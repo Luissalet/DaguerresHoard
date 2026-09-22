@@ -97,6 +97,9 @@ export default function SearchPage({ t, platformIsWindows, onOpenSettings }: Pro
         </label>
       </div>
 
+      {result?.translated_query && (
+        <p className="muted small search-translated-note">{t.searched_for(result.translated_query)}</p>
+      )}
       {result?.note && (
         <div className="notice notice-warn">
           <AlertTriangle size={18} />

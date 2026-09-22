@@ -1,6 +1,8 @@
 import type {
   Album,
   AgentCall,
+  BackendConfigInput,
+  BackendStatus,
   DuplicatesResult,
   Job,
   LibraryStatus,
@@ -79,14 +81,20 @@ export const api = {
   albumAdd: (name: string, photo_ids: string[]) => post<Album>("/api/albums", { name, photo_ids }),
   albumRemove: (id: string, photo_ids: string[]) => post<Album>(`/api/albums/${id}/remove`, { photo_ids }),
   deleteAlbum: (id: string) => request<{ ok: boolean }>(`/api/albums/${id}`, { method: "DELETE" }),
-  setSettings: (body: { ollama_base_url?: string; ollama_model?: string }) =>
-    post<{ ollama_base_url: string; ollama_model: string }>("/api/settings", body),
+  getSettings: () =>
+    request<{ ollama_base_url: string; ollama_model: string; translate_search: boolean }>("/api/settings"),
+  setSettings: (body: { ollama_base_url?: string; ollama_model?: string; translate_search?: boolean }) =>
+    post<{ ollama_base_url: string; ollama_model: string; translate_search: boolean }>("/api/settings", body),
   testOllama: () => post<{ ok: boolean; error: string | null }>("/api/settings/ollama/test"),
   captionBatch: (limit = 500) => post<{ job_id: string }>("/api/captions/batch", { limit }),
   modelStatus: () => request<ModelStatus>("/api/model"),
   downloadModel: () => post<{ job_id: string }>("/api/model/download"),
   downloadGeocoder: () => post<{ job_id: string }>("/api/geocoder/download"),
   agentCalls: (limit = 50) => request<AgentCall[]>(`/api/agent-calls?limit=${limit}`),
+  getBackend: () => request<BackendStatus>("/api/backend"),
+  setBackendConfig: (body: BackendConfigInput) =>
+    request<BackendStatus>("/api/backend/config", { method: "PUT", body: JSON.stringify(body) }),
+  recheckBackend: () => post<BackendStatus>("/api/backend/recheck"),
 };
 
 export function errorText(e: unknown): string {

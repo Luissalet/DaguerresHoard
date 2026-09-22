@@ -106,10 +106,24 @@ class ScanBody(BaseModel):
 class SettingsBody(BaseModel):
     ollama_base_url: str | None = None
     ollama_model: str | None = None
+    translate_search: bool | None = None
 
 
 class CaptionBatchBody(BaseModel):
     limit: int = 500
+
+
+class BackendConfigBody(BaseModel):
+    """PUT /api/backend/config -- UI only, never an agent endpoint. Every
+    field is optional and an empty string clears that override; None
+    leaves it untouched. The token is write-only: it is never read back."""
+
+    faustus_url: str | None = None
+    faustus_token: str | None = None
+    vision_url: str | None = None
+    vision_model: str | None = None
+    llm_url: str | None = None
+    llm_model: str | None = None
 
 
 def _summarise_validation(exc: RequestValidationError) -> str:
@@ -127,6 +141,16 @@ def _check_id(photo_id: str) -> str:
     if not ID_RE.match(photo_id or ""):
         raise ApiError(400, "invalid_argument", "photo ids are 32 lowercase hex characters")
     return photo_id
+
+
+def _check_optional_url(field: str, value: str | None) -> None:
+    """An empty string clears an override and is always fine; a non-empty
+    value must look like an http(s) URL (same check as the Ollama field)."""
+    if not value:
+        return
+    parsed = urlparse(value.strip())
+    if parsed.scheme not in ("http", "https") or not parsed.hostname:
+        raise ApiError(400, "invalid_argument", f"{field} must look like http://127.0.0.1:PORT")
 
 
 def create_app(data_dir: Path, static_dir: Path | None = None, port: int = 8814) -> FastAPI:
@@ -298,7 +322,10 @@ def create_app(data_dir: Path, static_dir: Path | None = None, port: int = 8814)
     # -- UI versions of the search tools (not audited) --------------------- #
     @app.post("/api/search")
     def ui_search(body: SearchBody):
-        return run(lambda: lib.search(body.query, body.filters, body.limit, False))
+        # UI-only: automatically translates a non-English query to English
+        # first (the MCP tool tells the agent to translate itself instead,
+        # so /api/agent/photos_search below always calls lib.search directly).
+        return run(lambda: lib.search_translated(body.query, body.filters, body.limit, False))
 
     @app.post("/api/similar")
     def ui_similar(body: SimilarBody):
@@ -347,19 +374,30 @@ def create_app(data_dir: Path, static_dir: Path | None = None, port: int = 8814)
         return {
             "ollama_base_url": dbmod.get_setting(lib.conn, "ollama_base_url", DEFAULT_BASE_URL),
             "ollama_model": dbmod.get_setting(lib.conn, "ollama_model", DEFAULT_MODEL),
+            "translate_search": lib.translate_search_enabled(),
         }
 
     @app.post("/api/settings")
     def set_settings(body: SettingsBody):
+        changed_legacy_vision = False
         if body.ollama_base_url is not None:
             parsed = urlparse(body.ollama_base_url.strip())
             if parsed.scheme not in ("http", "https") or not parsed.hostname:
                 raise ApiError(400, "invalid_argument", "the Ollama URL must look like http://127.0.0.1:11434")
             dbmod.set_setting(lib.conn, "ollama_base_url", body.ollama_base_url.strip().rstrip("/"))
+            changed_legacy_vision = True
         if body.ollama_model is not None:
             if not body.ollama_model.strip():
                 raise ApiError(400, "invalid_argument", "the model name cannot be empty")
             dbmod.set_setting(lib.conn, "ollama_model", body.ollama_model.strip())
+            changed_legacy_vision = True
+        if body.translate_search is not None:
+            lib.set_translate_search(body.translate_search)
+        if changed_legacy_vision:
+            # The legacy Ollama fields feed the `vision` capability's
+            # explicit override (see backend.py); rebuild it so a saved
+            # change takes effect on the next caption without a restart.
+            lib.backend.reload()
         return get_settings()
 
     @app.post("/api/settings/ollama/test")
@@ -382,6 +420,31 @@ def create_app(data_dir: Path, static_dir: Path | None = None, port: int = 8814)
     @app.post("/api/geocoder/download")
     def geocoder_download():
         return {"job_id": run(lib.start_geodata_download)}
+
+    # -- shared model backend (Hoard Link) -- UI only, never agent routes -- #
+    @app.get("/api/backend")
+    def get_backend():
+        return lib.backend_status()
+
+    @app.put("/api/backend/config")
+    def set_backend_config(body: BackendConfigBody):
+        _check_optional_url("faustus_url", body.faustus_url)
+        _check_optional_url("vision_url", body.vision_url)
+        _check_optional_url("llm_url", body.llm_url)
+        lib.backend.set_overrides(
+            faustus_url=body.faustus_url,
+            faustus_token=body.faustus_token,
+            capability_overrides={
+                "vision": (body.vision_url, body.vision_model),
+                "llm": (body.llm_url, body.llm_model),
+            },
+        )
+        return lib.backend_status()
+
+    @app.post("/api/backend/recheck")
+    def recheck_backend():
+        lib.backend.reload()
+        return lib.backend_status()
 
     # -- agent activity log ------------------------------------------------ #
     @app.get("/api/agent-calls")

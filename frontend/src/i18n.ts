@@ -129,6 +129,22 @@ export interface Dict {
   job_started: string;
   folder_unreachable: string;
   score: string;
+  shared_models: string;
+  shared_models_note: string;
+  backend_row_vision: string;
+  backend_row_llm: string;
+  backend_recheck: string;
+  backend_resolved: string;
+  backend_unavailable: string;
+  backend_faustus_url: string;
+  backend_faustus_token: string;
+  backend_token_set: string;
+  backend_token_placeholder: string;
+  backend_override_url: string;
+  backend_override_model: string;
+  backend_save_overrides: string;
+  translate_search_label: string;
+  searched_for: (english: string) => string;
 }
 
 export const dict: Record<Lang, Dict> = {
@@ -265,6 +281,23 @@ export const dict: Record<Lang, Dict> = {
     job_started: "Started in the background",
     folder_unreachable: "Folder not reachable",
     score: "Match",
+    shared_models: "Shared models",
+    shared_models_note:
+      "Argus shares its models with Faustus and any other local app instead of loading its own copy: whatever is already running (Faustus, Ollama, llama.cpp, or another OpenAI-compatible server) is used first.",
+    backend_row_vision: "Vision (captions)",
+    backend_row_llm: "Language model (query translation)",
+    backend_recheck: "Re-check",
+    backend_resolved: "Available",
+    backend_unavailable: "Not available",
+    backend_faustus_url: "Faustus URL",
+    backend_faustus_token: "Faustus token",
+    backend_token_set: "Token saved",
+    backend_token_placeholder: "Leave blank to keep the saved token",
+    backend_override_url: "URL override",
+    backend_override_model: "Model override",
+    backend_save_overrides: "Save shared-backend settings",
+    translate_search_label: "Translate non-English searches to English automatically",
+    searched_for: (english: string) => `Searched for: “${english}”`,
   },
   es: {
     appName: "El Tesoro de Argos",
@@ -399,6 +432,23 @@ export const dict: Record<Lang, Dict> = {
     job_started: "En marcha en segundo plano",
     folder_unreachable: "Carpeta no accesible",
     score: "Coincidencia",
+    shared_models: "Modelos compartidos",
+    shared_models_note:
+      "Argos comparte sus modelos con Faustus y con cualquier otra app local en vez de cargar su propia copia: usa primero lo que ya esté en marcha (Faustus, Ollama, llama.cpp u otro servidor compatible con OpenAI).",
+    backend_row_vision: "Visión (descripciones)",
+    backend_row_llm: "Modelo de lenguaje (traducción de búsquedas)",
+    backend_recheck: "Volver a comprobar",
+    backend_resolved: "Disponible",
+    backend_unavailable: "No disponible",
+    backend_faustus_url: "URL de Faustus",
+    backend_faustus_token: "Token de Faustus",
+    backend_token_set: "Token guardado",
+    backend_token_placeholder: "Déjalo en blanco para mantener el token guardado",
+    backend_override_url: "URL manual",
+    backend_override_model: "Modelo manual",
+    backend_save_overrides: "Guardar ajustes del backend compartido",
+    translate_search_label: "Traducir automáticamente las búsquedas que no estén en inglés",
+    searched_for: (english: string) => `Buscado como: «${english}»`,
   },
 };
 

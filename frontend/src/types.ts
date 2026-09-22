@@ -39,6 +39,9 @@ export interface SearchResult {
   has_more: boolean;
   embedder: string;
   note?: string;
+  translated_query?: string;
+  original_query?: string;
+  translate_error?: string;
 }
 
 export interface PhotoListResult {
@@ -133,6 +136,40 @@ export interface Album {
   photo_count: number;
   cover_thumbnail_url?: string | null;
   photos?: Photo[];
+}
+
+export interface ResolutionInfo {
+  capability: string;
+  provider: string | null;
+  url: string | null;
+  model: string | null;
+  api: string | null;
+  state: "resolved" | "unavailable";
+  reason: string;
+  details?: Record<string, unknown>;
+}
+
+export interface BackendStatus {
+  llm: ResolutionInfo;
+  vision: ResolutionInfo;
+  embeddings: ResolutionInfo;
+  tts: ResolutionInfo;
+  stt: ResolutionInfo;
+  image: ResolutionInfo;
+  video: ResolutionInfo;
+  music: ResolutionInfo;
+  token_set: boolean;
+  used_capabilities: string[];
+  image_search: { engine: string; active: string; semantic: boolean };
+}
+
+export interface BackendConfigInput {
+  faustus_url?: string;
+  faustus_token?: string;
+  vision_url?: string;
+  vision_model?: string;
+  llm_url?: string;
+  llm_model?: string;
 }
 
 export interface AgentCall {
