@@ -4,6 +4,8 @@ app, and drives it through the real MCP protocol -- not by importing the
 adapter's functions directly."""
 from __future__ import annotations
 
+import base64
+import json
 import socket
 import sys
 import threading
@@ -94,20 +96,65 @@ async def test_mcp_adapter_over_stdio(running_app):
                 "photos_duplicates", "photos_timeline", "photos_library",
                 "photos_add_folder", "photos_album",
             }
+            for tool in tools.tools:
+                assert "Keywords:" in tool.description, tool.name
+                assert tool.annotations is not None and tool.annotations.openWorldHint is False, tool.name
+                assert tool.annotations.destructiveHint is False, tool.name
+            read_only = {t.name for t in tools.tools if t.annotations.readOnlyHint}
+            assert read_only == names - {"photos_add_folder", "photos_album"}
             search_tool = next(t for t in tools.tools if t.name == "photos_search")
-            assert "Keywords:" in search_tool.description
-            assert search_tool.annotations.readOnlyHint is True
+            assert search_tool.inputSchema["properties"]["orientation"]["anyOf"][0]["enum"] == ["landscape", "portrait"]
 
             result = await session.call_tool("photos_search", {"query": "a red square", "limit": 5})
             assert result.isError is not True
-            assert len(result.content) >= 2  # structured dict text block + contact sheet image
             text_blocks = [c for c in result.content if c.type == "text"]
             image_blocks = [c for c in result.content if c.type == "image"]
-            assert text_blocks and "red.jpg" in text_blocks[0].text
-            assert image_blocks
+            assert len(text_blocks) == 1 and len(image_blocks) == 1
+            payload = json.loads(text_blocks[0].text)
+            assert payload["results"][0]["n"] == 1
+            assert payload["results"][0]["path"].endswith("red.jpg")
+            assert "contact_sheet_jpeg_base64" not in payload  # moved into the image block
+            assert image_blocks[0].mimeType == "image/jpeg"
+            assert len(base64.b64decode(image_blocks[0].data)) <= 200 * 1024
+            photo_id = payload["results"][0]["id"]
+
+            shown = await session.call_tool("photos_show", {"ids": [photo_id, "0" * 32]})
+            assert shown.isError is not True
+            meta = json.loads(shown.content[0].text)
+            assert meta["shown"][0]["id"] == photo_id and meta["not_found"] == ["0" * 32]
+            assert [c.type for c in shown.content] == ["text", "image"]
+
+            album = await session.call_tool("photos_album", {"name": "Reds", "photo_ids": [photo_id]})
+            assert json.loads(album.content[0].text)["added"] == 1
+
+            timeline = await session.call_tool("photos_timeline", {})
+            assert "years" in json.loads(timeline.content[0].text)
 
             lib_result = await session.call_tool("photos_library", {})
             assert lib_result.isError is not True
+            assert json.loads(lib_result.content[0].text)["photo_count"] == 1
 
             bad_result = await session.call_tool("photos_describe", {"photo_id": "nope"})
             assert bad_result.isError is True
+            assert "not_found:" in bad_result.content[0].text
+            assert "photos_search" in bad_result.content[0].text  # tells the model how to recover
+
+            bad_filter = await session.call_tool("photos_search", {"query": "x", "month": 13})
+            assert bad_filter.isError is True and "invalid_argument" in bad_filter.content[0].text
+
+
+@pytest.mark.asyncio
+async def test_mcp_adapter_reports_app_not_running(tmp_path):
+    params = StdioServerParameters(
+        command=sys.executable,
+        args=[str(REPO_ROOT / "argus_hoard" / "mcp_server.py")],
+        env={"ARGUS_URL": f"http://127.0.0.1:{_free_port()}"},
+        cwd=str(tmp_path),
+    )
+    async with stdio_client(params) as (read, write):
+        async with ClientSession(read, write) as session:
+            await session.initialize()
+            result = await session.call_tool("photos_library", {})
+            assert result.isError is True
+            assert "argus_unavailable" in result.content[0].text
+            assert "Iniciar Argus.cmd" in result.content[0].text
