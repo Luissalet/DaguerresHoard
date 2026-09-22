@@ -4,7 +4,7 @@
 
 ### ¿Sigues teniendo la foto del perro en la playa del verano pasado?
 
-**Una fototeca privada que indexa tus carpetas en tu propio ordenador, entiende lo que aparece en cada imagen y le entrega a un modelo de IA local resultados compactos y una única hoja de contactos numerada que puede mirar de verdad.**
+**Una fototeca privada que indexa tus carpetas en tu propio ordenador, entiende lo que aparece en cada imagen y le entrega a un modelo de IA local resultados de texto compactos y ordenados con honestidad, y una hoja de contactos numerada solo cuando el modelo puede ver imágenes.**
 
 [English](README.md) · [Ejecutar en local](#ejecutar-en-local-en-windows) · [Conectar una IA](docs/MCP.md) · [Portfolio](https://luissalet.github.io/Portfolio/#projects)
 
@@ -23,10 +23,39 @@ Argos indexa las carpetas del usuario en su propio equipo (embeddings de
 imagen CLIP con ONNX Runtime, sin PyTorch y sin llamadas a la nube), lee
 EXIF y GPS, geocodifica sin conexión y encuentra duplicados exactos y
 aproximados. El modelo recibe resultados cortos, filtrados y numerados,
-con identificadores estables, y una sola hoja de contactos con las
-candidatas, de modo que un modelo con visión puede revisar diez fotos por
-el precio de una imagen antes de afirmar nada. Argos nunca modifica,
+con identificadores estables y un grado de coincidencia (fuerte, media o
+débil) en cada uno. Un modelo con visión puede pedir una sola hoja de
+contactos con las candidatas y revisar diez fotos por el precio de una
+imagen antes de afirmar nada; un modelo solo de texto nunca recibe una
+imagen que no haya pedido. Argos nunca modifica,
 mueve ni borra un archivo original; es un invariante con su test.
+
+## Casos de uso
+
+Ocho escenarios, recorridos en el navegador y, los del agente, por MCP
+real con un script que hace de modelo local pequeño
+([docs/USE_CASES.md](docs/USE_CASES.md); lo encontrado y lo corregido
+está en [docs/USABILITY_REPORT.md](docs/USABILITY_REPORT.md)):
+
+- **Primer arranque**: añadir `Imágenes` (sirve una ruta pegada con las
+  comillas del Explorador), descargar el modelo de imagen en Ajustes
+  mientras la barra cuenta los megas y buscar «sunset over the sea».
+- **Una foto por contenido y fecha**: *«¿tienes la foto del perro en la
+  playa del verano pasado?»*. El modelo busca «dog on the beach» con un
+  rango de fechas, recibe solo texto y dice cuánta seguridad tiene.
+- **Liberar espacio**: las copias exactas conservan el original del
+  carrete, y «Copiar rutas de las copias extra» deja fuera la que se
+  conserva; los duplicados aproximados se muestran como «hasta», para
+  revisarlos grupo a grupo.
+- **Álbumes desde el agente**: *«haz un álbum "Lisboa 2024" con todo el
+  viaje»*: solo con filtros (`place="Lisbon"`, julio de 2024) y paginando
+  con `next_offset` se cubre el viaje entero.
+- **Con otras herramientas**: un retrato vertical para el CV que el
+  asistente copia luego con sus propias herramientas de archivos, y las
+  fotos de la claqueta y el croma del rodaje de un cortometraje reunidas en un
+  álbum.
+- **Recuerdos y lugares**: «un día como hoy» con lugares, y Lugares
+  agrupado por país y ciudad.
 
 ## Qué está implementado
 
@@ -35,8 +64,8 @@ mueve ni borra un archivo original; es un invariante con su test.
 | Indexado | Escaneos incrementales en segundo plano: un archivo sin cambios cuesta un `stat`; los modificados se vuelven a leer; los movidos o renombrados conservan su id, su vector, su descripción y sus álbumes. Hash y decodificación en paralelo, progreso con archivos/s y tiempo restante, y un archivo ilegible se anota sin parar el escaneo. JPEG, PNG, WebP, GIF, BMP, TIFF y HEIC/HEIF | Sin vigilancia del sistema de archivos: los reescaneos los lanza el usuario, el agente o una carpeta nueva |
 | Metadatos | Fecha EXIF con zona horaria, cámara, objetivo, exposición, ISO, focal, orientación y GPS; si no hay fecha EXIF se usa la del archivo y se indica | Solo EXIF; no lee archivos XMP |
 | Búsqueda | Texto a imagen con CLIP ViT-B/32 (en inglés funciona mejor; las herramientas piden al modelo que traduzca), fotos parecidas y filtros (rango de fechas, año, mes, lugar, carpeta, cámara, orientación, megapíxeles, GPS). Híbrida con las descripciones cuando existen | El modelo (unos 600 MB) solo se descarga cuando el usuario lo pide en Ajustes. Hasta entonces funciona un modo básico que solo entiende colores, y cada resultado lo avisa |
-| Duplicados | Exactos (BLAKE2b) y aproximados (pHash, distancia de Hamming hasta 6, búsqueda exacta multiíndice, union-find), con la copia recomendada y el espacio que ocupan las copias sobrantes | Solo lectura por diseño: «Copiar rutas» y «Abrir carpeta»; borrar es cosa del usuario |
-| Lugares y tiempo | Geocodificación inversa sin conexión (tabla integrada de 10 ciudades o GeoNames `cities1000` bajo petición), países y ciudades con recuentos, cronología por año y mes, «un día como hoy» | Sin mapas con teselas, para no hacer peticiones de red por una vista |
+| Duplicados | Exactos (BLAKE2b) y aproximados (pHash, distancia de Hamming hasta 6, búsqueda exacta multiíndice, union-find), con la copia recomendada (el original, no la copia de seguridad ni la del chat) y el espacio que ocupan las copias sobrantes | Solo lectura por diseño: «Copiar rutas de las copias extra» y «Abrir carpeta»; borrar es cosa del usuario. Un grupo aproximado puede juntar fotos distintas que se parecen, así que su espacio se muestra como «hasta» |
+| Lugares y tiempo | Geocodificación inversa sin conexión (tabla integrada de 10 ciudades o GeoNames `cities1000` bajo petición, donde cada barrio lleva la ciudad a la que pertenece: «Alfama, Lisbon, Portugal»), países y ciudades con recuentos, cronología por año y mes, «un día como hoy» | Sin mapas con teselas, para no hacer peticiones de red por una vista. La tabla integrada no ubica nada a más de 50 km de sus 10 ciudades |
 | Descripciones | Modelo de visión local de Ollama, opcional, por foto o en lote en segundo plano, guardado en un índice de texto completo para la búsqueda híbrida | Desactivado por defecto; nunca se genera durante el indexado |
 | Álbumes | Los crea el usuario o el agente, desde el visor o con una herramienta; el agente solo puede añadir | Sin álbumes anidados |
 | Interfaz | Interfaz React de escritorio: cuadrícula de miniaturas con carga continua, visor con zoom y desplazamiento sobre una vista previa grande (1600 px) del original, panel EXIF, fotos parecidas, inglés y español, tema claro y oscuro | Las secciones de la barra lateral no tienen URL propia |
@@ -72,7 +101,7 @@ trabajo de la aplicación y arranca él mismo el adaptador MCP.
 
 | Herramienta | Qué hace | Solo lectura |
 | --- | --- | --- |
-| `photos_search` | Texto (en inglés) -> fotos, con filtros y hoja de contactos numerada | sí |
+| `photos_search` | Texto (en inglés) -> fotos con grado de coincidencia, filtros y paginación; hoja de contactos numerada solo si se pide | sí |
 | `photos_similar` | Fotos que se parecen a una dada | sí |
 | `photos_show` | Hasta 4 imágenes para verlas de cerca (200 KB como máximo cada una) | sí |
 | `photos_describe` | EXIF, lugar y ruta; descripción local opcional | sí (la descripción pedida se guarda en la base de datos de Argos) |
@@ -159,7 +188,7 @@ hilos e índice de duplicados: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 ## Tests
 
 ```powershell
-.venv\Scripts\python -m pytest -q          # 116 tests, unos 15-25 s, sin red
+.venv\Scripts\python -m pytest -q          # 141 tests, unos 20-30 s, sin red
 .venv\Scripts\python -m pytest -q -m model # 1 test opcional con el modelo CLIP real (lo descarga si falta)
 cd frontend; npm run build                 # TypeScript estricto
 ```
@@ -193,7 +222,18 @@ descripciones y su aplazamiento si el modelo sigue ocupado; que un `Link`
 sustituido se cierre en vez de dejar su hilo abierto; un `backend.json`
 roto; el detector de idioma no inglés; y la separación entre
 `/api/search` y `/api/agent/photos_search` (solo la ruta de la interfaz
-traduce). El test del
+traduce). De las pasadas de usabilidad: que una búsqueda o un «similares»
+por defecto no lleva ninguna imagen; los grados de coincidencia por
+modelo y que no haya un `count` suelto en los resultados del agente; la
+paginación y los listados solo con filtros; que un resultado vacío diga
+qué filtro relajar; la regla de la copia recomendada que evita carpetas
+de copia de seguridad; los grupos de duplicados resumidos y los totales
+aproximados como cota superior; la ciudad a la que pertenece cada barrio
+con filas reales de GeoNames (Lisboa, Madrid, Tokio, Kioto, Cádiz) y que
+una biblioteca ya existente se reetiquete una vez cuando cambia el
+geocodificador; Lugares agrupado por ciudad; quitar fotos de un álbum;
+rutas entre comillas; nombres de álbum sin distinguir tildes; y el
+progreso de la descarga en megas. El test del
 modelo indexa las escenas de demostración con CLIP real y comprueba que
 cuatro descripciones en inglés encuentran la escena correcta. El flujo de
 CI está preparado para pasar la batería en Ubuntu y Windows con Python

@@ -4,7 +4,7 @@
 
 ### Do you still have the photo of the dog on the beach from last summer?
 
-**A private photo library that indexes your folders locally, understands what is in each picture, and hands a local AI model compact results plus one numbered contact sheet it can actually look at.**
+**A private photo library that indexes your folders locally, understands what is in each picture, and hands a local AI model compact, honestly ranked text results -- plus one numbered contact sheet, only when the model can see images.**
 
 [Español](README.es.md) · [Run locally](#run-locally-on-windows) · [Connect an AI](docs/MCP.md) · [Portfolio](https://luissalet.github.io/Portfolio/#projects)
 
@@ -23,10 +23,37 @@ Argus indexes the owner's folders on their own machine (CLIP image
 embeddings through ONNX Runtime, no PyTorch, no cloud call), reads EXIF
 and GPS, reverse-geocodes offline, and finds exact and near duplicates.
 The model gets short, filtered, numbered results with stable ids and a
-single contact-sheet image of the candidates, so a vision model can check
-ten photos for the price of one image before it claims anything. Argus
+relevance band (strong/medium/weak) on each one. A vision model can ask
+for a single contact-sheet image of the candidates and check ten photos
+for the price of one image before it claims anything; a text-only model
+never receives an image it did not ask for. Argus
 never modifies, moves or deletes an original file; that invariant is
 tested.
+
+## Use cases
+
+Eight scenarios, each walked in the browser and, for the agent ones, over
+real MCP stdio by a script that plays a small local model
+([docs/USE_CASES.md](docs/USE_CASES.md); what was found and fixed is in
+[docs/USABILITY_REPORT.md](docs/USABILITY_REPORT.md)):
+
+- **First run**: add `Pictures` (a path pasted with Explorer's quotes
+  works), download the image model from Settings while the bar counts the
+  megabytes, and search "sunset over the sea".
+- **One photo by content and date**: *"do you still have the photo of
+  the dog on the beach from last summer?"* The model searches "dog on the
+  beach" with a date range, gets text only, and says how sure it is.
+- **Free up space**: exact copies keep the camera-roll original, and
+  "Copy paths of the extra copies" leaves the keeper out; near duplicates
+  are shown as "up to", to check group by group.
+- **Albums by the agent**: *"make an album 'Lisboa 2024' with the whole
+  trip"*: filters alone (`place="Lisbon"`, July 2024), paged with
+  `next_offset`, cover the trip.
+- **With other tools**: a vertical portrait for a CV that the assistant
+  then copies with its own file tools, and the clapperboard and
+  green-screen shots of a short-film shoot collected in one album.
+- **Memories and places**: "on this day" with places, and Places grouped
+  by country and city.
 
 ## What is implemented
 
@@ -35,8 +62,8 @@ tested.
 | Indexing | Background, incremental scans: unchanged files cost one `stat`; changed files are re-read; moved or renamed files keep their id, vector, caption and albums. Parallel hashing and decoding, progress with files/s and ETA, one unreadable file is reported instead of stopping the scan. JPEG, PNG, WebP, GIF, BMP, TIFF, HEIC/HEIF | No file-system watcher: rescans are started by the user, the agent or a new folder |
 | Metadata | EXIF date with time-zone offset, camera, lens, exposure, ISO, focal length, orientation, GPS; file time as fallback, flagged as such | EXIF only; XMP sidecars are not read |
 | Search | Text to image with CLIP ViT-B/32 (English queries work best; the tools tell the model to translate), similar photos, filters (date range, year, month, place, folder, camera, orientation, megapixels, GPS). Hybrid with captions when they exist | The model (about 600 MB) is downloaded only when the user clicks it in Settings. Until then a colour-only fallback is active and every result says so |
-| Duplicates | Exact (BLAKE2b) and near (pHash, Hamming distance up to 6, exact multi-index lookup, union-find) with a suggested keeper and the space that extra copies use | Read-only by design: "Copy paths" and "Open folder", deleting is up to the owner |
-| Places and time | Offline reverse geocoding (bundled 10-city table, or GeoNames `cities1000` on request), countries and cities with photo counts, timeline by year and month, "on this day" | No map tiles, to avoid any network request for a view |
+| Duplicates | Exact (BLAKE2b) and near (pHash, Hamming distance up to 6, exact multi-index lookup, union-find) with a suggested keeper (the original, not the backup or chat-app copy) and the space that extra copies use | Read-only by design: "Copy paths of the extra copies" and "Open folder", deleting is up to the owner. A near group can join different look-alike photos, so its space is shown as "up to" |
+| Places and time | Offline reverse geocoding (bundled 10-city table, or GeoNames `cities1000` on request, where a neighbourhood is labelled with the city it belongs to: "Alfama, Lisbon, Portugal"), countries and cities with photo counts, timeline by year and month, "on this day" | No map tiles, to avoid any network request for a view. The bundled table places nothing more than 50 km from its 10 cities |
 | Captions | Optional local Ollama vision model per photo or as a background batch, stored in a full-text index for hybrid search | Off by default; never generated during indexing |
 | Albums | Created by the owner or the agent from the lightbox or by tool call; the agent can only add | No nested albums |
 | Interface | React desktop-style UI: thumbnail grid with infinite scroll, lightbox with zoom and pan on a large (1600 px) preview of the original, EXIF panel, similar strip, English and Spanish, light and dark | Sidebar sections are not deep-linkable URLs |
@@ -69,7 +96,7 @@ launches the MCP adapter itself.
 
 | Tool | What | Read-only |
 | --- | --- | --- |
-| `photos_search` | Text (English) -> photos, filters, numbered contact sheet | yes |
+| `photos_search` | Text (English) -> photos with relevance bands, filters, paging; a numbered contact sheet only on request | yes |
 | `photos_similar` | Photos that look like a given one | yes |
 | `photos_show` | Up to 4 images for a closer look (200 KB each at most) | yes |
 | `photos_describe` | EXIF, place, path; optional local caption | yes (a requested caption is saved in Argus's database) |
@@ -154,7 +181,7 @@ index are described in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 ## Tests
 
 ```powershell
-.venv\Scripts\python -m pytest -q          # 116 tests, about 15-25 s, no network
+.venv\Scripts\python -m pytest -q          # 141 tests, about 20-30 s, no network
 .venv\Scripts\python -m pytest -q -m model # 1 opt-in test with the real CLIP model (downloads it if missing)
 cd frontend; npm run build                 # TypeScript strict
 ```
@@ -181,7 +208,16 @@ or not; the good-citizen `wait_idle("vision")` pause in a caption batch and its
 postponement when the model stays busy; retiring a replaced `Link`
 instead of leaking its thread; a broken `backend.json`;
 the non-English query detector; and the `/api/search` vs
-`/api/agent/photos_search` split (only the UI path ever translates). The
+`/api/agent/photos_search` split (only the UI path ever translates).
+From the usability passes: no image in a default search or similar call;
+relevance bands per embedder and no bare `count` in agent results;
+paging and filter-only listings; an empty result naming the filter to
+relax; the keeper rule avoiding backup folders; summarised duplicate
+groups and near totals called an upper bound; parent cities from real
+GeoNames rows (Lisbon, Madrid, Tokyo, Kyoto, Cadiz) and relabelling an
+existing library once when the geocoder changes; Places grouped by city;
+removing photos from an album; quoted paths; accent-insensitive album
+names; and download progress in MB. The
 model test indexes the demo scenes with real CLIP and checks that four
 English descriptions find the right scene. The CI workflow is set up to
 run the suite on Ubuntu and Windows with Python 3.11 and 3.13, build the

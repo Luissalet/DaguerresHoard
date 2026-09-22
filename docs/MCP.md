@@ -80,7 +80,7 @@ own database (the photo file is never touched). All annotations set
 | `taken_after` / `taken_before` | ISO date or datetime | none | inclusive; a plain date covers the whole day |
 | `year` | int | none | 1800-2200 |
 | `month` | int | none | 1-12 |
-| `place` | string | none | substring of city, parent municipality, region or country |
+| `place` | string | none | substring of the place, the city it belongs to ("Lisbon" finds Alfama and Restelo) or the country |
 | `folder` | string | none | substring of the path, either slash direction |
 | `camera` | string | none | substring of make or model |
 | `orientation` | `"landscape"` or `"portrait"` | none | |

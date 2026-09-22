@@ -29,7 +29,10 @@
   histogram, deterministic across processes); `ClipEmbedder` (fastembed /
   ONNX Runtime CLIP ViT-B/32, 512-d, no PyTorch); `VectorStore`.
 - `geocode.py` -- offline reverse geocoding: bundled 10-city fixture, or
-  GeoNames `cities1000` once the user downloads it.
+  GeoNames `cities1000` once the user downloads it. With `cities1000` a
+  neighbourhood's `region` is the city it belongs to, read from the admin
+  codes; `GEOCODER_VERSION` is stamped in settings so a library labelled
+  by an older version is relabelled once at start.
 - `captions.py` -- `LinkCaptioner` (what `Library._captioner()` returns:
   captions through Hoard Link's `vision` capability) plus the original
   `OllamaCaptioner` (a direct connection to one Ollama server, kept for

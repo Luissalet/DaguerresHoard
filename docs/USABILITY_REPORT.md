@@ -65,6 +65,72 @@ photos, and libraries above the synthetic set's 262 photos -- the same
 list the first pass left, since fixing the reproducible bugs did not
 require any of them.
 
+## Third pass: re-walk after the fixes
+
+Every use case was walked again, as a person (Playwright at 1280x800 and
+1920x1080, Spanish and English, light and dark, every screenshot read) and
+as an agent (`scripts/agent_walkthrough.py` over real MCP stdio), against
+three instances: a **fresh** first run (empty data folder, folder added
+through the UI with Explorer-style quotes, the image model downloaded from
+Settings), an **upgraded** library (the first pass's data, labelled by the
+old geocoder with the world-cities file, now opened with the new code),
+and the `--demo` data for the README screenshots. Zero console errors or
+failed requests in every walk.
+
+Two fixes of the second pass did not survive contact with real data:
+
+- **B4 was not fixed.** On the real `cities1000` file the "nearest place
+  of 15,000+ people" is often another neighbourhood: Alfama became
+  "Alfama, Sao Jorge de Arroios", Madrid's districts got no parent, and
+  `place="Lisbon"` matched about 10 of the 54 trip photos. The unit test
+  passed only because its fake file had no populous neighbourhoods. And an
+  existing library never received the new labels at all: a rescan skips
+  unchanged files, so the upgraded library still found 2 of 54.
+- **B2 was half fixed.** Agent search results still carried `count` next
+  to `returned` and `indexed_total` ("kept for older callers"), so a
+  default search still said `count=262` to the model.
+
+| Finding (re-walk) | Commit | What changed |
+| --- | --- | --- |
+| B4 on real data | `2f44ff8` | The parent city comes from the dataset's admin codes (the most populous seat of a division the place belongs to, within 30 km). Tested with real rows for Lisbon, Madrid, Tokyo, Kyoto and Cadiz. |
+| B4/A11 on existing libraries | `2f44ff8` | A geocoder-version stamp; a library labelled by another version is relabelled once in the background at start, and a photo that can no longer be placed loses its wrong label. |
+| Places listed neighbourhoods | `2f44ff8` | 22 Madrid districts ("Ibiza", "Salamanca"), no "Madrid": Places now groups by the parent city (Tokyo 31, Kyoto 12, Lisbon 60, Madrid 92, Cadiz 13). |
+| A11 hint never shown | `2f44ff8` | The bundled table returns no country beyond 50 km, so the "download the world data" hint counted zero; it now counts GPS photos without a city (25 on the fresh instance). |
+| A1 download looked frozen | `2c5d4a2` | The first fresh download took more than ten minutes here at a static "5%". Progress is now reported in MB from the bytes on disk; the job ends with "image model ready: 262 photos analysed, content search is on". |
+| B2 remnant | `6526a10` | Agent routes drop `count`. |
+| A10 remnant | `6526a10` | An empty result names the filter to relax ("without min_megapixels=2 alone, 40 would"); UC5 recovered in one retry. |
+| A3 wording | `6526a10`, `661e162` | Near-duplicate totals are an upper bound: a `note` for the agent, "up to ... check each group before deleting" in the UI. |
+| A9 leaked into the UI | `6526a10`, `661e162` | The agent's English translate hint showed verbatim in the Spanish UI. Notes now carry codes and the UI words them in both languages. |
+| Folder label "07" | `661e162` | Duplicate tiles climb past year/month folders ("Camera Roll/2024/07"). |
+| Walkthrough out of date | `5be8ab0` | It crashed on the summarised duplicate groups; it now checks the new shapes. |
+| Album prompt grammar | `80f2a45` | "The file stay where it is"; plus a test for the removal route. |
+
+### Verdict per use case
+
+| Use case | Verdict | Evidence |
+| --- | --- | --- |
+| UC1 first run | works, with a caveat | Quoted path accepted; 262 photos indexed, the truncated JPEG reported; model downloaded from Settings and re-embedded without further clicks; "sunset over the sea" finds sunsets. Caveat: the first-run checklist (A1's larger part) is still not built -- the amber badge and banner are the guide. |
+| UC2 dog on the beach | works | UI and agent: burst + the two dog photos lead, all `strong`; no image in any default call; the Spanish query gets a translated hint in the UI and a named-language hint for the agent. |
+| UC3 free up space | works, with a caveat | Exact: 15 groups, every keeper is the camera-roll original, "Copy paths of the extra copies" leaves it out. Near: the burst is one group and no chat-app copy is a keeper, but groups can still join different photos (six different scans); now labelled "up to" (A3's algorithm change is still open). |
+| UC4 Lisboa 2024 album (agent) | works | Filters alone, two pages via `next_offset`: 54 of 54 trip photos on the bundled table, 53 of 54 with world cities (one GPS point jittered into the river lands in Trafaria, across it -- an honest label). |
+| UC5 CV portrait (agent) | works, with a caveat | Empty first result names `min_megapixels`; the retry returns five real vertical portraits and an absolute path. Caveat: the synthetic portraits score `weak` (0.23-0.24), so the model is told to hedge; real photos need a threshold check. |
+| UC6 short-film album | works | "film clapperboard" and "green screen studio" in March 2025: only clapperboards and green screens are `strong`; UI add-to-album folds accents; removing a photo in the album view works with the two-step prompt. |
+| UC7 on this day (agent) | works | Three photos of 22 September (2023-2025) with Madrid places, no image. |
+| UC8 places and receipts | works, with a caveat | Places is right on both geocoders, Cadiz is never labelled Portugal. The synthetic data has no receipts during the Lisbon trip, so "paper receipt" in July 2024 honestly says "no strong match"; without the date all 7 receipts come first. |
+
+Agent walkthrough, final run: 28 calls, about 19k text tokens (35k in
+the first pass), 2 images (both from `photos_show`, the only tool that
+returns them), 0 failed checks, on both the fresh and the upgraded
+instance. The tool list costs about 3.3k tokens (`photos_search` about
+830 of them). pytest: 132 -> 141.
+
+Still open: A1's first-run checklist, A3's grouping algorithm, A5
+(copies side by side in results and albums: the WhatsApp copy of a dog
+photo is still #2 for "dog on the beach"), C2/C3 (English reasons and
+country names in the Spanish UI), C4-C7, and merging the two
+"Rodaje La Estacion"/"Rodaje La Estación" albums the first pass created before
+the accent fold.
+
 ## How it was tested
 
 - **Data**: `scripts/make_uxtest_photos.py` built a synthetic `Pictures`
