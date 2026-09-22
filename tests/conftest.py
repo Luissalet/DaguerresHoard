@@ -6,7 +6,6 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import datetime as dt
-from fractions import Fraction
 from pathlib import Path
 
 import pytest
@@ -49,7 +48,10 @@ def make_image(
     # the size floor like a real photo would be.
     import numpy as np
 
-    rng = np.random.default_rng(abs(hash((path.name, color))) % (2**32))
+    import hashlib
+
+    seed = hashlib.blake2b(f"{path.name}{color}".encode(), digest_size=8).digest()
+    rng = np.random.default_rng(int.from_bytes(seed, "little"))  # stable across runs
     base = np.array(color, dtype=np.int16)
     noise = rng.integers(-35, 35, size=(size[1], size[0], 3))
     arr = np.clip(base + noise, 0, 255).astype(np.uint8)

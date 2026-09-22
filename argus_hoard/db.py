@@ -40,6 +40,7 @@ CREATE TABLE IF NOT EXISTS photos (
     country TEXT,
     caption TEXT,
     embed_row INTEGER,
+    embed_model TEXT,
     indexed_at TEXT NOT NULL,
     missing INTEGER NOT NULL DEFAULT 0
 );
@@ -49,7 +50,7 @@ CREATE INDEX IF NOT EXISTS idx_photos_taken ON photos(taken_at);
 CREATE INDEX IF NOT EXISTS idx_photos_root ON photos(root_id);
 
 CREATE VIRTUAL TABLE IF NOT EXISTS photos_fts USING fts5(
-    photo_id UNINDEXED, caption, content='', tokenize='porter unicode61'
+    photo_id UNINDEXED, caption, tokenize='porter unicode61'
 );
 
 CREATE TABLE IF NOT EXISTS albums (
@@ -94,16 +95,73 @@ CREATE TABLE IF NOT EXISTS settings (
 """
 
 
+def _migrate(conn: sqlite3.Connection) -> None:
+    """Bring databases created by earlier builds up to the current schema."""
+    cols = {r["name"] for r in conn.execute("PRAGMA table_info(photos)").fetchall()}
+    if "embed_model" not in cols:
+        # Vectors written before this column existed have an unknown origin:
+        # leave embed_model NULL so the next scan re-embeds them.
+        conn.execute("ALTER TABLE photos ADD COLUMN embed_model TEXT")
+    fts_sql = conn.execute(
+        "SELECT sql FROM sqlite_master WHERE name = 'photos_fts'"
+    ).fetchone()
+    if fts_sql and "content=''" in (fts_sql["sql"] or ""):
+        # A contentless FTS table cannot return photo_id nor delete rows,
+        # which silently disabled hybrid search. Rebuild it from photos.
+        conn.execute("DROP TABLE photos_fts")
+        conn.executescript(SCHEMA)
+        conn.execute(
+            "INSERT INTO photos_fts(rowid, photo_id, caption) "
+            "SELECT rowid, id, caption FROM photos WHERE caption IS NOT NULL"
+        )
+
+
 def connect(db_path: Path) -> sqlite3.Connection:
     db_path.parent.mkdir(parents=True, exist_ok=True)
-    conn = sqlite3.connect(str(db_path), check_same_thread=False)
+    conn = sqlite3.connect(str(db_path), check_same_thread=False, timeout=10.0)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA journal_mode=WAL")
     conn.execute("PRAGMA foreign_keys=ON")
-    conn.execute("PRAGMA busy_timeout=5000")
+    conn.execute("PRAGMA busy_timeout=10000")
     conn.executescript(SCHEMA)
+    _migrate(conn)
     conn.commit()
     return conn
+
+
+class ThreadLocalConnections:
+    """One sqlite3 connection per thread (WAL lets them run concurrently).
+
+    The HTTP thread pool, the background job threads and the tests all go
+    through `Library.conn`; sharing a single connection between threads
+    interleaves their transactions, so each thread gets its own."""
+
+    def __init__(self, db_path: Path):
+        import threading
+
+        self.db_path = db_path
+        self._local = threading.local()
+        self._lock = threading.Lock()
+        self._all: list[sqlite3.Connection] = []
+        self.get()  # create the schema eagerly, in the constructing thread
+
+    def get(self) -> sqlite3.Connection:
+        conn = getattr(self._local, "conn", None)
+        if conn is None:
+            conn = connect(self.db_path)
+            self._local.conn = conn
+            with self._lock:
+                self._all.append(conn)
+        return conn
+
+    def close_all(self) -> None:
+        with self._lock:
+            for conn in self._all:
+                try:
+                    conn.close()
+                except sqlite3.Error:
+                    pass
+            self._all.clear()
 
 
 def get_setting(conn: sqlite3.Connection, key: str, default: str | None = None) -> str | None:

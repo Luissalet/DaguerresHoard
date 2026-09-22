@@ -18,17 +18,31 @@ class ContactSheetItem:
     caption: str = ""
 
 
+# Bold sans fonts that exist on a stock Windows / Linux / macOS install;
+# Pillow searches the system font folders for bare file names.
+_FONT_CANDIDATES = ("segoeuib.ttf", "arialbd.ttf", "DejaVuSans-Bold.ttf", "Arial Bold.ttf", "LiberationSans-Bold.ttf")
+MAX_ITEMS = 20
+
+
 def _load_font(size: int) -> ImageFont.ImageFont:
+    for name in _FONT_CANDIDATES:
+        try:
+            return ImageFont.truetype(name, size)
+        except OSError:
+            continue
     try:
-        return ImageFont.truetype("DejaVuSans-Bold.ttf", size)
-    except OSError:
+        return ImageFont.load_default(size=size)  # scalable built-in font (Pillow >= 10.1)
+    except TypeError:
         return ImageFont.load_default()
 
 
 def render_contact_sheet(items: list[ContactSheetItem], cols: int = 5, cell: int = 220) -> bytes:
-    """Returns JPEG bytes, quality reduced as needed to stay under MAX_BYTES."""
+    """Returns JPEG bytes, at most MAX_ITEMS cells; quality (then size) is
+    reduced as needed to stay under MAX_BYTES."""
     if not items:
         raise ValueError("no items for contact sheet")
+    items = items[:MAX_ITEMS]
+    cols = max(1, min(cols, len(items)))
     rows = (len(items) + cols - 1) // cols
     label_h = 34
     sheet = Image.new("RGB", (cols * cell, rows * (cell + label_h)), (24, 24, 28))
@@ -57,12 +71,20 @@ def render_contact_sheet(items: list[ContactSheetItem], cols: int = 5, cell: int
         if item.caption:
             draw.text((x0 + 6, y0 + cell + 8), item.caption[:40], font=font_cap, fill=(210, 210, 215))
 
-    quality = 85
-    while quality >= 30:
-        buf = io.BytesIO()
-        sheet.save(buf, format="JPEG", quality=quality)
-        data = buf.getvalue()
-        if len(data) <= MAX_BYTES:
+    return encode_jpeg_under(sheet, MAX_BYTES)
+
+
+def encode_jpeg_under(img: Image.Image, max_bytes: int, quality: int = 85) -> bytes:
+    """JPEG-encode `img`, lowering quality and then resolution until the
+    result fits in `max_bytes` (vision-model context is the budget)."""
+    img = img.convert("RGB")
+    while True:
+        for q in range(quality, 29, -10):
+            buf = io.BytesIO()
+            img.save(buf, format="JPEG", quality=q, optimize=True)
+            data = buf.getvalue()
+            if len(data) <= max_bytes:
+                return data
+        if max(img.size) <= 64:
             return data
-        quality -= 10
-    return data
+        img = img.resize((max(1, int(img.width * 0.8)), max(1, int(img.height * 0.8))), Image.LANCZOS)

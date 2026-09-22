@@ -6,7 +6,7 @@ files outside of it (except the read-only photo roots the user registers).
 from __future__ import annotations
 
 import os
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 
 SERVICE_SLUG = "argus-hoard"

@@ -7,8 +7,10 @@ job. If Ollama is unreachable we say so instead of failing silently.
 from __future__ import annotations
 
 import base64
+import io
 from dataclasses import dataclass
 from pathlib import Path
+from urllib.parse import urlparse
 
 import httpx
 
@@ -24,16 +26,37 @@ class CaptionResult:
     error: str | None = None
 
 
+MAX_SIDE = 1024  # vision models downscale anyway; do not ship a 16 MP original
+
+
+def _encode_for_model(image_path: Path) -> str:
+    from PIL import Image, ImageOps
+
+    with Image.open(image_path) as img:
+        try:
+            img.draft("RGB", (MAX_SIDE, MAX_SIDE))
+        except Exception:  # noqa: BLE001
+            pass
+        img = ImageOps.exif_transpose(img).convert("RGB")
+        img.thumbnail((MAX_SIDE, MAX_SIDE))
+        buf = io.BytesIO()
+        img.save(buf, format="JPEG", quality=85)
+    return base64.b64encode(buf.getvalue()).decode("ascii")
+
+
 class OllamaCaptioner:
-    def __init__(self, base_url: str = DEFAULT_BASE_URL, model: str = DEFAULT_MODEL, timeout: float = 60.0):
+    def __init__(self, base_url: str = DEFAULT_BASE_URL, model: str = DEFAULT_MODEL, timeout: float = 120.0):
         self.base_url = base_url.rstrip("/")
         self.model = model
         self.timeout = timeout
+        host = urlparse(self.base_url).hostname or ""
+        # a local Ollama must not be routed through a system proxy
+        self._trust_env = host not in ("127.0.0.1", "localhost", "::1")
 
     def test_connection(self, client: httpx.Client | None = None) -> CaptionResult:
         try:
             own_client = client is None
-            c = client or httpx.Client(timeout=5.0)
+            c = client or httpx.Client(timeout=5.0, trust_env=self._trust_env)
             try:
                 resp = c.get(f"{self.base_url}/api/tags")
                 resp.raise_for_status()
@@ -49,7 +72,7 @@ class OllamaCaptioner:
 
     def caption(self, image_path: Path, client: httpx.Client | None = None) -> CaptionResult:
         try:
-            data = base64.b64encode(image_path.read_bytes()).decode("ascii")
+            data = _encode_for_model(image_path)
             payload = {
                 "model": self.model,
                 "prompt": PROMPT,
@@ -57,7 +80,7 @@ class OllamaCaptioner:
                 "stream": False,
             }
             own_client = client is None
-            c = client or httpx.Client(timeout=self.timeout)
+            c = client or httpx.Client(timeout=self.timeout, trust_env=self._trust_env)
             try:
                 resp = c.post(f"{self.base_url}/api/generate", json=payload)
                 resp.raise_for_status()
@@ -70,5 +93,5 @@ class OllamaCaptioner:
                     c.close()
         except httpx.HTTPError as exc:
             return CaptionResult(ok=False, error=f"Ollama request failed: {exc}")
-        except OSError as exc:
+        except (OSError, ValueError) as exc:
             return CaptionResult(ok=False, error=f"could not read image: {exc}")
