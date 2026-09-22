@@ -115,9 +115,10 @@ if (-not (Test-Path (Join-Path $RepoRoot "frontend\dist\index.html"))) {
     Write-Host "Building the interface..."
     Push-Location (Join-Path $RepoRoot "frontend")
     try {
-        & npm ci
+        # npm.cmd, not npm: the npm.ps1 shim misreads "& npm ci" as "pm ci".
+        & npm.cmd ci --no-audit --no-fund
         if ($LASTEXITCODE -ne 0) { Fail "npm ci failed" }
-        & npm run build
+        & npm.cmd run build
         if ($LASTEXITCODE -ne 0) { Fail "npm run build failed" }
     } finally {
         Pop-Location
