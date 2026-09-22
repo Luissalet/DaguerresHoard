@@ -125,3 +125,20 @@ def test_link_captioner_test_connection_reflects_resolution(tmp_path):
         assert LinkCaptioner(link).test_connection().ok
     finally:
         link.sync.close()
+
+
+def test_link_captioner_follows_a_link_provider(tmp_path):
+    """Library passes a provider so a running batch picks up the Link a
+    Re-check or settings change swapped in, instead of the retired one."""
+    img = make_image(tmp_path / "photo.jpg")
+    first = _link_with_explicit_vision(lambda r: httpx.Response(200, json={"message": {"content": "first"}}))
+    second = _link_with_explicit_vision(lambda r: httpx.Response(200, json={"message": {"content": "second"}}))
+    current = {"link": first}
+    captioner = LinkCaptioner(lambda: current["link"])
+    try:
+        assert captioner.caption(img).caption == "first"
+        current["link"] = second
+        assert captioner.caption(img).caption == "second"
+    finally:
+        first.sync.close()
+        second.sync.close()

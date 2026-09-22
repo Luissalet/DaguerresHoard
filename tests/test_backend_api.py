@@ -140,3 +140,21 @@ def test_translate_search_can_be_disabled(app_and_client, monkeypatch):
 def test_settings_get_reports_translate_search_default_on(app_and_client):
     app, client = app_and_client
     assert client.get("/api/settings").json()["translate_search"] is True
+
+
+def test_get_backend_reports_saved_overrides_but_never_the_token(app_and_client):
+    app, client = app_and_client
+    client.put(
+        "/api/backend/config",
+        json={"faustus_url": "http://127.0.0.1:7000", "faustus_token": "ody_hidden", "llm_model": "qwen3"},
+    )
+    resp = client.get("/api/backend")
+    body = resp.json()
+    assert "ody_hidden" not in resp.text
+    assert body["overrides"]["faustus_url"] == "http://127.0.0.1:7000"
+    assert body["overrides"]["llm"] == {"url": "", "model": "qwen3"}
+    assert body["config_error"] is None
+    # An empty string clears a saved override, including the token.
+    body = client.put("/api/backend/config", json={"faustus_url": "", "faustus_token": ""}).json()
+    assert body["overrides"]["faustus_url"] == ""
+    assert body["token_set"] is False

@@ -148,10 +148,7 @@ class Library:
         return self._conns.get()
 
     def close(self) -> None:
-        try:
-            self.backend.link.sync.close()
-        except Exception:  # noqa: BLE001 - best effort; a daemon thread never blocks shutdown
-            pass
+        self.backend.close()
         self._conns.close_all()
 
     @property
@@ -910,7 +907,7 @@ class Library:
         """The seam tests monkeypatch. Captions through Hoard Link's `vision`
         capability -- see argus_hoard/backend.py for how the legacy Ollama
         URL/model settings become that capability's explicit override."""
-        return LinkCaptioner(self.backend.link)
+        return LinkCaptioner(lambda: self.backend.link)
 
     def start_caption_batch(self, limit: int = 500) -> str:
         limit = max(1, min(int(limit), 5000))

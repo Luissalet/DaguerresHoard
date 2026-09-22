@@ -18,6 +18,7 @@ from __future__ import annotations
 import json
 import os
 import sqlite3
+import threading
 from pathlib import Path
 from typing import Any
 
@@ -29,6 +30,11 @@ from .hoard_link import CapabilityConfig, Link, LinkConfig
 # Settings "Models" panel and the override endpoint agree on what exists.
 USED_CAPABILITIES = ("vision", "llm")
 
+# A replaced Link is closed only after this grace period, so a call already
+# in flight on it (a chat times out after 120 s, a wait_idle round after
+# 30 s) finishes normally instead of hanging on a stopped event loop.
+RETIRE_GRACE_S = 180.0
+
 
 class Backend:
     """Everything `/api/backend` and Settings needs, in one place."""
@@ -37,19 +43,33 @@ class Backend:
         self.data_dir = Path(data_dir)
         self.config_path = self.data_dir / "backend.json"
         self._conn = conn
+        self._retiring: dict[threading.Timer, Link] = {}
+        self._retire_lock = threading.Lock()
         self.link = self._build_link()
 
     # -- config ----------------------------------------------------- #
     def _raw_config(self) -> dict[str, Any]:
         if self.config_path.is_file():
             try:
-                return json.loads(self.config_path.read_text(encoding="utf-8-sig"))
+                raw = json.loads(self.config_path.read_text(encoding="utf-8-sig"))
             except (json.JSONDecodeError, OSError):
                 return {}
+            return raw if isinstance(raw, dict) else {}
         return {}
 
     def _build_link(self) -> Link:
-        config = LinkConfig.load(self.config_path, env=os.environ, app="argus")
+        try:
+            config = LinkConfig.load(self.config_path, env=os.environ, app="argus")
+            self.config_error: str | None = None
+        except ValueError as exc:
+            # A hand-edited backend.json with a typo must not stop the app
+            # from starting (everything but captions/translation works
+            # without a model): fall back to env + probing and say why.
+            config = LinkConfig.load(None, env=os.environ, app="argus")
+            self.config_error = (
+                f"backend.json is not usable ({exc}); using automatic detection "
+                "until it is fixed."
+            )
         vision_cc = config.capability("vision")
         if not vision_cc.explicit:
             # Only a *saved* legacy setting counts as an explicit override
@@ -62,7 +82,9 @@ class Backend:
             if base_url:
                 config.capabilities["vision"] = CapabilityConfig(
                     url=base_url,
-                    model=model or DEFAULT_MODEL,
+                    # A model saved in the Shared models panel is newer
+                    # than the legacy field, so it wins.
+                    model=vision_cc.model or model or DEFAULT_MODEL,
                     api="ollama",
                     provider="ollama",
                     allow_load=vision_cc.allow_load,
@@ -73,8 +95,34 @@ class Backend:
         """Rebuild the Link from the current backend.json + settings table.
 
         Also serves as "clear the probe cache" (POST /api/backend/recheck):
-        a fresh Link starts with an empty probe cache."""
-        self.link = self._build_link()
+        a fresh Link starts with an empty probe cache.
+
+        Each Link's sync facade owns a thread, an event loop and an HTTP
+        client, so the replaced one is closed after RETIRE_GRACE_S instead
+        of leaking on every Re-check."""
+        old, self.link = self.link, self._build_link()
+        timer = threading.Timer(RETIRE_GRACE_S, self._retire, args=(old,))
+        timer.daemon = True
+        with self._retire_lock:
+            self._retiring[timer] = old
+        timer.start()
+
+    def _retire(self, link: Link) -> None:
+        with self._retire_lock:
+            for timer, pending in list(self._retiring.items()):
+                if pending is link:
+                    del self._retiring[timer]
+        _close_quietly(link)
+
+    def close(self) -> None:
+        """Shutdown: close the current Link and every one still retiring."""
+        with self._retire_lock:
+            pending = list(self._retiring.items())
+            self._retiring.clear()
+        for timer, link in pending:
+            timer.cancel()
+            _close_quietly(link)
+        _close_quietly(self.link)
 
     def set_overrides(
         self,
@@ -119,7 +167,30 @@ class Backend:
     def token_set(self) -> bool:
         return bool((self._raw_config().get("faustus") or {}).get("token"))
 
+    def saved_overrides(self) -> dict[str, Any]:
+        """What the Settings form shows as already saved -- never the token."""
+        raw = self._raw_config()
+        caps = raw.get("capabilities") or {}
+        out: dict[str, Any] = {"faustus_url": (raw.get("faustus") or {}).get("url") or ""}
+        for cap in USED_CAPABILITIES:
+            entry = caps.get(cap) or {}
+            out[cap] = {"url": entry.get("url") or "", "model": entry.get("model") or ""}
+        return out
+
     # -- status ------------------------------------------------------ #
     def status(self) -> dict[str, Any]:
         caps = self.link.sync.status()  # {capability: Resolution.to_dict()}
-        return {**caps, "token_set": self.token_set(), "used_capabilities": list(USED_CAPABILITIES)}
+        return {
+            **caps,
+            "token_set": self.token_set(),
+            "overrides": self.saved_overrides(),
+            "config_error": self.config_error,
+            "used_capabilities": list(USED_CAPABILITIES),
+        }
+
+
+def _close_quietly(link: Link) -> None:
+    try:
+        link.sync.close()
+    except Exception:  # noqa: BLE001 - best effort; never blocks a reload or shutdown
+        pass

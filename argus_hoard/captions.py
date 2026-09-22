@@ -22,7 +22,7 @@ import base64
 import io
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Callable
 from urllib.parse import urlparse
 
 import httpx
@@ -133,8 +133,14 @@ class LinkCaptioner:
     connection to one hard-coded Ollama address.
     """
 
-    def __init__(self, link: "Link"):
-        self.link = link
+    def __init__(self, link: "Link | Callable[[], Link]"):
+        # A callable is re-read on every call, so a long batch follows a
+        # Re-check / settings change instead of pinning the replaced Link.
+        self._link = link
+
+    @property
+    def link(self) -> "Link":
+        return self._link() if callable(self._link) else self._link
 
     def test_connection(self) -> CaptionResult:
         from .hoard_link import BackendError, Unavailable  # noqa: F401 (documents the pair)
