@@ -54,7 +54,8 @@ siempre el mismo: primero un ajuste manual guardado en Ajustes, luego un
 Faustus en marcha, luego un servidor local Ollama / llama.cpp / compatible con OpenAI
 que ya esté sirviendo un modelo adecuado -- así Argos nunca le pide a la
 GPU que cargue una segunda copia. Si nada se resuelve, ambas funciones lo
-dicen claramente y se quedan desactivadas; el resto de Argos (indexado,
+dicen claramente y se quedan desactivadas (sus botones aparecen
+deshabilitados con el motivo); el resto de Argos (indexado,
 búsqueda, duplicados, cronología, lugares, álbumes) funciona sin conexión
 y sin ningún modelo. Más detalle en
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#shared-model-backend-hoard-link).
@@ -158,7 +159,7 @@ hilos e índice de duplicados: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 ## Tests
 
 ```powershell
-.venv\Scripts\python -m pytest -q          # 106 tests, unos 15-20 s, sin red
+.venv\Scripts\python -m pytest -q          # 116 tests, unos 15-25 s, sin red
 .venv\Scripts\python -m pytest -q -m model # 1 test opcional con el modelo CLIP real (lo descarga si falta)
 cd frontend; npm run build                 # TypeScript estricto
 ```
@@ -188,7 +189,9 @@ los ha guardado de verdad; los ajustes manuales se guardan sin devolver
 nunca el token de Faustus); las descripciones a través de
 `Link.chat(capability="vision")` contra un servidor simulado, resuelto o
 no; la pausa de buen ciudadano `wait_idle("vision")` en un lote de
-descripciones; el detector de idioma no inglés; y la separación entre
+descripciones y su aplazamiento si el modelo sigue ocupado; que un `Link`
+sustituido se cierre en vez de dejar su hilo abierto; un `backend.json`
+roto; el detector de idioma no inglés; y la separación entre
 `/api/search` y `/api/agent/photos_search` (solo la ruta de la interfaz
 traduce). El test del
 modelo indexa las escenas de demostración con CLIP real y comprueba que

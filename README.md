@@ -53,7 +53,7 @@ Resolution order is always the same: an explicit override set in Settings,
 then a running Faustus, then a loopback Ollama / llama.cpp / OpenAI-compatible
 server -- whichever is already serving a fitting model, so Argus never
 asks a GPU to load a second copy. Both features simply say so and stay off
-when nothing resolves; the rest of Argus (indexing, search, duplicates,
+when nothing resolves (their buttons are disabled with the reason); the rest of Argus (indexing, search, duplicates,
 timeline, places, albums) works fully offline with no model at all. See
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#shared-model-backend-hoard-link).
 
@@ -154,7 +154,7 @@ index are described in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 ## Tests
 
 ```powershell
-.venv\Scripts\python -m pytest -q          # 106 tests, about 15-20 s, no network
+.venv\Scripts\python -m pytest -q          # 116 tests, about 15-25 s, no network
 .venv\Scripts\python -m pytest -q -m model # 1 opt-in test with the real CLIP model (downloads it if missing)
 cd frontend; npm run build                 # TypeScript strict
 ```
@@ -177,7 +177,9 @@ Also: the shared-backend resolver (legacy Ollama settings become the
 `vision` capability's explicit override only once actually saved; manual
 overrides persist without ever returning the Faustus token); captioning
 through `Link.chat(capability="vision")` against a mocked server, resolved
-or not; the good-citizen `wait_idle("vision")` pause in a caption batch;
+or not; the good-citizen `wait_idle("vision")` pause in a caption batch and its
+postponement when the model stays busy; retiring a replaced `Link`
+instead of leaking its thread; a broken `backend.json`;
 the non-English query detector; and the `/api/search` vs
 `/api/agent/photos_search` split (only the UI path ever translates). The
 model test indexes the demo scenes with real CLIP and checks that four

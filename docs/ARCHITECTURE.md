@@ -182,9 +182,12 @@ wrapping `self.backend.link`. It calls
 served by whatever resolves: the legacy/explicit Ollama address, a running
 Faustus, or a loopback probe -- never a private, Ollama-only connection.
 `start_caption_batch` calls `link.sync.wait_idle("vision", max_wait_s=30)`
-before every photo (up to ~10 minutes of polling, then it captions anyway)
-so a background batch yields to whatever the owner is doing with the
-shared model instead of racing it.
+before every photo, so a background batch yields to whatever the owner is
+doing with the shared model instead of racing it; if the model stays busy
+for 20 rounds (~10 minutes) the batch postpones -- it stops, keeps what it
+already captioned and reports the rest as `postponed` in its stats and job
+message. The lightbox button and `photos_describe(caption=true)` are
+foreground calls and never wait.
 
 `Library.search_translated` (used only by the UI's `/api/search`, never
 by `/api/agent/photos_search` -- the MCP tool's docstring tells the agent
@@ -195,8 +198,19 @@ capability="llm")`. `Unavailable`/`BackendError` fall back silently to
 searching with the original text and surface a `translate_error` field;
 nothing ever blocks a search on the shared model being absent.
 
+`Backend.reload()` (Re-check, saving overrides or the legacy Ollama
+fields) builds a fresh `Link` -- an empty probe cache -- and closes the
+replaced one after a 180 s grace period, longer than a chat call's
+timeout, so an in-flight caption or translation finishes; each `Link`'s
+sync facade owns a thread, an event loop and an HTTP client, so they are
+never left behind. `LinkCaptioner` reads the current `Link` on every call,
+so a running batch follows a reload. A `backend.json` that is not valid
+JSON or has a malformed key does not stop the app: it falls back to
+environment + automatic detection and reports `config_error`.
+
 `GET /api/backend` returns `Backend.status()` (Hoard Link's `Resolution`
-for all eight capabilities, `token_set`, `used_capabilities`) plus
+for all eight capabilities, `token_set`, the saved `overrides` without the
+token, `config_error`, `used_capabilities`) plus
 `image_search` (the local CLIP embedder's name and whether it is the real
 model or the colour-only fallback) -- CLIP is never shared: it is not a
 chat/embeddings-text model any of Hoard Link's capabilities cover.
