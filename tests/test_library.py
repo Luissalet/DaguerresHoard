@@ -327,6 +327,23 @@ def test_search_empty_result_says_filters_excluded_everything(library, tmp_path)
     assert "no photo passes these filters" in result["note"]
 
 
+def test_empty_result_names_the_filter_to_relax(library, tmp_path):
+    # A10 (re-walk, UC5): orientation="portrait" + min_megapixels=2 against
+    # 1.9 MP portraits said only "no photo passes these filters"; the model
+    # had to guess which one to relax.
+    photos_dir = tmp_path / "photos"
+    make_image(photos_dir / "tall.jpg", size=(240, 320))
+    make_image(photos_dir / "wide.jpg", size=(320, 240))
+    _index_sync(library, photos_dir)
+
+    filters = {"orientation": "portrait", "min_megapixels": 2}
+    result = library.search("portrait photo of a person", filters=filters)
+    assert result["indexed_total"] == 0
+    assert "without min_megapixels=2 alone, 1 would" in result["note"]
+    listing = library.search(None, filters=filters)
+    assert "without min_megapixels=2 alone, 1 would" in listing["note"]
+
+
 def test_album_name_matches_accent_insensitively(library, tmp_path):
     # A8 (live report): "Rodaje La Estación" and "Rodaje La Estacion" became two
     # albums because COLLATE NOCASE does not fold accents.

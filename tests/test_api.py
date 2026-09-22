@@ -110,7 +110,7 @@ def test_index_and_agent_search_flow(client, tmp_path):
     )
     assert search_resp.status_code == 200
     body = search_resp.json()
-    assert body["count"] >= 1
+    assert body["returned"] >= 1
     assert body["results"][0]["path"].endswith("red.jpg")
     assert body["contact_sheet_jpeg_base64"]
 
@@ -142,6 +142,30 @@ def test_index_and_agent_search_flow(client, tmp_path):
     assert "thumbnail_url" in json.dumps(ui_search_resp.json())
 
 
+def test_agent_search_has_no_bare_count_and_ui_search_gets_note_codes(client, tmp_path):
+    # B2 (re-walk): `count` (every ranked photo) was kept next to
+    # `returned`/`indexed_total`, so a default agent search still said
+    # count=262 -- the number a model quoted as "I found 87 photos".
+    # A9 (re-walk): the UI showed the agent's English notes verbatim in
+    # the Spanish UI; it now gets stable codes to translate instead.
+    photos_dir = tmp_path / "srcphotos"
+    make_image(photos_dir / "red.jpg", color=(220, 30, 30))
+    make_image(photos_dir / "green.jpg", color=(30, 200, 30))
+    root_id = client.post("/api/roots", json={"path": str(photos_dir)}).json()["id"]
+    _wait_job(client, client.post("/api/scan", json={"root_id": root_id}).json()["job_id"])
+
+    agent = client.post("/api/agent/photos_search", json={"query": "a red square", "limit": 1}).json()
+    assert "count" not in agent
+    assert agent["returned"] == 1 and agent["indexed_total"] == 2
+    assert "note_codes" not in agent and agent["note"]
+    similar = client.post("/api/agent/photos_similar", json={"photo_id": agent["results"][0]["id"]}).json()
+    assert "count" not in similar and "note_codes" not in similar
+
+    ui = client.post("/api/search", json={"query": "a cat", "limit": 5}).json()
+    assert "fallback_model" in ui["note_codes"]
+    assert "no_colour_word" in ui["note_codes"]
+
+
 def test_agent_duplicates_are_summarised_for_a_small_context(client, tmp_path):
     # A4 (live report): photos_duplicates(kind="near") at the default
     # limit=10 returned ~8.6k tokens because every member of every group
@@ -171,6 +195,12 @@ def test_agent_duplicates_are_summarised_for_a_small_context(client, tmp_path):
 
     ui_resp = client.post("/api/duplicates", json={"kind": "exact", "limit": 5}).json()["groups"][0]
     assert "photos" in ui_resp and len(ui_resp["photos"]) == 3  # UI keeps full detail for rendering
+
+    # A3 (re-walk): near groups can join different photos; the agent is
+    # told the total is an upper bound, exact groups need no such caveat.
+    near = client.post("/api/agent/photos_duplicates", json={"kind": "near"}).json()
+    assert "upper bound" in near["note"]
+    assert "note" not in agent_resp.json()
 
 
 def test_places_endpoint_groups_by_country_and_city(client, tmp_path, monkeypatch):

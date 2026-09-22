@@ -698,10 +698,12 @@ class Library:
         for embedding-based results, the active embedder name plus its
         caveats (fallback model, or photos not yet embedded)."""
         notes = [payload.pop("note")] if "note" in payload else []
+        codes: list[str] = payload.pop("note_codes", [])
         if embedding_used:
             payload["embedder"] = self.embedder.name
             if isinstance(self.embedder, FakeEmbedder):
                 notes.append(FAKE_EMBEDDER_NOTE)
+                codes.append("fallback_model")
             else:
                 stale = self.conn.execute(
                     "SELECT COUNT(*) c FROM photos WHERE missing = 0 AND "
@@ -709,12 +711,18 @@ class Library:
                     (self.embedder.name,),
                 ).fetchone()["c"]
                 if stale:
+                    codes.append("stale_photos")
                     notes.append(
                         f"{stale} photos are not analysed with the current model yet (indexing may be "
                         "running); they are missing from these results. Check photos_library for progress."
                     )
         if notes:
             payload["note"] = " ".join(notes)
+        if codes:
+            # re-walk: the UI showed these English, agent-facing notes as-is
+            # in the Spanish UI; it renders its own translated text from the
+            # codes, and agent routes drop them (see api._agent_view).
+            payload["note_codes"] = codes
         return payload
 
     def _relevance(self, score: float, best: float, color_query: bool = True) -> str:
@@ -765,12 +773,14 @@ class Library:
         # A9: an agent forgetting to translate a Spanish/French/... query
         # used to get no hint at all -- CLIP matches English far better.
         notes: list[str] = []
+        codes: list[str] = []
         if not isinstance(self.embedder, FakeEmbedder):
             lang = detect_non_english(query)
             if lang:
+                codes.append("translate_query")
                 notes.append(
-                    f"query looks {lang}; CLIP matches English far better than other languages, "
-                    "translate it and retry"
+                    f"query looks {_LANGUAGE_NAMES.get(lang, lang)}; CLIP matches English far better "
+                    "than other languages, translate it and retry"
                 )
         rows = self._embedded_rows(filters)
         if not rows:
@@ -783,15 +793,18 @@ class Library:
                 (self.embedder.name,),
             ).fetchone()["c"]
             if filters and total_any:
-                notes.append("no photo passes these filters")
+                codes.append("filters_exclude_all")
+                notes.append(self._filters_exclude_all_note(filters))
             if notes:
                 payload["note"] = " ".join(notes)
+                payload["note_codes"] = codes
             return self._agent_notes(payload)
 
         color_query = self.embedder.has_color_word(query) if isinstance(self.embedder, FakeEmbedder) else True
         if isinstance(self.embedder, FakeEmbedder) and not color_query:
             # B3 (live report): a query with no colour word used to get a
             # random-but-deterministic vector that scored like a real match.
+            codes.append("no_colour_word")
             notes.append("this query has no colour word; the fallback ranking order is arbitrary")
         qvec = self.embedder.embed_text(query)
         row_by_embed = {r["embed_row"]: r for r in rows}
@@ -854,17 +867,40 @@ class Library:
             payload["limit_clamped"] = True
             payload["requested_limit"] = requested_limit
         if indexed_total == 0 and min_score is not None:
+            codes.append("min_score_excludes_all")
             notes.append(f"no result scores at or above min_score={min_score}; lower it or drop it")
         elif results and not isinstance(self.embedder, FakeEmbedder) and self._relevance(best, best) != "strong":
+            codes.append("no_strong_match")
             notes.append("no strong match; the best result is only medium/weak -- say how sure you are")
         if notes:
             payload["note"] = " ".join(notes)
+            payload["note_codes"] = codes
         payload["contact_sheet_jpeg_base64"] = (
             self._contact_sheet_for([r for _, _, r in window]) if contact_sheet and window else None
         )
         if contact_sheet and len(window) > SHEET_MAX_ITEMS:
             payload["contact_sheet_covers"] = SHEET_MAX_ITEMS
         return self._agent_notes(payload)
+
+    def _filters_exclude_all_note(self, filters: dict) -> str:
+        """A10 (re-walk): "no photo passes these filters" left a small model
+        guessing which filter to relax (UC5: orientation="portrait",
+        min_megapixels=2 against 1.9 MP portraits). Name the one filter
+        whose removal alone brings back the most photos -- one COUNT per
+        filter, and there are at most ten."""
+        note = "no photo passes these filters"
+        if len(filters) < 2:
+            return note
+        best_key, best_n = None, 0
+        for key in filters:
+            rest = {k: v for k, v in filters.items() if k != key}
+            where, params = self._where(rest)
+            n = self.conn.execute(f"SELECT COUNT(*) c FROM photos WHERE {where}", params).fetchone()["c"]
+            if n > best_n:
+                best_key, best_n = key, n
+        if best_key is None:
+            return note
+        return f"{note}; without {best_key}={filters[best_key]!r} alone, {best_n} would"
 
     def _filtered_listing(self, filters: dict, limit: int, offset: int, contact_sheet: bool) -> dict:
         """search() with no query and only filters (B5): a plain,
@@ -889,8 +925,9 @@ class Library:
             "count": total,
             "results": results,
             "has_more": has_more,
-            "note": "no photo passes these filters" if total == 0
+            "note": self._filters_exclude_all_note(filters) if total == 0
             else "no text query given: every matching photo, newest first",
+            "note_codes": ["filters_exclude_all" if total == 0 else "filtered_listing"],
         }
         if has_more:
             payload["next_offset"] = offset + len(results)
@@ -1359,7 +1396,7 @@ class Library:
                     "reclaimable_bytes": reclaim(g),
                     "photos": [self._public(by_id[pid]) for pid in keeper_first],
                 })
-        return {
+        result = {
             "kind": kind,
             "count": len(out),
             "total_groups": len(groups),
@@ -1367,6 +1404,16 @@ class Library:
             "reclaimable_bytes_total": sum(reclaim(g) for g in groups),
             "groups": out,
         }
+        if kind == "near":
+            # A3 (re-walk): near groups can join different photos (six
+            # different scans of one album, several receipts), so the total
+            # is an upper bound, not space that is safe to take.
+            result["note"] = (
+                "near duplicates are look-alikes, not proven copies: a group can hold different "
+                "photos (scans, receipts, a burst). reclaimable_bytes_total is an upper bound; "
+                "tell the owner to check each group before deleting anything"
+            )
+        return result
 
     def timeline(self, year: int | None = None, samples: int = 0) -> dict:
         if year is not None:

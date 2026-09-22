@@ -459,14 +459,14 @@ def create_app(data_dir: Path, static_dir: Path | None = None, port: int = 8814)
     # -- agent tools (mirror the MCP tools one to one, audited) -------------- #
     @app.post("/api/agent/photos_search")
     def agent_search(body: SearchBody):
-        return _strip_agent_urls(run(
+        return _agent_ranked(run(
             lambda: lib.search(body.query, body.filters, body.limit, body.contact_sheet, body.offset, body.min_score),
             tool="photos_search", args=body.model_dump(),
         ))
 
     @app.post("/api/agent/photos_similar")
     def agent_similar(body: SimilarBody):
-        return _strip_agent_urls(run(
+        return _agent_ranked(run(
             lambda: lib.similar(
                 body.photo_id, body.path, body.limit, body.contact_sheet, body.offset, body.min_score
             ),
@@ -540,15 +540,30 @@ def create_app(data_dir: Path, static_dir: Path | None = None, port: int = 8814)
     return app
 
 
+_UI_ONLY_KEYS = {"thumbnail_url", "note_codes"}
+
+
 def _strip_agent_urls(obj: Any) -> Any:
     """A4 (live report): every agent result carried a relative
     `thumbnail_url` (~60 characters an agent cannot fetch or use). UI
-    routes keep it (rendering needs it); agent routes never do."""
+    routes keep it (rendering needs it); agent routes never do. The same
+    goes for `note_codes`, which only let the UI translate the `note`."""
     if isinstance(obj, dict):
-        return {k: _strip_agent_urls(v) for k, v in obj.items() if k != "thumbnail_url"}
+        return {k: _strip_agent_urls(v) for k, v in obj.items() if k not in _UI_ONLY_KEYS}
     if isinstance(obj, list):
         return [_strip_agent_urls(v) for v in obj]
     return obj
+
+
+def _agent_ranked(payload: Any) -> Any:
+    """B2 (re-walk): search/similar kept `count` next to `returned` and
+    `indexed_total` "for older callers", so a default agent search still
+    said count=262 -- the very number a model quoted as "I found 87
+    photos". No agent tool documents `count`; agent routes drop it."""
+    payload = _strip_agent_urls(payload)
+    if isinstance(payload, dict):
+        payload.pop("count", None)
+    return payload
 
 
 def _args_summary(args: dict | None) -> str:

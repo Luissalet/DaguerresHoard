@@ -58,7 +58,7 @@ system proxy settings for these calls.
 
 | tool | read-only | idempotent | purpose |
 | --- | --- | --- | --- |
-| `photos_search` | yes | yes | text (English) -> photos + contact sheet |
+| `photos_search` | yes | yes | text (English) -> photos; contact sheet only on request |
 | `photos_similar` | yes | yes | photos that look like a given photo |
 | `photos_show` | yes | yes | up to 4 images for close inspection |
 | `photos_describe` | yes* | yes | EXIF, place, path; optional local caption |
@@ -98,7 +98,10 @@ most 20 cells, at most 200 KB). `indexed_total` is every ranked photo that
 passed the filters, not a match count. `relevance` is `strong`/`medium`/
 `weak`, calibrated per embedder (the colour fallback never returns
 `strong`); a top-level `note` flags things like no strong match, a
-non-English query, or filters that excluded every photo. When `query` is
+non-English query, or filters that excluded every photo (naming the one
+filter whose removal alone brings photos back, e.g. `without
+min_megapixels=2 alone, 40 would`). There is no bare `count` in agent
+results: a model quoted it as "I found 87 photos". When `query` is
 empty and filters are given, the result is a plain chronological listing
 (`mode: "filtered_listing"`, no `score`/`relevance`) instead of a ranked
 search. When captions exist, ranking is hybrid: 0.8 x normalised cosine +
@@ -144,7 +147,7 @@ server, or the app's own configured Ollama override -- see the README's
 
 `kind` (`"exact"` default, or `"near"`), `limit` (1-50 groups, default
 10), `include_ids` (default false). Returns `{kind, count, total_groups,
-has_more, reclaimable_bytes_total, groups: [{kind, keeper_id, keeper_path,
+has_more, reclaimable_bytes_total, note?, groups: [{kind, keeper_id, keeper_path,
 count, max_distance, reclaimable_bytes, other_paths (up to 3),
 more_paths?, photo_ids? (only with include_ids=true)}]}`, groups with the
 most wasted space first. Each group is summarised (not every member's
@@ -155,6 +158,9 @@ Hamming distance 6, grouped with union-find (pure exact-copy groups are
 left to `kind="exact"`). Keeper: largest resolution, then oldest
 `taken_at`, then earliest file time, away from a folder that looks like a
 backup/copy/WhatsApp, then shortest path. Argus never deletes anything.
+A near group can join different photos that look alike (several scans of
+one album, receipts), so `kind="near"` carries a `note` saying its bytes
+are an upper bound and the owner must check each group before deleting.
 
 ## photos_timeline
 

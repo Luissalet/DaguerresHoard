@@ -125,33 +125,21 @@ def photos_search(
 ) -> list:
     """Find the owner's photos by what they show; write `query` in English.
 
-    Use it whenever a photo is described by content, place or time ("the dog
-    on the beach", "whiteboard photo from March"). Translate the query to
-    English first (the image model matches English far better). Leave
-    `query` empty when the owner only means "everything from that trip":
-    with filters and no query you get a plain chronological listing instead
-    of a ranked search (no `relevance`/`score`).
-
-    Returns {returned, indexed_total, has_more, next_offset?, results:[{n,
-    id, path, taken_at, place, width, height, score, relevance}]} best first.
-    `indexed_total` is every ranked photo that passed the filters, not "N
-    matches" -- ranking is by similarity, never a yes/no filter. Trust
-    `relevance` (strong/medium/weak) over the raw `score`, and read a
-    top-level `note` when present (e.g. no strong match, or the query looks
-    non-English). Set `contact_sheet=true` only if you can see images (a
-    multimodal turn); it attaches one JPEG whose cell numbers are the `n`
-    values (sheet shows at most 20) -- a text-only model must never set it.
-
-    Optional filters, combined with AND: taken_after / taken_before (ISO
-    date, inclusive, e.g. 2024-03-31), year, month (1-12), place (city,
-    parent municipality or country substring), folder (path substring),
-    camera (make/model substring), orientation, min_megapixels, has_gps.
-    `limit`: 1-50, default 12 (a larger value is clamped and the result says
-    so). `offset`: page past the first `limit` results. `min_score`: drop
-    results below this cosine score.
-    Keywords: search photos, find pictures, find image, photo of, search
-    images, every photo of, all photos from, buscar fotos, busca la foto,
-    encuentra fotos, fotos de, dónde está la foto, foto del, todas las fotos
+    Describe the photo ("dog on a beach", "whiteboard") and put time and
+    place in the filters. Leave `query` out for "every photo of that trip":
+    filters alone give a plain listing, newest first.
+    Returns {returned, indexed_total, has_more, next_offset?, note?,
+    results:[{n, id, path, taken_at, place, width, height, score,
+    relevance}]}. Results are ranked, not matched: `indexed_total` counts
+    every photo that passed the filters, never "N matches". Judge each hit
+    by `relevance` (strong/medium/weak) and read `note`.
+    Filters (AND): taken_after/taken_before (ISO date, inclusive), year,
+    month (1-12), place (city, parent city or country), folder and camera
+    (substrings), orientation, min_megapixels, has_gps. limit 1-50 (default
+    12); page on with offset=next_offset. contact_sheet=true attaches one
+    numbered JPEG: only if you can see images, never in a text-only turn.
+    Keywords: search photos, find pictures, photo of, all photos from,
+    buscar fotos, busca la foto, fotos de, todas las fotos
     """
     filters = {
         k: v
@@ -249,8 +237,10 @@ def photos_describe(photo_id: str, caption: bool = False) -> list:
 def photos_duplicates(kind: Literal["exact", "near"] = "exact", limit: int = 10, include_ids: bool = False) -> list:
     """Groups of duplicate photos with a suggested copy to keep. Never deletes anything.
 
-    kind="exact": byte-identical copies. kind="near": the same picture
-    resized, re-encoded or lightly edited. Groups come largest wasted space
+    kind="exact": byte-identical copies. kind="near": look-alikes (the same
+    picture resized or re-encoded, a burst) -- a near group can also join
+    different photos, so its bytes are an upper bound (read the `note`) and
+    the owner must check each group. Groups come largest wasted space
     first: {total_groups, has_more, reclaimable_bytes_total, groups:[{
     keeper_id, keeper_path, count, max_distance, reclaimable_bytes,
     other_paths (up to 3), more_paths?}]}, keeper picked by largest
