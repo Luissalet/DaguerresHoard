@@ -52,6 +52,14 @@ class Agent:
         self.failures: list[str] = []
         self.transcript: list[dict] = []
         self.tools: dict[str, dict] = {}
+        self.seen_rel: set[str] = set()
+        # the Lisbon trip: 40 photos + the 12-frame burst + 2 dog photos,
+        # 12-17 July 2024 in the camera roll (make_uxtest_photos.py); the
+        # manifest has no place, so one everyday Madrid photo from those days
+        # is counted too, and a GPS point jittered into the river can land
+        # in Trafaria (across it) with the world-cities data: allow 2.
+        self.trip_truth = {rel: sc for rel, sc in truth.items()
+                           if rel.startswith("Camera Roll/2024/07/IMG_202407") and rel[30:32] in ("12", "13", "14", "15", "16", "17")}
 
     # -- plumbing --------------------------------------------------------- #
     def scene(self, path: str | None) -> str:
@@ -88,7 +96,11 @@ class Agent:
             print(f"     error: {text[:300]}")
             return None, len(images), text
         try:
-            return json.loads(text), len(images), None
+            parsed = json.loads(text)
+            for r in parsed.get("results", []) if isinstance(parsed, dict) else []:
+                if self.root and r.get("path"):
+                    self.seen_rel.add(os.path.relpath(r["path"], self.root).replace("\\", "/"))
+            return parsed, len(images), None
         except ValueError:
             print(f"     (not JSON) {text[:200]}")
             return None, len(images), None
@@ -162,9 +174,8 @@ class Agent:
         if data:
             self.show_results(data, k=5)
             self.check(imgs == 0, "no image by default for 'orange sunsets' either")
-            self.check("count" not in data or data.get("count") == len(data.get("results", [])),
-                       f"no count larger than what was returned (count={data.get('count')}, "
-                       f"returned={len(data.get('results', []))})")
+            self.check("count" not in data,
+                       f"no bare 'count' a model can quote as 'N matches' (count={data.get('count')})")
 
     async def uc3_duplicates(self) -> None:
         print("\n== UC3: 'Faustus, how much space do the repeated photos take?' ==")
@@ -172,56 +183,67 @@ class Agent:
         if data:
             print(f"     exact: total_groups={data.get('total_groups')} reclaimable={data.get('reclaimable_bytes_total')}")
             for g in data.get("groups", [])[:3]:
-                print(f"     keeper {Path(g['photos'][0]['path']).parent.name}/{Path(g['photos'][0]['path']).name} "
-                      f"+{len(g['photos']) - 1} copies, {g.get('reclaimable_bytes')} B")
-            keepers = [g["photos"][0]["path"] for g in data.get("groups", [])]
-            self.check(all("Copia movil" not in k for k in keepers), "exact keepers are the camera-roll originals, not the backup")
+                keeper = Path(g["keeper_path"])
+                print(f"     keeper {keeper.parent.name}/{keeper.name} +{g['count'] - 1} copies, {g.get('reclaimable_bytes')} B")
+            keepers = [g["keeper_path"] for g in data.get("groups", [])]
+            self.check(bool(keepers) and all("Copia movil" not in k for k in keepers),
+                       "exact keepers are the camera-roll originals, not the backup")
+            self.check(all("photos" not in g for g in data.get("groups", [])),
+                       "groups are summarised (no full record per photo)")
         data, imgs, _ = await self.call("photos_duplicates", kind="near")
         if data:
             print(f"     near: total_groups={data.get('total_groups')} reclaimable={data.get('reclaimable_bytes_total')} "
                   f"has_more={data.get('has_more')}")
-            wa_keepers = 0
-            burst_group = None
-            for g in data.get("groups", []):
-                if "WhatsApp" in g["photos"][0]["path"]:
-                    wa_keepers += 1
-                if sum("BURST" in p["path"] for p in g["photos"]) >= 6:
-                    burst_group = g
+            if data.get("note"):
+                print(f"     note: {data['note'][:200]}")
+            groups = data.get("groups", [])
+            wa_keepers = sum("WhatsApp" in g["keeper_path"] for g in groups)
+            burst_group = next((g for g in groups if "BURST" in g["keeper_path"] and g["count"] >= 6), None)
             self.check(wa_keepers == 0, "no WhatsApp copy is suggested as the keeper")
             self.check(burst_group is not None, "the 12-frame burst shows up as one near-duplicate group")
             if burst_group:
-                print(f"     burst group: {len(burst_group['photos'])} photos, max_distance={burst_group.get('max_distance')}")
+                print(f"     burst group: {burst_group['count']} photos, max_distance={burst_group.get('max_distance')}")
+            self.check("upper bound" in (data.get("note") or ""),
+                       "near totals are called an upper bound, not space that is safe to free")
 
     async def uc4_album(self) -> None:
         print("\n== UC4: 'Faustus, make an album \"Lisboa 2024\" with every photo of the July 2024 Lisbon trip' ==")
+        print("  (no query: the owner means everything from the trip, so filters alone)")
         ids: list[str] = []
-        data, _, err = await self.call("photos_search", query="photo", place="Lisbon", year=2024, month=7, limit=50)
-        if data:
-            self.show_results(data, k=3)
-            ids = [r["id"] for r in data["results"]]
-            if data.get("has_more"):
-                print("     has_more=true: the model looks for a way to get the next page")
-                schema = self.tools["photos_search"]["schema"].get("properties", {})
-                pager = next((p for p in ("offset", "page", "cursor") if p in schema), None)
-                if self.check(pager is not None, "photos_search offers a way to page past 50 results"):
-                    more, _, _ = await self.call("photos_search", query="photo", place="Lisbon", year=2024, month=7,
-                                                 limit=50, **{pager: 50 if pager == "offset" else 2})
-                    ids += [r["id"] for r in (more or {}).get("results", [])]
-                else:
-                    await self.call("photos_search", query="photo", place="Lisbon", year=2024, month=7, limit=100)
-        truth_trip = sum(1 for rel, s in self.truth.items() if rel.startswith("Camera Roll/2024/07/"))
+        offset = 0
+        for _ in range(5):
+            data, _, err = await self.call("photos_search", place="Lisbon", year=2024, month=7, limit=50, offset=offset)
+            if not data:
+                break
+            if offset == 0:
+                self.show_results(data, k=3)
+            ids += [r["id"] for r in data["results"]]
+            if not data.get("has_more"):
+                break
+            self.check("next_offset" in data, "has_more comes with next_offset to page on")
+            offset = data["next_offset"]
+        trip = list(self.trip_truth)
         if ids:
             album, _, _ = await self.call("photos_album", name="Lisboa 2024", photo_ids=ids)
             if album:
                 print(f"     album photo_count={album.get('photo_count')} added={album.get('added')}")
-                if truth_trip:
-                    self.check(album.get("photo_count", 0) >= truth_trip,
-                               f"album holds the whole trip ({album.get('photo_count')} of {truth_trip})")
+        if trip:
+            got = sum(1 for rel in trip if rel in self.seen_rel)
+            print(f"     trip photos found: {got} of {len(trip)} (+{len(ids) - got} copies/other)")
+            self.check(got >= len(trip) - 2, f"the search pages cover the whole trip ({got} of {len(trip)})")
 
     async def uc5_portrait(self) -> None:
         print("\n== UC5: 'Faustus, find a vertical portrait with good resolution for my CV' ==")
-        data, imgs, _ = await self.call("photos_search", query="portrait photo of a person",
-                                        orientation="portrait", min_megapixels=2, limit=5)
+        args = {"query": "portrait photo of a person", "orientation": "portrait", "min_megapixels": 2, "limit": 5}
+        data, imgs, _ = await self.call("photos_search", **args)
+        if data and not data.get("results"):
+            note = data.get("note") or ""
+            print(f"     note: {note}")
+            culprit = next((k for k in args if f"without {k}=" in note), None)
+            if self.check(culprit is not None, "an empty result names the filter to relax"):
+                print(f"  (the model relaxes {culprit} and retries)")
+                args.pop(culprit)
+                data, imgs, _ = await self.call("photos_search", **args)
         if not data or not data.get("results"):
             return
         self.show_results(data, k=5)
