@@ -10,6 +10,7 @@ export interface Photo {
   score?: number;
   n?: number;
   caption_match?: boolean;
+  relevance?: "strong" | "medium" | "weak";
 }
 
 export interface PhotoDetail extends Photo {
@@ -33,11 +34,15 @@ export interface PhotoDetail extends Photo {
 }
 
 export interface SearchResult {
-  query?: string;
+  query?: string | null;
+  mode?: "filtered_listing";
   count: number;
+  returned: number;
+  indexed_total: number;
   results: Photo[];
   has_more: boolean;
-  embedder: string;
+  next_offset?: number | null;
+  embedder?: string;
   note?: string;
   translated_query?: string;
   original_query?: string;

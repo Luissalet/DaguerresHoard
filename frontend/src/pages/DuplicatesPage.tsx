@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Check, Copy, ExternalLink } from "lucide-react";
-import { api, errorText, fileName, formatBytes } from "../api";
+import { api, errorText, fileName, formatBytes, parentFolder } from "../api";
 import Lightbox from "../components/Lightbox";
 import type { Dict } from "../i18n";
 import type { DuplicatesResult, Photo } from "../types";
@@ -28,8 +28,13 @@ export default function DuplicatesPage({ t, platformIsWindows }: Props) {
       .finally(() => setLoading(false));
   }, [kind]);
 
-  function copyPaths(photos: Photo[], idx: number) {
-    const text = photos.map((p) => p.path).join("\n");
+  function copyPaths(photos: Photo[], keeperId: string, idx: number) {
+    // A2 (live report): copying every path (keeper included) meant pasting
+    // the list into a delete command also deleted the copy to keep.
+    const text = photos
+      .filter((p) => p.id !== keeperId)
+      .map((p) => p.path)
+      .join("\n");
     navigator.clipboard?.writeText(text).catch(() => {});
     setCopiedGroup(idx);
     setTimeout(() => setCopiedGroup(null), 1500);
@@ -68,7 +73,7 @@ export default function DuplicatesPage({ t, platformIsWindows }: Props) {
             <span className="muted small">
               {t.photos_count(g.photos.length)} · {t.dup_group_reclaim(formatBytes(g.reclaimable_bytes))}
             </span>
-            <button className="btn btn-sm" onClick={() => copyPaths(g.photos, idx)}>
+            <button className="btn btn-sm" onClick={() => copyPaths(g.photos, g.keeper_id, idx)}>
               {copiedGroup === idx ? <Check size={14} /> : <Copy size={14} />}
               {copiedGroup === idx ? t.copied : t.copy_paths}
             </button>
@@ -84,6 +89,11 @@ export default function DuplicatesPage({ t, platformIsWindows }: Props) {
                   <span className="dup-name" title={p.path}>
                     {fileName(p.path)}
                   </span>
+                  {parentFolder(p.path) && (
+                    <span className="muted small dup-folder" title={p.path}>
+                      {parentFolder(p.path)}
+                    </span>
+                  )}
                   <span className="muted small">
                     {p.width && p.height ? `${p.width}×${p.height}` : "?"} · {formatBytes(p.size)}
                   </span>

@@ -28,6 +28,7 @@ export interface Dict {
   no_results: string;
   loading: string;
   photos_count: (n: number) => string;
+  ranked_count: (returned: number, total: number) => string;
   open_in_explorer: string;
   similar_photos: string;
   close: string;
@@ -181,13 +182,16 @@ export const dict: Record<Lang, Dict> = {
     no_results: "No photos matched your search.",
     loading: "Loading…",
     photos_count: (n: number) => `${n} photo${n === 1 ? "" : "s"}`,
+    // B2 (live report): "50 photos / 262" read as "262 matches". Results
+    // are ranked by similarity, not filtered -- this says so.
+    ranked_count: (returned, total) => `the best ${returned} of ${total} photo${total === 1 ? "" : "s"}, ranked`,
     open_in_explorer: "Open in Explorer",
     similar_photos: "Similar photos",
     close: "Close",
     exact_duplicates: "Exact duplicates",
     near_duplicates: "Near duplicates",
     keeper: "Keeper",
-    copy_paths: "Copy paths",
+    copy_paths: "Copy paths of the extra copies",
     copied: "Copied",
     on_this_day: "On this day",
     year: "Year",
@@ -338,13 +342,15 @@ export const dict: Record<Lang, Dict> = {
     no_results: "Ninguna foto coincide con tu búsqueda.",
     loading: "Cargando…",
     photos_count: (n: number) => `${n} foto${n === 1 ? "" : "s"}`,
+    ranked_count: (returned, total) =>
+      `las ${returned} mejores de ${total} foto${total === 1 ? "" : "s"}, por similitud`,
     open_in_explorer: "Abrir en el Explorador",
     similar_photos: "Fotos similares",
     close: "Cerrar",
     exact_duplicates: "Duplicados exactos",
     near_duplicates: "Duplicados aproximados",
     keeper: "Conservar",
-    copy_paths: "Copiar rutas",
+    copy_paths: "Copiar rutas de las copias extra",
     copied: "Copiado",
     on_this_day: "Un día como hoy",
     year: "Año",

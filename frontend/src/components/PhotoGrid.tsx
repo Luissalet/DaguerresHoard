@@ -12,6 +12,11 @@ export default function PhotoGrid({ photos, onOpen }: Props) {
       {photos.map((p, i) => (
         <button key={p.id} className="thumb" onClick={() => onOpen(i)} title={fileName(p.path)}>
           <img src={p.thumbnail_url} alt={fileName(p.path)} loading="lazy" decoding="async" />
+          {p.relevance && (
+            // B2 (live report): `score` alone did not say how confident a
+            // match was; this mirrors the `relevance` band an agent gets.
+            <span className={`relevance-dot relevance-${p.relevance}`} title={`relevance: ${p.relevance}`} />
+          )}
           <div className="meta">
             <span>{p.taken_at ? p.taken_at.slice(0, 10) : ""}</span>
             {p.place && <span className="meta-place">{p.place}</span>}

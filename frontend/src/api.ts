@@ -116,3 +116,11 @@ export function fileName(path: string): string {
   const parts = path.split(/[\\/]/);
   return parts[parts.length - 1] || path;
 }
+
+// A2 (live report): exact-duplicate tiles showed only the file name, which
+// is identical within a group, so the folder that tells the copies apart
+// was visible only in the hover title.
+export function parentFolder(path: string): string {
+  const parts = path.split(/[\\/]/).filter(Boolean);
+  return parts.length > 1 ? parts[parts.length - 2] : "";
+}

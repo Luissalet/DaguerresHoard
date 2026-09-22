@@ -105,7 +105,7 @@ export default function SearchPage({ t, platformIsWindows, onOpenSettings }: Pro
           {t.not_translated}
         </p>
       )}
-      {result?.note && (
+      {result?.note && result.embedder === "fake-colorhist-v1" && (
         <div className="notice notice-warn">
           <AlertTriangle size={18} />
           <div>
@@ -116,6 +116,12 @@ export default function SearchPage({ t, platformIsWindows, onOpenSettings }: Pro
             {t.open_settings}
           </button>
         </div>
+      )}
+      {result?.note && result.embedder !== "fake-colorhist-v1" && (
+        // B2/A9/A10 (live report): a single fixed banner used to be shown
+        // for every note, even "no strong match" or "translate this query"
+        // with the real model active -- the actual note text now shows.
+        <p className="muted small search-translated-note">{result.note}</p>
       )}
       {error && <p className="error-text">{error}</p>}
 
@@ -131,8 +137,9 @@ export default function SearchPage({ t, platformIsWindows, onOpenSettings }: Pro
       {results.length > 0 && !loading && (
         <>
           <p className="muted result-count">
-            {t.photos_count(results.length)}
-            {result?.has_more ? ` / ${result.count}` : ""}
+            {result?.mode === "filtered_listing" || !result?.has_more
+              ? t.photos_count(results.length)
+              : t.ranked_count(result.returned, result.indexed_total)}
           </p>
           <PhotoGrid photos={results} onOpen={setOpenIndex} />
         </>

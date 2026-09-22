@@ -5,10 +5,24 @@ folder" and "Copy list" on top of what this module computes.
 """
 from __future__ import annotations
 
+import re
+import unicodedata
 from collections import defaultdict
 from dataclasses import dataclass
 
 from .phash import DEFAULT_THRESHOLD, ChunkIndex, UnionFind, hamming
+
+# A2 (live report): the shortest-path tie-break alone kept the backup copy
+# in all 15 exact-duplicate groups ("Copia movil 2024/IMG_1.jpg" is
+# shorter than "Camera Roll/2024/07/IMG_1.jpg"). A path whose folder name
+# says it is a copy is now pushed to the back before path length decides.
+_BACKUP_LIKE_RE = re.compile(r"(backup|copia|copy|whatsapp)", re.IGNORECASE)
+
+
+def _looks_like_backup_path(path: str) -> bool:
+    folded = unicodedata.normalize("NFKD", path)
+    folded = "".join(ch for ch in folded if not unicodedata.combining(ch))
+    return bool(_BACKUP_LIKE_RE.search(folded))
 
 
 @dataclass
@@ -21,6 +35,7 @@ class PhotoRow:
     taken_at: str | None
     content_hash: str
     phash: int | None
+    mtime_ns: int = 0
 
 
 @dataclass
@@ -34,9 +49,12 @@ class DuplicateGroup:
 def _pick_keeper(rows: list[PhotoRow]) -> str:
     def key(r: PhotoRow):
         mp = (r.width or 0) * (r.height or 0)
-        # largest resolution, then oldest taken_at, then shortest path
+        # largest resolution, then oldest taken_at, then earliest file
+        # mtime, away from backup/copy/WhatsApp-looking folders, then
+        # shortest path (A2: exact duplicates all have the same taken_at,
+        # so path length used to be the only real tie-break).
         taken = r.taken_at or "9999"
-        return (-mp, taken, len(r.path))
+        return (-mp, taken, r.mtime_ns, _looks_like_backup_path(r.path), len(r.path))
 
     return sorted(rows, key=key)[0].id
 

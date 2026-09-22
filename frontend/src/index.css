@@ -390,6 +390,29 @@ a {
   border: 2px solid white;
 }
 
+.relevance-dot {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255, 255, 255, 0.85);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+}
+
+.relevance-dot.relevance-strong {
+  background: #2e9e57;
+}
+
+.relevance-dot.relevance-medium {
+  background: #d3a418;
+}
+
+.relevance-dot.relevance-weak {
+  background: #9aa1a6;
+}
+
 .thumb.selected .select-dot {
   background: var(--accent);
 }

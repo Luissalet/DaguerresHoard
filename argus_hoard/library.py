@@ -1251,6 +1251,7 @@ class Library:
                 id=r["id"], path=r["path"], size=r["size"], width=r["width"], height=r["height"],
                 taken_at=r["taken_at"], content_hash=r["content_hash"],
                 phash=int(r["phash"], 16) if r["phash"] else None,
+                mtime_ns=r["mtime_ns"] or 0,
             )
             for r in rows
         ]
