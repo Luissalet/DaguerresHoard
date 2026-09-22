@@ -1,6 +1,6 @@
 from PIL import Image
 
-from argus_hoard.thumbnails import make_thumbnail
+from daguerre_hoard.thumbnails import make_thumbnail
 from tests.conftest import make_image
 
 

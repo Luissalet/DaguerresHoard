@@ -6,8 +6,8 @@ import time
 import pytest
 from fastapi.testclient import TestClient
 
-from argus_hoard.api import create_app
-from argus_hoard.embeddings import FakeEmbedder
+from daguerre_hoard.api import create_app
+from daguerre_hoard.embeddings import FakeEmbedder
 from tests.conftest import make_image
 
 PORT = 18841
@@ -16,7 +16,7 @@ PORT = 18841
 @pytest.fixture()
 def client(tmp_path, monkeypatch):
     # Force the fake embedder so tests never try to download CLIP.
-    monkeypatch.setattr("argus_hoard.library.select_embedder", lambda settings: FakeEmbedder())
+    monkeypatch.setattr("daguerre_hoard.library.select_embedder", lambda settings: FakeEmbedder())
     app = create_app(data_dir=tmp_path / "data", static_dir=None, port=PORT)
     with TestClient(app, base_url=f"http://127.0.0.1:{PORT}") as c:
         yield c
@@ -36,8 +36,8 @@ def test_health(client):
     resp = client.get("/api/health")
     assert resp.status_code == 200
     body = resp.json()
-    assert body["service"] == "argus-hoard"
-    assert body["name"] == "Argus's Hoard"
+    assert body["service"] == "daguerres-hoard"
+    assert body["name"] == "Daguerre's Hoard"
     assert body["status"] == "ok"
 
 
@@ -222,7 +222,7 @@ def test_owner_removes_a_photo_from_an_album_and_keeps_the_file(client, tmp_path
 
 
 def test_places_endpoint_groups_by_country_and_city(client, tmp_path, monkeypatch):
-    from argus_hoard.geocode import CityMatch
+    from daguerre_hoard.geocode import CityMatch
 
     photos_dir = tmp_path / "geophotos"
     make_image(photos_dir / "a.jpg")
@@ -231,10 +231,10 @@ def test_places_endpoint_groups_by_country_and_city(client, tmp_path, monkeypatc
     app = client.app
     lib = app.state.library
     monkeypatch.setattr(lib.geocoder, "lookup", lambda lat, lon: CityMatch(city="Madrid", region=None, country="Spain", distance_km=0))
-    from argus_hoard.metadata import PhotoMetadata
+    from daguerre_hoard.metadata import PhotoMetadata
 
     monkeypatch.setattr(
-        "argus_hoard.library.extract_metadata",
+        "daguerre_hoard.library.extract_metadata",
         lambda path: PhotoMetadata(
             width=10, height=10, taken_at="2020-01-01T00:00:00", date_source="exif", make=None, model=None,
             lens=None, f_number=None, exposure_time=None, iso=None, focal_length=None, orientation=1,
@@ -262,7 +262,7 @@ def test_agent_add_folder_rejects_relative_path(client):
 
 
 def test_no_ui_page_when_frontend_not_built(tmp_path, monkeypatch):
-    monkeypatch.setattr("argus_hoard.library.select_embedder", lambda settings: FakeEmbedder())
+    monkeypatch.setattr("daguerre_hoard.library.select_embedder", lambda settings: FakeEmbedder())
     app = create_app(data_dir=tmp_path / "data2", static_dir=None, port=PORT)
     with TestClient(app, base_url=f"http://127.0.0.1:{PORT}") as c:
         resp = c.get("/")

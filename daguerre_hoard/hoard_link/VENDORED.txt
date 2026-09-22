@@ -3,7 +3,7 @@ Vendored from HoardLink (https://github.com/Luissalet/HoardLink), version 0.1.1
 Do not edit; replace the whole folder with a byte-identical copy of that
 version to update.
 
-Argus's Hoard talks to Hoard Link only through argus_hoard/backend.py,
+Daguerre's Hoard talks to Hoard Link only through daguerre_hoard/backend.py,
 which wraps this package (maps the legacy Ollama URL/model settings into
 an explicit "vision" override) without editing any vendored file. When
 re-vendoring a later HoardLink version, drop in the new files here and

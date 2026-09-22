@@ -1,8 +1,10 @@
 <img src="app-icon.png" width="96" alt="">
 
-# El Tesoro de Argos
+# Daguerre's Hoard
 
 ### ¿Sigues teniendo la foto del perro en la playa del verano pasado?
+
+*Lleva el nombre de Louis Daguerre, cuyo daguerrotipo (1839) fue la primera fotografía práctica.*
 
 **Una fototeca privada que indexa tus carpetas en tu propio ordenador, entiende lo que aparece en cada imagen y le entrega a un modelo de IA local resultados de texto compactos y ordenados con honestidad, y una hoja de contactos numerada solo cuando el modelo puede ver imágenes.**
 
@@ -19,7 +21,7 @@ marzo, dónde fue un viaje ni que hay tres copias de la misma foto
 ocupando espacio. Pegar imágenes en un chat no escala, y describir fotos
 a partir del nombre del archivo invita a inventar.
 
-Argos indexa tus carpetas en tu propio equipo (embeddings de
+Daguerre indexa tus carpetas en tu propio equipo (embeddings de
 imagen CLIP con ONNX Runtime, sin PyTorch y sin llamadas a la nube), lee
 EXIF y GPS, geocodifica sin conexión y encuentra duplicados exactos y
 aproximados. El modelo recibe resultados cortos, filtrados y numerados,
@@ -27,7 +29,7 @@ con identificadores estables y un grado de coincidencia (fuerte, media o
 débil) en cada uno. Un modelo con visión puede pedir una sola hoja de
 contactos con las candidatas y revisar diez fotos por el precio de una
 imagen antes de afirmar nada; un modelo solo de texto nunca recibe una
-imagen que no haya pedido. Argos nunca modifica,
+imagen que no haya pedido. Daguerre nunca modifica,
 mueve ni borra un archivo original; es un invariante con su test.
 
 ## Casos de uso
@@ -74,7 +76,7 @@ está en [docs/USABILITY_REPORT.md](docs/USABILITY_REPORT.md)):
 
 ## Modelos compartidos
 
-Argos nunca carga su propia copia de un modelo de lenguaje o de visión.
+Daguerre nunca carga su propia copia de un modelo de lenguaje o de visión.
 Dos funciones pasan por [HoardLink](https://github.com/Luissalet/HoardLink),
 un pequeño resolutor que llevan incluido las aplicaciones que comparten
 modelos en el mismo equipo: las
@@ -82,10 +84,10 @@ modelos en el mismo equipo: las
 automática** de la búsqueda (capacidad `llm`). El orden de resolución es
 siempre el mismo: primero un ajuste manual guardado en Ajustes, luego un
 Faustus en marcha, luego un servidor local Ollama / llama.cpp / compatible
-con OpenAI que ya esté sirviendo un modelo adecuado -- así Argos nunca le
+con OpenAI que ya esté sirviendo un modelo adecuado -- así Daguerre nunca le
 pide a la GPU que cargue una segunda copia. Si nada se resuelve, ambas funciones lo
 dicen claramente y se quedan desactivadas (sus botones aparecen
-deshabilitados con el motivo); el resto de Argos (indexado,
+deshabilitados con el motivo); el resto de Daguerre (indexado,
 búsqueda, duplicados, cronología, lugares, álbumes) funciona sin conexión
 y sin ningún modelo. Más detalle en
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#shared-model-backend-hoard-link).
@@ -95,7 +97,7 @@ y sin ningún modelo. Más detalle en
 
 ## Conectarlo a Faustus
 
-Argos es un plugin de [Faustus](https://github.com/Luissalet/Faustus), un
+Daguerre es un plugin de [Faustus](https://github.com/Luissalet/Faustus), un
 espacio de trabajo de IA local, y se declara con `faustus-plugin.json`.
 Arranca la aplicación y, en Faustus, abre **Conectores -> Aplicaciones cercanas -> Añadir**. Faustus
 la encuentra en `127.0.0.1:8814`, lee el manifiesto del directorio de
@@ -106,7 +108,7 @@ trabajo de la aplicación y arranca él mismo el adaptador MCP.
 | `photos_search` | Texto (en inglés) -> fotos con grado de coincidencia, filtros y paginación; hoja de contactos numerada solo si se pide | sí |
 | `photos_similar` | Fotos que se parecen a una dada | sí |
 | `photos_show` | Hasta 4 imágenes para verlas de cerca (200 KB como máximo cada una) | sí |
-| `photos_describe` | EXIF, lugar y ruta; descripción local opcional | sí (la descripción pedida se guarda en la base de datos de Argos) |
+| `photos_describe` | EXIF, lugar y ruta; descripción local opcional | sí (la descripción pedida se guarda en la base de datos de Daguerre) |
 | `photos_duplicates` | Grupos de duplicados exactos o aproximados con la copia recomendada | sí |
 | `photos_timeline` | Recuentos por año y mes, «un día como hoy» | sí |
 | `photos_library` | Carpetas, recuentos, modelo activo y trabajos en curso | sí |
@@ -118,16 +120,16 @@ Funciona con cualquier cliente MCP por stdio:
 ```json
 {
   "mcpServers": {
-    "argus": {
-      "command": "C:/ruta/a/argus-hoard/.venv/Scripts/python.exe",
-      "args": ["C:/ruta/a/argus-hoard/argus_hoard/mcp_server.py"],
-      "env": { "ARGUS_URL": "http://127.0.0.1:8814" }
+    "daguerre": {
+      "command": "C:/ruta/a/daguerres-hoard/.venv/Scripts/python.exe",
+      "args": ["C:/ruta/a/daguerres-hoard/daguerre_hoard/mcp_server.py"],
+      "env": { "DAGUERRE_URL": "http://127.0.0.1:8814" }
     }
   }
 }
 ```
 
-En Linux o macOS el intérprete es `argus-hoard/.venv/bin/python`.
+En Linux o macOS el intérprete es `daguerres-hoard/.venv/bin/python`.
 
 Argumentos, formato de las respuestas, códigos de error y límites:
 [docs/MCP.md](docs/MCP.md). La guía que le dice al modelo cuándo y cómo
@@ -149,12 +151,12 @@ hasta entonces la búsqueda solo entiende colores y lo avisa.
 ### Windows (PowerShell)
 
 ```powershell
-git clone https://github.com/Luissalet/ArgusHoard.git
-cd ArgusHoard
+git clone https://github.com/Luissalet/DaguerresHoard.git
+cd DaguerresHoard
 .\scripts\start.ps1 -Demo      # primera vez: crea .venv, instala el lock, compila la interfaz y abre el navegador
 ```
 
-O doble clic en **`Iniciar Argus.cmd`** (y **`Detener Argus.cmd`** para
+O doble clic en **`Iniciar Daguerre.cmd`** (y **`Detener Daguerre.cmd`** para
 pararlo). Más opciones del lanzador:
 
 ```powershell
@@ -168,7 +170,7 @@ reinstala las dependencias cada vez que cambia `requirements-lock.txt`,
 arranca la aplicación en segundo plano con el repositorio como directorio
 de trabajo, espera a que responda `/api/health` y abre el navegador. Los
 registros quedan en `data\logs\`. `stop.ps1` detiene el proceso que
-escucha en el puerto tras comprobar que es Argos.
+escucha en el puerto tras comprobar que es Daguerre.
 
 Los mismos pasos a mano:
 
@@ -176,24 +178,24 @@ Los mismos pasos a mano:
 python -m venv .venv
 .venv\Scripts\python -m pip install -r requirements-lock.txt
 cd frontend; npm ci; npm run build; cd ..
-.venv\Scripts\python -m argus_hoard --demo     # biblioteca sintética en data-demo\
-.venv\Scripts\python -m argus_hoard            # tu propia biblioteca, http://127.0.0.1:8814
+.venv\Scripts\python -m daguerre_hoard --demo     # biblioteca sintética en data-demo\
+.venv\Scripts\python -m daguerre_hoard            # tu propia biblioteca, http://127.0.0.1:8814
 ```
 
 ### Linux / macOS
 
 ```bash
-git clone https://github.com/Luissalet/ArgusHoard.git
-cd ArgusHoard
+git clone https://github.com/Luissalet/DaguerresHoard.git
+cd DaguerresHoard
 python3 -m venv .venv
 .venv/bin/python -m pip install -r requirements-lock.txt
 (cd frontend && npm ci && npm run build)
-.venv/bin/python -m argus_hoard --demo --no-browser   # biblioteca sintética en data-demo/
-curl http://127.0.0.1:8814/api/health                 # {"service":"argus-hoard",...}
+.venv/bin/python -m daguerre_hoard --demo --no-browser   # biblioteca sintética en data-demo/
+curl http://127.0.0.1:8814/api/health                 # {"service":"daguerres-hoard",...}
 ```
 
 Después abre <http://127.0.0.1:8814>. Opciones: `--port`, `--data-dir` (o
-`ARGUS_DATA_DIR`), `--demo` y `--no-browser`. Todo lo que escribe Argos
+`DAGUERRE_DATA_DIR`), `--demo` y `--no-browser`. Todo lo que escribe Daguerre
 vive en la carpeta de datos (`data/` por defecto, `data-demo/` con
 `--demo`): base de datos, miniaturas, vectores, caché del modelo y
 registros.
@@ -278,7 +280,7 @@ Python 3.11, 3.12 y 3.13, compila la interfaz con Node 22 y prueba
   asistente** (herramienta, argumentos, duración, resultado o error); los
   clics de la propia interfaz van por otras rutas y no se mezclan.
 - Los originales solo se leen. Quitar una carpeta en Ajustes borra los
-  datos propios de Argos sobre ella (filas del índice, miniaturas,
+  datos propios de Daguerre sobre ella (filas del índice, miniaturas,
   entradas de álbumes), nunca los archivos. El agente puede añadir
   carpetas y álbumes, pero no quitar nada.
 - Los nombres de lugares proceden de [GeoNames](https://www.geonames.org/)

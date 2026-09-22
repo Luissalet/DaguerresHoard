@@ -1,7 +1,7 @@
 import httpx
 
-from argus_hoard.captions import LinkCaptioner, OllamaCaptioner
-from argus_hoard.hoard_link import CapabilityConfig, Link, LinkConfig
+from daguerre_hoard.captions import LinkCaptioner, OllamaCaptioner
+from daguerre_hoard.hoard_link import CapabilityConfig, Link, LinkConfig
 from tests.conftest import make_image
 
 

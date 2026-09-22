@@ -65,7 +65,7 @@ _LANGUAGE_NAMES = {"es": "Spanish", "fr": "French", "pt": "Portuguese", "it": "I
 FAKE_EMBEDDER_NOTE = (
     "The semantic image model is not installed, so search only understands "
     "colour words (red, orange, yellow, green, blue, purple, pink, white, black). "
-    "Tell the owner they can download it in Argus Settings (about 600 MB) for "
+    "Tell the owner they can download it in Daguerre Settings (about 600 MB) for "
     "content search, and do not trust the ranking for anything else."
 )
 
@@ -231,10 +231,10 @@ class Library:
         if not p.is_dir():
             raise ValidationError(f"not an existing folder: {cleaned}")
         p = Path(os.path.abspath(p))
-        for managed in self._skip_dirs + [self.settings.data_dir / "argus.db"]:
+        for managed in self._skip_dirs + [self.settings.data_dir / "daguerre.db"]:
             try:
                 p.relative_to(managed)
-                raise ValidationError(f"{path} is inside Argus's own data folder and cannot be a photo root")
+                raise ValidationError(f"{path} is inside Daguerre's own data folder and cannot be a photo root")
             except ValueError:
                 pass
         globs = [g.strip() for g in (excluded_globs or []) if isinstance(g, str) and g.strip()][:50]
@@ -258,7 +258,7 @@ class Library:
 
     def remove_root(self, root_id: int) -> None:
         """UI-only (human) operation -- never exposed as an agent tool.
-        Forgets the folder and Argus's own derived data (index rows, album
+        Forgets the folder and Daguerre's own derived data (index rows, album
         memberships, captions, thumbnails). The original files are untouched."""
         c = self.conn
         ids = [r["id"] for r in c.execute("SELECT id FROM photos WHERE root_id = ?", (root_id,)).fetchall()]
@@ -338,7 +338,7 @@ class Library:
         total = len(plan)
         started = time.monotonic()
         workers = max(2, min(8, (os.cpu_count() or 2)))
-        with ThreadPoolExecutor(max_workers=workers, thread_name_prefix="argus-decode") as pool:
+        with ThreadPoolExecutor(max_workers=workers, thread_name_prefix="daguerre-decode") as pool:
             for start in range(0, total, CHUNK):
                 chunk = plan[start : start + CHUNK]
                 self._index_chunk(chunk, pool, pending_embed, stats, record_error)
@@ -1160,7 +1160,7 @@ class Library:
 
     def _captioner(self) -> LinkCaptioner:
         """The seam tests monkeypatch. Captions through Hoard Link's `vision`
-        capability -- see argus_hoard/backend.py for how the legacy Ollama
+        capability -- see daguerre_hoard/backend.py for how the legacy Ollama
         URL/model settings become that capability's explicit override."""
         return LinkCaptioner(lambda: self.backend.link)
 

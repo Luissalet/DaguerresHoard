@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import time
 
-from argus_hoard.captions import CaptionResult
+from daguerre_hoard.captions import CaptionResult
 from tests.conftest import make_image
 
 

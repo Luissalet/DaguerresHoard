@@ -75,7 +75,7 @@ jobs:
         shell: powershell
         run: |
           $h = Invoke-RestMethod http://127.0.0.1:18899/api/health
-          if ($h.service -ne "argus-hoard") { throw "unexpected health: $h" }
+          if ($h.service -ne "daguerres-hoard") { throw "unexpected health: $h" }
           $r = Invoke-WebRequest http://127.0.0.1:18899/ -UseBasicParsing
           if ($r.StatusCode -ne 200) { throw "UI did not load" }
       - name: Stop with the launcher script

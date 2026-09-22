@@ -9,9 +9,9 @@ from pathlib import Path
 
 import pytest
 
-from argus_hoard.config import Settings
-from argus_hoard.embeddings import FakeEmbedder
-from argus_hoard.library import Library, ValidationError
+from daguerre_hoard.config import Settings
+from daguerre_hoard.embeddings import FakeEmbedder
+from daguerre_hoard.library import Library, ValidationError
 from tests.conftest import make_image
 
 def _wait(library, job_id, timeout=20.0):
@@ -64,7 +64,7 @@ def test_concurrent_scans_are_serialised(library, tmp_path):
 def test_data_dir_inside_a_root_is_never_indexed(tmp_path):
     root_dir = tmp_path / "home"
     make_image(root_dir / "Pictures" / "a.jpg")
-    settings = Settings(data_dir=root_dir / "argus-data")
+    settings = Settings(data_dir=root_dir / "daguerre-data")
     lib = Library(settings, embedder=FakeEmbedder())
     _index(lib, root_dir)
     # rescan: the first scan wrote thumbnails under the data dir
@@ -226,7 +226,7 @@ def test_stored_captions_feed_hybrid_search(library, tmp_path, monkeypatch):
     """Captions go into the FTS table and lift matching photos (hybrid =
     0.8 cosine_norm + 0.2 bm25_norm). Two near-identical grey photos: only
     the captioned one matches the words, so it must rank above its twin."""
-    from argus_hoard.captions import CaptionResult
+    from daguerre_hoard.captions import CaptionResult
 
     photos = tmp_path / "photos"
     make_image(photos / "red.jpg", color=(220, 20, 20))
@@ -256,7 +256,7 @@ def test_stored_captions_feed_hybrid_search(library, tmp_path, monkeypatch):
 
 
 def test_every_supported_format_is_indexed_and_previewed(library, tmp_path):
-    from argus_hoard.formats import HEIF_AVAILABLE
+    from daguerre_hoard.formats import HEIF_AVAILABLE
 
     photos = tmp_path / "photos"
     formats = {"a.png": "PNG", "b.webp": "WEBP", "c.gif": "GIF", "d.tif": "TIFF", "e.bmp": "BMP", "f.jpeg": "JPEG"}

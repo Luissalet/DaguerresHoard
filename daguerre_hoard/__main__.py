@@ -1,4 +1,4 @@
-"""Entry point: `python -m argus_hoard [--port P] [--data-dir D] [--demo] [--no-browser]`."""
+"""Entry point: `python -m daguerre_hoard [--port P] [--data-dir D] [--demo] [--no-browser]`."""
 from __future__ import annotations
 
 import argparse
@@ -28,7 +28,7 @@ def _setup_logging(logs_dir: Path) -> None:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(prog="argus_hoard")
+    parser = argparse.ArgumentParser(prog="daguerre_hoard")
     parser.add_argument("--port", type=int, default=DEFAULT_PORT)
     parser.add_argument("--data-dir", type=str, default=None)
     parser.add_argument("--demo", action="store_true")

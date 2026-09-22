@@ -52,7 +52,7 @@ class CityMatch:
 
 
 def _bundled_country_names() -> dict[str, str]:
-    text = resources.files("argus_hoard.data").joinpath("country_names.tsv").read_text(encoding="utf-8")
+    text = resources.files("daguerre_hoard.data").joinpath("country_names.tsv").read_text(encoding="utf-8")
     out = {}
     for row in csv.DictReader(io.StringIO(text), delimiter="\t"):
         out[row["code"]] = row["name"]
@@ -78,7 +78,7 @@ class ReverseGeocoder:
             self._load_bundled()
 
     def _load_bundled(self) -> None:
-        text = resources.files("argus_hoard.data").joinpath("cities_fixture.tsv").read_text(encoding="utf-8")
+        text = resources.files("daguerre_hoard.data").joinpath("cities_fixture.tsv").read_text(encoding="utf-8")
         rows = list(csv.DictReader(io.StringIO(text), delimiter="\t"))
         self._names = [r["name"] for r in rows]
         # `region` means "the city this place belongs to" (see _parent);

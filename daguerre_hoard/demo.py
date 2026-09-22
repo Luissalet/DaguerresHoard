@@ -36,7 +36,7 @@ def _dms(value: float) -> tuple:
     return (IFDRational(degrees, 1), IFDRational(minutes, 1), IFDRational(int(seconds * 100), 100))
 
 
-CAMERAS = [("Argus Demo Camera", "ArgusCam Mk1", "Demo 35mm F2"), ("Demo Phone Co", "Pocket 12", None)]
+CAMERAS = [("Daguerre Demo Camera", "DaguerreCam Mk1", "Demo 35mm F2"), ("Demo Phone Co", "Pocket 12", None)]
 
 
 def _exif_bytes(taken_at: dt.datetime, gps: tuple[float, float] | None, camera: int = 0) -> bytes:
@@ -124,7 +124,7 @@ def _draw_scene(scene: str, rng: random.Random, portrait: bool = False) -> Image
         bx, by = rng.randint(20, size[0] - 200), rng.randint(20, size[1] - 150)
         draw.rectangle([bx, by, bx + rng.randint(80, 180), by + rng.randint(50, 130)],
                        outline=rng.choice(colors), width=4)
-        draw.text((24, 12), "ARGUS DEMO NOTES", fill=(30, 30, 30))
+        draw.text((24, 12), "DAGUERRE DEMO NOTES", fill=(30, 30, 30))
     return img
 
 

@@ -1,6 +1,6 @@
 """Optional: the real CLIP model end to end. Not part of the default run.
 
-    pytest -m model            # uses ARGUS_MODELS_DIR or <repo>/data/models;
+    pytest -m model            # uses DAGUERRE_MODELS_DIR or <repo>/data/models;
                                # downloads about 600 MB there if not cached
 
 Indexes the synthetic demo scenes with the real embedder and checks that
@@ -14,17 +14,17 @@ from pathlib import Path
 
 import pytest
 
-from argus_hoard.config import Settings
-from argus_hoard.demo import generate_demo_photos
-from argus_hoard.embeddings import ClipEmbedder
-from argus_hoard.library import Library
+from daguerre_hoard.config import Settings
+from daguerre_hoard.demo import generate_demo_photos
+from daguerre_hoard.embeddings import ClipEmbedder
+from daguerre_hoard.library import Library
 
 pytestmark = pytest.mark.model
 REPO = Path(__file__).resolve().parents[1]
 
 
 def test_real_clip_finds_scenes_by_description(tmp_path):
-    models_dir = Path(os.environ.get("ARGUS_MODELS_DIR", REPO / "data" / "models"))
+    models_dir = Path(os.environ.get("DAGUERRE_MODELS_DIR", REPO / "data" / "models"))
     embedder = ClipEmbedder(models_dir, local_only=False)
     generate_demo_photos(tmp_path / "photos", count=24)
     lib = Library(Settings(data_dir=tmp_path / "data"), embedder=embedder)

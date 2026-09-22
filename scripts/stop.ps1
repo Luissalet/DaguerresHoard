@@ -1,6 +1,6 @@
 #requires -Version 5.1
 <#
-  Stops the Argus's Hoard instance listening on -Port (default 8814).
+  Stops the Daguerre's Hoard instance listening on -Port (default 8814).
 
   The process is found by the port it listens on and confirmed through
   /api/health before anything is stopped, so other Python programs are
@@ -23,10 +23,10 @@ $Url = "http://127.0.0.1:$Port"
 try {
     $health = Invoke-RestMethod -Uri "$Url/api/health" -TimeoutSec 3 -UseBasicParsing
 } catch {
-    Write-Host "Argus's Hoard is not running on port $Port."
+    Write-Host "Daguerre's Hoard is not running on port $Port."
     exit 0
 }
-if ($health.service -ne "argus-hoard") {
+if ($health.service -ne "daguerres-hoard") {
     Write-Host "Port $Port is used by another service ($($health.service)); nothing was stopped."
     exit 1
 }
@@ -53,7 +53,7 @@ foreach ($procId in $pids) {
     if ($p) {
         $parent = Get-CimInstance Win32_Process -Filter "ProcessId = $($p.ParentProcessId)" -ErrorAction SilentlyContinue
     }
-    Write-Host "Stopping Argus's Hoard (PID $procId)..."
+    Write-Host "Stopping Daguerre's Hoard (PID $procId)..."
     Stop-Process -Id $procId -Force -ErrorAction SilentlyContinue
     if ($parent -and $parent.ExecutablePath -and ($parent.ExecutablePath -ieq $VenvPython)) {
         Stop-Process -Id $parent.ProcessId -Force -ErrorAction SilentlyContinue

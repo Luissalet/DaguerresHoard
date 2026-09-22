@@ -1,4 +1,4 @@
-from argus_hoard.duplicates import PhotoRow, exact_duplicate_groups, near_duplicate_groups
+from daguerre_hoard.duplicates import PhotoRow, exact_duplicate_groups, near_duplicate_groups
 
 
 def _row(id, path, size, w, h, taken_at, content_hash, phash=None, mtime_ns=0):

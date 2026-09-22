@@ -1,6 +1,6 @@
 # Usability report
 
-First real use of Argus's Hoard, as a person in the browser and as an
+First real use of Daguerre's Hoard, as a person in the browser and as an
 agent over MCP, following the eight scenarios in
 [USE_CASES.md](USE_CASES.md). This pass records what happened. It fixes
 nothing: none of the problems stopped the walkthrough. Every finding has
@@ -150,7 +150,7 @@ the accent fold.
   every screenshot. The screenshots are in `data-uxtest/shots/` and are not
   committed. No page logged a console error or a failed request.
 - **Agent**: `scripts/agent_walkthrough.py` spawns
-  `argus_hoard/mcp_server.py` over stdio, the way Faustus does, and plays a
+  `daguerre_hoard/mcp_server.py` over stdio, the way Faustus does, and plays a
   small local model. It calls `list_tools`, chains the ids it gets back,
   checks each scenario against the data manifest and counts the images in
   every result. It ran against the fallback instance (16 failed checks) and
@@ -174,8 +174,8 @@ the accent fold.
 - Agent errors say what to fix next: `month must be 1-12, got 13`, `Use an
   'id' value returned by photos_search`, `not an existing folder: ...`,
   `name is required: a short album title such as 'Lisbon 2024'`. When the
-  app is down, the result is `argus_unavailable: ... Start it from Faustus
-  (Apps) or with 'Iniciar Argus.cmd', then retry.`
+  app is down, the result is `daguerre_unavailable: ... Start it from Faustus
+  (Apps) or with 'Iniciar Daguerre.cmd', then retry.`
 - The timeline and "on this day" are correct: they show the three photos
   planted on 22 September.
 - `photos_describe(caption=true)` with no vision model returns
@@ -358,7 +358,7 @@ may not notice), **cosmetic**.
 - **What happened**: the album view has only "Delete album". The endpoint
   `/api/albums/{id}/remove` and `api.albumRemove` exist, but the UI never
   calls them. The skill tells the model "Removing ... album entries is for
-  the owner, in the Argus UI", which is not possible today.
+  the owner, in the Daguerre UI", which is not possible today.
 - **Fix**: add a remove control on each photo of an open album, and a
   select mode for several photos at once, with the two-step inline
   confirmation that AGENTS.md requires.
@@ -423,7 +423,7 @@ may not notice), **cosmetic**.
   bursts" toggle (near duplicates within seconds) would help. Low priority.
 - **C6.** Assistant activity does not show whether a result carried an
   image. It would have made the live HTTP 500 diagnosable from inside
-  Argus.
+  Daguerre.
 - **C7.** Near-duplicate groups wider than the card are cut off at the
   right edge, with no visible scroll affordance.
 

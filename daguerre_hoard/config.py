@@ -1,4 +1,4 @@
-"""Paths and runtime settings for Argus's Hoard.
+"""Paths and runtime settings for Daguerre's Hoard.
 
 Everything lives under a single data directory so the app never touches
 files outside of it (except the read-only photo roots the user registers).
@@ -9,8 +9,8 @@ import os
 from dataclasses import dataclass
 from pathlib import Path
 
-SERVICE_SLUG = "argus-hoard"
-DISPLAY_NAME = "Argus's Hoard"
+SERVICE_SLUG = "daguerres-hoard"
+DISPLAY_NAME = "Daguerre's Hoard"
 DEFAULT_PORT = 8814
 
 SUPPORTED_EXTENSIONS = {
@@ -30,7 +30,7 @@ class Settings:
 
     @property
     def db_path(self) -> Path:
-        return self.data_dir / "argus.db"
+        return self.data_dir / "daguerre.db"
 
     @property
     def thumbs_dir(self) -> Path:
@@ -69,7 +69,7 @@ def resolve_data_dir(cli_value: str | None, demo: bool, repo_root: Path) -> Path
         return repo_root / "data-demo"
     if cli_value:
         return Path(cli_value).expanduser().resolve()
-    env_value = os.environ.get("ARGUS_DATA_DIR")
+    env_value = os.environ.get("DAGUERRE_DATA_DIR")
     if env_value:
         return Path(env_value).expanduser().resolve()
     return repo_root / "data"

@@ -6,15 +6,15 @@ from __future__ import annotations
 import pytest
 from fastapi.testclient import TestClient
 
-from argus_hoard.api import create_app
-from argus_hoard.embeddings import FakeEmbedder
+from daguerre_hoard.api import create_app
+from daguerre_hoard.embeddings import FakeEmbedder
 
 PORT = 18842
 
 
 @pytest.fixture()
 def dist_client(tmp_path, monkeypatch):
-    monkeypatch.setattr("argus_hoard.library.select_embedder", lambda settings: FakeEmbedder())
+    monkeypatch.setattr("daguerre_hoard.library.select_embedder", lambda settings: FakeEmbedder())
     dist = tmp_path / "site" / "dist"
     (dist / "assets").mkdir(parents=True)
     (dist / "index.html").write_text("<!doctype html><title>spa</title>", encoding="utf-8")

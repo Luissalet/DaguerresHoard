@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Argus's Hoard MCP adapter (stdio transport).
+"""Daguerre's Hoard MCP adapter (stdio transport).
 
 Standalone script: only imports stdlib, httpx and mcp. It is launched by
 absolute path (see faustus-plugin.json), never with `-m`, so it must not
-import anything from the `argus_hoard` package.
+import anything from the `daguerre_hoard` package.
 
-Reads the running app's URL from the ARGUS_URL environment variable
+Reads the running app's URL from the DAGUERRE_URL environment variable
 (default http://127.0.0.1:8814) and calls its `/api/agent/<tool>` HTTP
 endpoints -- the exact same code path the FastAPI TestClient exercises in
 the tests. This file only translates between MCP tool calls and that HTTP
@@ -23,19 +23,19 @@ from mcp.server.fastmcp.exceptions import ToolError
 from mcp.server.fastmcp.utilities.types import Image
 from mcp.types import TextContent, ToolAnnotations
 
-APP_NAME = "Argus's Hoard"
+APP_NAME = "Daguerre's Hoard"
 DEFAULT_URL = "http://127.0.0.1:8814"
 UNAVAILABLE = (
-    f"argus_unavailable: {APP_NAME} is not running. Start it from Faustus (Apps) "
-    "or with 'Iniciar Argus.cmd', then retry."
+    f"daguerre_unavailable: {APP_NAME} is not running. Start it from Faustus (Apps) "
+    "or with 'Iniciar Daguerre.cmd', then retry."
 )
 
 
 def _resolve_url() -> str:
-    url = os.environ.get("ARGUS_URL", DEFAULT_URL).strip() or DEFAULT_URL
+    url = os.environ.get("DAGUERRE_URL", DEFAULT_URL).strip() or DEFAULT_URL
     parsed = urlparse(url)
     if parsed.scheme != "http" or parsed.hostname not in ("127.0.0.1", "localhost"):
-        raise SystemExit(f"ARGUS_URL must be an http:// loopback URL, got: {url!r}")
+        raise SystemExit(f"DAGUERRE_URL must be an http:// loopback URL, got: {url!r}")
     return url.rstrip("/")
 
 
@@ -50,8 +50,8 @@ ADDITIVE = ToolAnnotations(readOnlyHint=False, destructiveHint=False, idempotent
 mcp = FastMCP(
     APP_NAME,
     instructions=(
-        "Argus's Hoard indexes the owner's local photo folders so you can find, look at "
-        "and organise their photos. Argus never modifies, moves or deletes photos. "
+        "Daguerre's Hoard indexes the owner's local photo folders so you can find, look at "
+        "and organise their photos. Daguerre never modifies, moves or deletes photos. "
         "Translate search queries to English before calling photos_search. "
         "Results are ranked, not filtered: use each result's 'relevance' band "
         "(strong/medium/weak) and the top-level 'note' to judge how sure to sound, "
@@ -72,7 +72,7 @@ def _call(tool: str, payload: dict) -> dict:
         resp = _client.post(f"/api/agent/{tool}", json=payload)
     except httpx.TimeoutException as exc:
         raise ToolError(
-            f"argus_timeout: {APP_NAME} did not answer {tool} in time (a large scan or model "
+            f"daguerre_timeout: {APP_NAME} did not answer {tool} in time (a large scan or model "
             "download may be running). Wait a little and retry once."
         ) from exc
     except httpx.TransportError as exc:
@@ -172,7 +172,7 @@ def photos_similar(
 ) -> list:
     """Find photos that look like a given photo (same scene, same trip, retakes).
 
-    Pass `photo_id` (an id from another Argus result; preferred) or the
+    Pass `photo_id` (an id from another Daguerre result; preferred) or the
     photo's absolute `path`. Returns {returned, indexed_total, has_more,
     next_offset?, results:[{n, id, path, taken_at, place, score,
     relevance}]} nearest first (the photo itself excluded). `limit`: 1-50,
@@ -217,13 +217,13 @@ def photos_show(ids: list[str], size: int = 768) -> list:
 
 @mcp.tool(annotations=READ_ONLY)
 def photos_describe(photo_id: str, caption: bool = False) -> list:
-    """Everything Argus knows about one photo: date, place, camera, EXIF, path.
+    """Everything Daguerre knows about one photo: date, place, camera, EXIF, path.
 
     Returns {id, path, taken_at, date_source ("exif" or "file_mtime"), place,
     city, country, gps_lat, gps_lon, make, model, lens, f_number,
     exposure_time, iso, width, height, caption} (fields without data are
     left out). caption=true asks the owner's local Ollama vision model for a
-    one-sentence caption if the photo has none yet, and saves it in Argus's
+    one-sentence caption if the photo has none yet, and saves it in Daguerre's
     own database for future searches; the photo file is never touched. If
     Ollama is not available you get `caption_error` instead.
     Keywords: photo details, exif, when was it taken, where was it taken,
@@ -293,7 +293,7 @@ def photos_add_folder(path: str) -> list:
     (e.g. C:\\Users\\name\\Pictures\\2024). Adding the same folder again just
     rescans it. Returns {root:{id, path}, job_id}; poll photos_library for
     progress. You cannot remove folders: that is the owner's decision in the
-    Argus Settings screen.
+    Daguerre Settings screen.
     Keywords: index this folder, add photo folder, scan folder, indexar esta
     carpeta, añade esta carpeta, añadir carpeta de fotos, escanear carpeta
     """
@@ -306,7 +306,7 @@ def photos_album(name: str, photo_ids: list[str]) -> list:
 
     Non-destructive: photos are referenced, never copied or moved, and this
     tool cannot remove anything from an album. Pass photo ids from other
-    Argus results (max 500 per call). Returns {id, name, created, added,
+    Daguerre results (max 500 per call). Returns {id, name, created, added,
     photo_count, unknown_ids, photos (first 10)}.
     Keywords: make an album, add to album, collection, crear álbum, añadir
     al álbum, hacer un álbum, colección

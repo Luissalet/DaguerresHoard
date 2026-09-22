@@ -6,7 +6,7 @@ from pathlib import Path
 import numpy as np
 from PIL import Image
 
-from argus_hoard.embeddings import FakeEmbedder, VectorStore
+from daguerre_hoard.embeddings import FakeEmbedder, VectorStore
 
 
 def test_fake_embedder_ranks_red_image_first_for_red_query(tmp_path):
@@ -55,7 +55,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 def test_fake_text_embedding_is_stable_across_processes():
     code = (
         "import sys; sys.path.insert(0, %r);"
-        "from argus_hoard.embeddings import FakeEmbedder;"
+        "from daguerre_hoard.embeddings import FakeEmbedder;"
         "print(FakeEmbedder().embed_text('dog on the beach')[:4].round(6).tolist())"
     ) % str(REPO_ROOT)
     outs = set()

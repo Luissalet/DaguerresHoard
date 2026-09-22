@@ -1,9 +1,9 @@
-"""Argus's own thin wrapper around the vendored Hoard Link.
+"""Daguerre's own thin wrapper around the vendored Hoard Link.
 
-Per CONTRACT_BACKEND.md: Argus never loads its own copy of a model server.
-It vendors Hoard Link (``argus_hoard/hoard_link/``, never edited) and
+Per CONTRACT_BACKEND.md: Daguerre never loads its own copy of a model server.
+It vendors Hoard Link (``daguerre_hoard/hoard_link/``, never edited) and
 composes it here with the one piece Hoard Link cannot know about: the
-pre-existing, per-app Ollama URL/model fields in Argus's own ``settings``
+pre-existing, per-app Ollama URL/model fields in Daguerre's own ``settings``
 table (Settings -> "Ollama model"), which predate Hoard Link. Those fields
 become the explicit override for the ``vision`` capability -- but only
 once the owner has actually saved one (a row exists in ``settings``), so a
@@ -26,7 +26,7 @@ from . import db as dbmod
 from .captions import DEFAULT_BASE_URL, DEFAULT_MODEL
 from .hoard_link import CapabilityConfig, Link, LinkConfig
 
-# The two capabilities Argus actually uses. Kept in one place so the
+# The two capabilities Daguerre actually uses. Kept in one place so the
 # Settings "Models" panel and the override endpoint agree on what exists.
 USED_CAPABILITIES = ("vision", "llm")
 
@@ -59,13 +59,13 @@ class Backend:
 
     def _build_link(self) -> Link:
         try:
-            config = LinkConfig.load(self.config_path, env=os.environ, app="argus")
+            config = LinkConfig.load(self.config_path, env=os.environ, app="daguerre")
             self.config_error: str | None = None
         except ValueError as exc:
             # A hand-edited backend.json with a typo must not stop the app
             # from starting (everything but captions/translation works
             # without a model): fall back to env + probing and say why.
-            config = LinkConfig.load(None, env=os.environ, app="argus")
+            config = LinkConfig.load(None, env=os.environ, app="daguerre")
             self.config_error = (
                 f"backend.json is not usable ({exc}); using automatic detection "
                 "until it is fixed."

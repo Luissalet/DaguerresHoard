@@ -1,6 +1,6 @@
 import datetime as dt
 
-from argus_hoard.metadata import extract_metadata
+from daguerre_hoard.metadata import extract_metadata
 from tests.conftest import make_image
 
 

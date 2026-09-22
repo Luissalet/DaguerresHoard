@@ -164,7 +164,7 @@ export interface Dict {
 
 export const dict: Record<Lang, Dict> = {
   en: {
-    appName: "Argus's Hoard",
+    appName: "Daguerre's Hoard",
     nav_library: "Library",
     nav_search: "Search",
     nav_duplicates: "Duplicates",
@@ -260,7 +260,7 @@ export const dict: Record<Lang, Dict> = {
     indexing_now: "Indexing…",
     fallback_title: "Content search is not available yet",
     fallback_body:
-      "Argus is using its colour-only fallback, so searches only understand colours. Download the image model in Settings to search by what is in your photos.",
+      "Daguerre is using its colour-only fallback, so searches only understand colours. Download the image model in Settings to search by what is in your photos.",
     open_settings: "Open Settings",
     filter_from: "From",
     filter_to: "To",
@@ -310,7 +310,7 @@ export const dict: Record<Lang, Dict> = {
     score: "Match",
     shared_models: "Shared models",
     shared_models_note:
-      "Argus shares its models with Faustus and any other local app instead of loading its own copy: whatever is already running (Faustus, Ollama, llama.cpp, or another OpenAI-compatible server) is used first.",
+      "Daguerre shares its models with Faustus and any other local app instead of loading its own copy: whatever is already running (Faustus, Ollama, llama.cpp, or another OpenAI-compatible server) is used first.",
     backend_row_vision: "Vision (captions)",
     backend_row_llm: "Language model (query translation)",
     backend_recheck: "Re-check",
@@ -335,7 +335,7 @@ export const dict: Record<Lang, Dict> = {
     backend_forget_token: "Forget token",
   },
   es: {
-    appName: "El Tesoro de Argos",
+    appName: "Daguerre's Hoard",
     nav_library: "Biblioteca",
     nav_search: "Buscar",
     nav_duplicates: "Duplicados",
@@ -430,7 +430,7 @@ export const dict: Record<Lang, Dict> = {
     indexing_now: "Indexando…",
     fallback_title: "La búsqueda por contenido aún no está disponible",
     fallback_body:
-      "Argos está usando su modo básico, que solo entiende colores. Descarga el modelo de imagen en Ajustes para buscar por lo que aparece en tus fotos.",
+      "Daguerre está usando su modo básico, que solo entiende colores. Descarga el modelo de imagen en Ajustes para buscar por lo que aparece en tus fotos.",
     open_settings: "Abrir Ajustes",
     filter_from: "Desde",
     filter_to: "Hasta",
@@ -480,7 +480,7 @@ export const dict: Record<Lang, Dict> = {
     score: "Coincidencia",
     shared_models: "Modelos compartidos",
     shared_models_note:
-      "Argos comparte sus modelos con Faustus y con cualquier otra app local en vez de cargar su propia copia: usa primero lo que ya esté en marcha (Faustus, Ollama, llama.cpp u otro servidor compatible con OpenAI).",
+      "Daguerre comparte sus modelos con Faustus y con cualquier otra app local en vez de cargar su propia copia: usa primero lo que ya esté en marcha (Faustus, Ollama, llama.cpp u otro servidor compatible con OpenAI).",
     backend_row_vision: "Visión (descripciones)",
     backend_row_llm: "Modelo de lenguaje (traducción de búsquedas)",
     backend_recheck: "Volver a comprobar",

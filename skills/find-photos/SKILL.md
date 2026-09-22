@@ -1,11 +1,11 @@
 ---
 name: find-photos
-description: Find, look at and organise the owner's local photos with Argus's Hoard. Use when the owner asks for a photo by content, place or date, wants to see photos, asks about duplicates or how many photos they took, or wants an album.
+description: Find, look at and organise the owner's local photos with Daguerre's Hoard. Use when the owner asks for a photo by content, place or date, wants to see photos, asks about duplicates or how many photos they took, or wants an album.
 ---
 
-# Finding photos with Argus
+# Finding photos with Daguerre
 
-Argus never modifies, moves or deletes a photo. Only `photos_add_folder`
+Daguerre never modifies, moves or deletes a photo. Only `photos_add_folder`
 and `photos_album` change anything, and both only add.
 
 ## Order of work
@@ -50,7 +50,7 @@ and `photos_album` change anything, and both only add.
   Trust the `relevance` band, not the raw `score` or `indexed_total`.
 - If a result has a `note` (the semantic model is not installed), tell
   the owner: search only understands colours until they download the
-  model in Argus Settings. Do not present the ranking as content matches;
+  model in Daguerre Settings. Do not present the ranking as content matches;
   a fallback result is never `relevance: "strong"`.
 - Never say a photo shows something you have not seen in a contact sheet
   or in `photos_show` -- and only ask for either when you can see images.
@@ -60,6 +60,6 @@ and `photos_album` change anything, and both only add.
 - An empty result whose `note` says "without min_megapixels=2 alone, 40
   would" names the filter to relax: drop or loosen that one and retry.
 - `invalid_argument` says what to fix: fix it and retry once.
-- `argus_unavailable`: ask the owner to start Argus (Faustus -> Apps, or
-  "Iniciar Argus.cmd") and retry once.
-- Removing folders or album entries is for the owner, in the Argus UI.
+- `daguerre_unavailable`: ask the owner to start Daguerre (Faustus -> Apps, or
+  "Iniciar Daguerre.cmd") and retry once.
+- Removing folders or album entries is for the owner, in the Daguerre UI.

@@ -11,7 +11,7 @@ job. Two ways to reach a model:
   captions through Hoard Link's `vision` capability, so it shares whatever
   server Faustus or a loopback probe resolves (Ollama, llama.cpp, an
   OpenAI-compatible server) instead of only ever speaking Ollama's
-  `/api/generate`. See `argus_hoard/backend.py` for how the legacy
+  `/api/generate`. See `daguerre_hoard/backend.py` for how the legacy
   Ollama URL/model settings become that capability's explicit override.
 
 If nothing resolves we say so instead of failing silently.

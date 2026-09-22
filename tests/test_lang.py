@@ -1,4 +1,4 @@
-from argus_hoard.lang import detect_non_english
+from daguerre_hoard.lang import detect_non_english
 
 
 def test_english_query_is_not_flagged():

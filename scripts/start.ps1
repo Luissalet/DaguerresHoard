@@ -1,6 +1,6 @@
 #requires -Version 5.1
 <#
-  Starts Argus's Hoard in the background and opens it in the browser.
+  Starts Daguerre's Hoard in the background and opens it in the browser.
 
   First run: creates .venv with Python 3.11+ (C:\Python313 preferred),
   installs requirements-lock.txt, and builds the frontend if
@@ -28,7 +28,7 @@ Set-Location -LiteralPath $RepoRoot
 $Url = "http://127.0.0.1:$Port"
 $VenvPython = Join-Path $RepoRoot ".venv\Scripts\python.exe"
 $LockFile = Join-Path $RepoRoot "requirements-lock.txt"
-$LockStamp = Join-Path $RepoRoot ".venv\argus-lock.sha256"
+$LockStamp = Join-Path $RepoRoot ".venv\daguerre-lock.sha256"
 
 function Fail([string]$Message) {
     Write-Host ""
@@ -36,10 +36,10 @@ function Fail([string]$Message) {
     exit 1
 }
 
-function Test-ArgusHealth {
+function Test-DaguerreHealth {
     try {
         $r = Invoke-RestMethod -Uri "$Url/api/health" -TimeoutSec 2 -UseBasicParsing
-        return ($r.service -eq "argus-hoard")
+        return ($r.service -eq "daguerres-hoard")
     } catch {
         return $false
     }
@@ -76,8 +76,8 @@ function Find-BasePython {
     return $null
 }
 
-if (Test-ArgusHealth) {
-    Write-Host "Argus's Hoard is already running at $Url"
+if (Test-DaguerreHealth) {
+    Write-Host "Daguerre's Hoard is already running at $Url"
     if (-not $NoBrowser) { Start-Process $Url }
     exit 0
 }
@@ -128,10 +128,10 @@ if (-not (Test-Path (Join-Path $RepoRoot "frontend\dist\index.html"))) {
 $dataName = if ($Demo) { "data-demo" } else { "data" }
 $logDir = Join-Path $RepoRoot "$dataName\logs"
 New-Item -ItemType Directory -Force -Path $logDir | Out-Null
-$appArgs = @("-m", "argus_hoard", "--no-browser", "--port", "$Port")
+$appArgs = @("-m", "daguerre_hoard", "--no-browser", "--port", "$Port")
 if ($Demo) { $appArgs += "--demo" }
 
-Write-Host "Starting Argus's Hoard on $Url ..."
+Write-Host "Starting Daguerre's Hoard on $Url ..."
 $proc = Start-Process -FilePath $VenvPython -ArgumentList $appArgs -WorkingDirectory $RepoRoot `
     -WindowStyle Hidden -PassThru `
     -RedirectStandardOutput (Join-Path $logDir "stdout.log") `
@@ -139,8 +139,8 @@ $proc = Start-Process -FilePath $VenvPython -ArgumentList $appArgs -WorkingDirec
 
 $deadline = (Get-Date).AddSeconds(90)
 while ((Get-Date) -lt $deadline) {
-    if (Test-ArgusHealth) {
-        Write-Host "Argus's Hoard is running at $Url (stop it with scripts\stop.ps1)."
+    if (Test-DaguerreHealth) {
+        Write-Host "Daguerre's Hoard is running at $Url (stop it with scripts\stop.ps1)."
         if (-not $NoBrowser) { Start-Process $Url }
         exit 0
     }

@@ -18,7 +18,7 @@ Reglas para cualquier agente de código que trabaje en este repositorio.
   llama.cpp, u otro compatible con OpenAI) para las capacidades `vision` y `llm` es la
   excepción esperada: nunca sale de `127.0.0.1` y es justo lo que pide
   el backend de modelos compartido.
-- **Nunca edites `argus_hoard/hoard_link/`** (es una copia vendorizada,
+- **Nunca edites `daguerre_hoard/hoard_link/`** (es una copia vendorizada,
   ver `VENDORED.txt`). Compón sobre ella desde `backend.py`
   (`Library.backend`); para actualizarla, sustituye la carpeta entera.
 - No uses `window.confirm` ni `alert` en el frontend: bloquean la
@@ -28,11 +28,11 @@ Reglas para cualquier agente de código que trabaje en este repositorio.
 ## Antes de tocar código
 
 - Lee `docs/ARCHITECTURE.md` para entender dónde vive cada cosa.
-- El núcleo (`argus_hoard/*.py` salvo `api.py` y `mcp_server.py`) no
+- El núcleo (`daguerre_hoard/*.py` salvo `api.py` y `mcp_server.py`) no
   importa FastAPI. Si necesitas FastAPI en un módulo "core", es que la
   lógica pertenece a `api.py`, no al revés.
 - `mcp_server.py` es un script standalone: solo stdlib, `httpx` y
-  `mcp`. No lo hagas importar nada de `argus_hoard`.
+  `mcp`. No lo hagas importar nada de `daguerre_hoard`.
 
 ## Al añadir una herramienta de agente
 

@@ -1,6 +1,6 @@
 """Exact and near duplicate grouping, and keeper selection.
 
-Read-only: Argus never deletes or moves anything. The UI offers "Open
+Read-only: Daguerre never deletes or moves anything. The UI offers "Open
 folder" and "Copy list" on top of what this module computes.
 """
 from __future__ import annotations

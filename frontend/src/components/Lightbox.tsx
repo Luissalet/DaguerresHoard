@@ -286,12 +286,12 @@ export default function Lightbox({ photos, index, onClose, onIndexChange, t, pla
           <form className="inline-form" onSubmit={addToAlbum}>
             <input
               className="input"
-              list="argus-albums"
+              list="daguerre-albums"
               placeholder={t.album_input_placeholder}
               value={albumName}
               onChange={(e) => setAlbumName(e.target.value)}
             />
-            <datalist id="argus-albums">
+            <datalist id="daguerre-albums">
               {albums.map((a) => (
                 <option key={a.id} value={a.name} />
               ))}

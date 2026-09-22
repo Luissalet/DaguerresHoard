@@ -1,6 +1,6 @@
 # Architecture
 
-## Modules (`argus_hoard/`)
+## Modules (`daguerre_hoard/`)
 
 - `config.py` -- paths, port, supported extensions. One `Settings`
   dataclass; only the two entry points (`__main__.py`, `mcp_server.py`)
@@ -11,7 +11,7 @@
 - `scanning.py` -- the `os.scandir` walker: stable order, skips
   dot-folders, Windows Hidden/System folders, symlinked folders and
   junctions, known system folders, files under 8 KB, excluded globs, and
-  Argus's own data folders.
+  Daguerre's own data folders.
 - `formats.py` -- registers `pillow-heif` when installed so HEIC/HEIF
   decode everywhere; without it those extensions are not listed at all.
 - `hashing.py` -- streamed BLAKE2b content hash.
@@ -62,7 +62,7 @@
 
 ## Data model
 
-`data/argus.db` (SQLite, WAL): `roots`, `photos` (one row per file; `id`
+`data/daguerre.db` (SQLite, WAL): `roots`, `photos` (one row per file; `id`
 is a random 32-hex id that survives moves), `photos_fts` (FTS5 over
 captions), `albums` / `album_photos`, `jobs`, `agent_calls`, `settings`.
 Vectors live in `data/vectors.f32`, a float32 matrix addressed by
@@ -101,7 +101,7 @@ Progress (files/s and ETA) and stats are written to the job row and
 polled by the UI. Jobs still `running` when the process stopped are
 marked `interrupted` on the next start.
 
-Argus never opens an original for writing and never renames, moves or
+Daguerre never opens an original for writing and never renames, moves or
 deletes anything under a root; all writes go to the data folder. Tested
 by `test_full_index_preserves_original_files`.
 
@@ -142,7 +142,7 @@ Windows for "Open in Explorer".
 
 ## HTTP surface
 
-- `/api/health` -- `{service: "argus-hoard", name, version, status,
+- `/api/health` -- `{service: "daguerres-hoard", name, version, status,
   photo_count, roots, embedder}`.
 - `/api/agent/<tool>` -- the nine MCP tools, audited in `agent_calls`.
 - UI routes (not audited): `/api/photos`, `/api/photos/{id}`,
@@ -165,9 +165,9 @@ Windows for "Open in Explorer".
 
 ## Shared model backend (Hoard Link)
 
-Argus uses two of Hoard Link's eight capabilities: `vision` (captions) and
+Daguerre uses two of Hoard Link's eight capabilities: `vision` (captions) and
 `llm` (UI-only query translation). `Library.backend` is one
-`argus_hoard.backend.Backend`, built once in `Library.__init__` and
+`daguerre_hoard.backend.Backend`, built once in `Library.__init__` and
 rebuilt (`backend.reload()`) whenever `data/backend.json` changes or the
 legacy Ollama settings are saved. `Backend._build_link()` loads
 `LinkConfig` from `data/backend.json` + environment, then -- only when

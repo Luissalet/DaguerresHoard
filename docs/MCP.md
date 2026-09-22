@@ -1,6 +1,6 @@
 # MCP tools
 
-Argus's Hoard exposes 9 tools over stdio (`argus_hoard/mcp_server.py`, a
+Daguerre's Hoard exposes 9 tools over stdio (`daguerre_hoard/mcp_server.py`, a
 standalone script: stdlib + `httpx` + `mcp`). Every tool calls the app's
 own `/api/agent/<tool>` endpoint and returns exactly what that endpoint
 returns, so an HTTP-only client gets the same data. The HTTP layer is
@@ -18,16 +18,16 @@ so the owner's clicks never appear there.
 ```json
 {
   "mcpServers": {
-    "argus": {
-      "command": "C:/path/to/argus-hoard/.venv/Scripts/python.exe",
-      "args": ["C:/path/to/argus-hoard/argus_hoard/mcp_server.py"],
-      "env": { "ARGUS_URL": "http://127.0.0.1:8814" }
+    "daguerre": {
+      "command": "C:/path/to/daguerres-hoard/.venv/Scripts/python.exe",
+      "args": ["C:/path/to/daguerres-hoard/daguerre_hoard/mcp_server.py"],
+      "env": { "DAGUERRE_URL": "http://127.0.0.1:8814" }
     }
   }
 }
 ```
 
-`ARGUS_URL` must be an `http://` loopback address (`127.0.0.1` or
+`DAGUERRE_URL` must be an `http://` loopback address (`127.0.0.1` or
 `localhost`); the adapter exits at start-up otherwise, and it ignores
 system proxy settings for these calls.
 
@@ -68,7 +68,7 @@ system proxy settings for these calls.
 | `photos_add_folder` | no (adds) | yes | register a folder and index it |
 | `photos_album` | no (adds) | yes | create or extend an album |
 
-\* `photos_describe(caption=true)` stores the generated caption in Argus's
+\* `photos_describe(caption=true)` stores the generated caption in Daguerre's
 own database (the photo file is never touched). All annotations set
 `destructiveHint=false` and `openWorldHint=false`.
 
@@ -157,7 +157,7 @@ identical BLAKE2b content hash; near = perceptual hash (pHash) within
 Hamming distance 6, grouped with union-find (pure exact-copy groups are
 left to `kind="exact"`). Keeper: largest resolution, then oldest
 `taken_at`, then earliest file time, away from a folder that looks like a
-backup/copy/WhatsApp, then shortest path. Argus never deletes anything.
+backup/copy/WhatsApp, then shortest path. Daguerre never deletes anything.
 A near group can join different photos that look alike (several scans of
 one album, receipts), so `kind="near"` carries a `note` saying its bytes
 are an upper bound and the owner must check each group before deleting.
@@ -181,7 +181,7 @@ embedded with the active model.
 
 ## photos_add_folder
 
-`path` (absolute, existing folder, not inside Argus's data folder).
+`path` (absolute, existing folder, not inside Daguerre's data folder).
 Registers the root (or finds the existing one) and starts an index job.
 Returns `{root: {id, path, photo_count}, job_id, next}`. There is no tool
 to remove a folder: that is a human action in Settings.
@@ -203,8 +203,8 @@ app's `{error, message}` response:
 | `invalid_argument` | a parameter is missing or out of range; the message lists what is accepted |
 | `not_found` | unknown photo id / path / album; the message says where valid ids come from |
 | `internal_error` | an unexpected failure (also recorded in Assistant activity) |
-| `argus_unavailable` | the app is not running: "Start it from Faustus (Apps) or with 'Iniciar Argus.cmd', then retry." |
-| `argus_timeout` | no answer within 120 s (a big scan may be running); retry once |
+| `daguerre_unavailable` | the app is not running: "Start it from Faustus (Apps) or with 'Iniciar Daguerre.cmd', then retry." |
+| `daguerre_timeout` | no answer within 120 s (a big scan may be running); retry once |
 
 ## Limits
 

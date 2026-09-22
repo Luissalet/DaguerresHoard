@@ -18,8 +18,8 @@ import uvicorn
 from mcp import ClientSession
 from mcp.client.stdio import StdioServerParameters, stdio_client
 
-from argus_hoard.api import create_app
-from argus_hoard.embeddings import FakeEmbedder
+from daguerre_hoard.api import create_app
+from daguerre_hoard.embeddings import FakeEmbedder
 from tests.conftest import make_image
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -35,7 +35,7 @@ def _free_port() -> int:
 
 @pytest.fixture()
 def running_app(tmp_path, monkeypatch):
-    monkeypatch.setattr("argus_hoard.library.select_embedder", lambda settings: FakeEmbedder())
+    monkeypatch.setattr("daguerre_hoard.library.select_embedder", lambda settings: FakeEmbedder())
     port = _free_port()
     app = create_app(data_dir=tmp_path / "data", static_dir=None, port=port)
 
@@ -81,8 +81,8 @@ def running_app(tmp_path, monkeypatch):
 async def test_mcp_adapter_over_stdio(running_app):
     params = StdioServerParameters(
         command=sys.executable,
-        args=[str(REPO_ROOT / "argus_hoard" / "mcp_server.py")],
-        env={"ARGUS_URL": running_app},
+        args=[str(REPO_ROOT / "daguerre_hoard" / "mcp_server.py")],
+        env={"DAGUERRE_URL": running_app},
         cwd=str(REPO_ROOT),
     )
     async with stdio_client(params) as (read, write):
@@ -161,8 +161,8 @@ async def test_mcp_adapter_over_stdio(running_app):
 async def test_mcp_adapter_reports_app_not_running(tmp_path):
     params = StdioServerParameters(
         command=sys.executable,
-        args=[str(REPO_ROOT / "argus_hoard" / "mcp_server.py")],
-        env={"ARGUS_URL": f"http://127.0.0.1:{_free_port()}"},
+        args=[str(REPO_ROOT / "daguerre_hoard" / "mcp_server.py")],
+        env={"DAGUERRE_URL": f"http://127.0.0.1:{_free_port()}"},
         cwd=str(tmp_path),
     )
     async with stdio_client(params) as (read, write):
@@ -170,5 +170,5 @@ async def test_mcp_adapter_reports_app_not_running(tmp_path):
             await session.initialize()
             result = await session.call_tool("photos_library", {})
             assert result.isError is True
-            assert "argus_unavailable" in result.content[0].text
-            assert "Iniciar Argus.cmd" in result.content[0].text
+            assert "daguerre_unavailable" in result.content[0].text
+            assert "Iniciar Daguerre.cmd" in result.content[0].text

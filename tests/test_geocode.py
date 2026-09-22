@@ -1,4 +1,4 @@
-from argus_hoard.geocode import NEARBY_KM, ReverseGeocoder
+from daguerre_hoard.geocode import NEARBY_KM, ReverseGeocoder
 
 
 def test_reverse_geocode_on_bundled_fixture():

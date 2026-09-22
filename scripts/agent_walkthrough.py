@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Walk the agent use cases (docs/USE_CASES.md) over real MCP stdio.
 
-Spawns argus_hoard/mcp_server.py exactly as Faustus does (a subprocess
-speaking MCP over stdin/stdout, ARGUS_URL pointing at a running app) and
+Spawns daguerre_hoard/mcp_server.py exactly as Faustus does (a subprocess
+speaking MCP over stdin/stdout, DAGUERRE_URL pointing at a running app) and
 plays the part of a small local model: it starts from list_tools, picks
 tools by their descriptions, chains ids from one result into the next and
 reacts to errors. It never imports the app.
@@ -36,7 +36,7 @@ from mcp import ClientSession
 from mcp.client.stdio import StdioServerParameters, stdio_client
 
 REPO = Path(__file__).resolve().parents[1]
-SERVER = REPO / "argus_hoard" / "mcp_server.py"
+SERVER = REPO / "daguerre_hoard" / "mcp_server.py"
 
 
 def approx_tokens(text: str) -> int:
@@ -254,7 +254,7 @@ class Agent:
             print(f"     path={info.get('path')} {info.get('width')}x{info.get('height')} camera={info.get('model')}")
             self.check(Path(info.get("path", "")).is_absolute(), "describe gives an absolute path another tool can copy")
             self.check(info.get("height", 0) > info.get("width", 0), "it really is vertical")
-        print("  (Faustus's own file tool would now copy that path; Argus itself never copies)")
+        print("  (Faustus's own file tool would now copy that path; Daguerre itself never copies)")
 
     async def uc6_shortfilm(self) -> None:
         print("\n== UC6: 'Faustus, put the clapperboard and green-screen shots from the March shoot in \"Rodaje La Estacion\"' ==")
@@ -328,7 +328,7 @@ async def main() -> int:
     if args.truth and args.truth.exists():
         truth = {e["path"]: e["scene"] for e in json.loads(args.truth.read_text(encoding="utf-8"))}
     only = {s for s in args.only.split(",") if s}
-    env = {**os.environ, "ARGUS_URL": args.url}
+    env = {**os.environ, "DAGUERRE_URL": args.url}
     params = StdioServerParameters(command=sys.executable, args=[str(SERVER)], env=env)
     async with stdio_client(params) as (read, write):
         async with ClientSession(read, write) as session:

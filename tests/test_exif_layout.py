@@ -9,7 +9,7 @@ import pytest
 from PIL import ExifTags, Image
 from PIL.TiffImagePlugin import IFDRational
 
-from argus_hoard.metadata import extract_metadata
+from daguerre_hoard.metadata import extract_metadata
 
 
 def test_exif_sub_ifd_tags_are_read(tmp_path):

@@ -1,6 +1,6 @@
 from PIL import Image
 
-from argus_hoard.contact_sheet import ContactSheetItem, render_contact_sheet, MAX_BYTES
+from daguerre_hoard.contact_sheet import ContactSheetItem, render_contact_sheet, MAX_BYTES
 
 
 def test_contact_sheet_dimensions_and_size_cap(tmp_path):

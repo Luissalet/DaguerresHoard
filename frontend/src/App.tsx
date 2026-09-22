@@ -32,7 +32,7 @@ function writeStored(key: string, value: string) {
 }
 
 function initialTheme(): Theme {
-  const stored = readStored("argus-theme");
+  const stored = readStored("daguerre-theme");
   if (stored === "light" || stored === "dark") return stored;
   try {
     return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
@@ -42,7 +42,7 @@ function initialTheme(): Theme {
 }
 
 function initialLang(): Lang {
-  const stored = readStored("argus-lang");
+  const stored = readStored("daguerre-lang");
   return stored === "en" || stored === "es" ? stored : detectLang();
 }
 
@@ -83,13 +83,13 @@ export default function App() {
   function toggleTheme() {
     const next = theme === "light" ? "dark" : "light";
     setTheme(next);
-    writeStored("argus-theme", next);
+    writeStored("daguerre-theme", next);
   }
 
   function toggleLang() {
     const next = lang === "en" ? "es" : "en";
     setLang(next);
-    writeStored("argus-lang", next);
+    writeStored("daguerre-lang", next);
   }
 
   const titleByPage: Record<Page, string> = {

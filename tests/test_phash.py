@@ -1,6 +1,6 @@
 import random
 
-from argus_hoard.phash import ChunkIndex, UnionFind, hamming
+from daguerre_hoard.phash import ChunkIndex, UnionFind, hamming
 
 
 def _flip_bits(value: int, n: int, rng: random.Random) -> int:

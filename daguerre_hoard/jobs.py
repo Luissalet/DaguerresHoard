@@ -93,7 +93,7 @@ class JobManager:
                 )
             conn.commit()
 
-        thread = threading.Thread(target=runner, name=f"argus-job-{kind}", daemon=True)
+        thread = threading.Thread(target=runner, name=f"daguerre-job-{kind}", daemon=True)
         thread.start()
         return job_id
 

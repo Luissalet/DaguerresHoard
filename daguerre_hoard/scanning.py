@@ -44,7 +44,7 @@ def walk_images(
     Windows), known system folders, symlinked folders and junctions (no
     loops), unreadable folders, files under 8 KB, anything matching
     `excluded_globs` (matched against the path relative to the root and
-    against the bare name), and every folder in `skip_dirs` -- Argus's own
+    against the bare name), and every folder in `skip_dirs` -- Daguerre's own
     data folders, so a root that contains the data dir never indexes its
     own thumbnails."""
     excluded_globs = excluded_globs or []

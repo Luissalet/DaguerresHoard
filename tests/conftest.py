@@ -12,9 +12,9 @@ import pytest
 from PIL import ExifTags, Image
 from PIL.TiffImagePlugin import IFDRational
 
-from argus_hoard.config import Settings
-from argus_hoard.embeddings import FakeEmbedder
-from argus_hoard.library import Library
+from daguerre_hoard.config import Settings
+from daguerre_hoard.embeddings import FakeEmbedder
+from daguerre_hoard.library import Library
 
 _TAG_ID = {v: k for k, v in ExifTags.TAGS.items()}
 _GPS_TAG_ID = {v: k for k, v in ExifTags.GPSTAGS.items()}
@@ -42,7 +42,7 @@ def make_image(
     orientation: int = 1,
     fmt: str = "JPEG",
 ):
-    # A flat-color JPEG compresses to well under Argus's 8KB minimum file
+    # A flat-color JPEG compresses to well under Daguerre's 8KB minimum file
     # size, so add deterministic noise around the target color: keeps the
     # dominant hue (what FakeEmbedder keys on) while pushing the file past
     # the size floor like a real photo would be.

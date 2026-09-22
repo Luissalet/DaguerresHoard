@@ -6,16 +6,16 @@ from __future__ import annotations
 import pytest
 from fastapi.testclient import TestClient
 
-from argus_hoard.api import create_app
-from argus_hoard.embeddings import FakeEmbedder
-from argus_hoard.hoard_link import ChatResult, Usage
+from daguerre_hoard.api import create_app
+from daguerre_hoard.embeddings import FakeEmbedder
+from daguerre_hoard.hoard_link import ChatResult, Usage
 
 PORT = 18842
 
 
 @pytest.fixture()
 def app_and_client(tmp_path, monkeypatch):
-    monkeypatch.setattr("argus_hoard.library.select_embedder", lambda settings: FakeEmbedder())
+    monkeypatch.setattr("daguerre_hoard.library.select_embedder", lambda settings: FakeEmbedder())
     app = create_app(data_dir=tmp_path / "data", static_dir=None, port=PORT)
     with TestClient(app, base_url=f"http://127.0.0.1:{PORT}") as c:
         yield app, c
@@ -89,7 +89,7 @@ def test_ui_search_translates_a_non_english_query(app_and_client, monkeypatch):
 def test_ui_search_falls_back_silently_when_llm_unavailable(app_and_client, monkeypatch):
     app, client = app_and_client
     lib = app.state.library
-    from argus_hoard.hoard_link import Unavailable
+    from daguerre_hoard.hoard_link import Unavailable
 
     def fake_chat(messages, **kwargs):
         raise Unavailable("llm", ["no server available"])

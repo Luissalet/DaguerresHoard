@@ -1,14 +1,16 @@
 <img src="app-icon.png" width="96" alt="">
 
-# Argus's Hoard
+# Daguerre's Hoard
 
 ### Do you still have the photo of the dog on the beach from last summer?
+
+*Named after Louis Daguerre, whose 1839 daguerreotype was the first practical photograph.*
 
 **A private photo library that indexes your folders locally, understands what is in each picture, and hands a local AI model compact, honestly ranked text results -- plus one numbered contact sheet, only when the model can see images.**
 
 [Español](README.es.md) · [Quick start](#quick-start) · [Connect to Faustus](#connect-it-to-faustus) · [MCP reference](docs/MCP.md) · [Portfolio](https://luissalet.github.io/Portfolio/#projects)
 
-![Argus's Hoard library grid with demo data](docs/media/library.png)
+![Daguerre's Hoard library grid with demo data](docs/media/library.png)
 *Actual application, synthetic demo data: 87 generated images (gradients and simple shapes, not real photos) with EXIF dates, GPS for three cities, and planted duplicates.*
 
 ## Why
@@ -19,14 +21,14 @@ where a trip was, or that three copies of the same picture are taking up
 space. Pasting images into a chat does not scale, and describing photos
 from their file names invites confident guesses.
 
-Argus indexes your folders on your own machine (CLIP image
+Daguerre indexes your folders on your own machine (CLIP image
 embeddings through ONNX Runtime, no PyTorch, no cloud call), reads EXIF
 and GPS, reverse-geocodes offline, and finds exact and near duplicates.
 The model gets short, filtered, numbered results with stable ids and a
 relevance band (strong/medium/weak) on each one. A vision model can ask
 for a single contact-sheet image of the candidates and check ten photos
 for the price of one image before it claims anything; a text-only model
-never receives an image it did not ask for. Argus
+never receives an image it did not ask for. Daguerre
 never modifies, moves or deletes an original file; that invariant is
 tested.
 
@@ -72,15 +74,15 @@ real MCP stdio by a script that plays a small local model
 
 ## Shared models
 
-Argus never loads its own copy of a language or vision model. Two features
+Daguerre never loads its own copy of a language or vision model. Two features
 go through [HoardLink](https://github.com/Luissalet/HoardLink), a small
 resolver vendored into each app that shares models on the same machine: photo **captions** (the `vision` capability) and
 automatic **query translation** for the search box (the `llm` capability).
 Resolution order is always the same: an explicit override set in Settings,
 then a running Faustus, then a loopback Ollama / llama.cpp / OpenAI-compatible
-server -- whichever is already serving a fitting model, so Argus never
+server -- whichever is already serving a fitting model, so Daguerre never
 asks a GPU to load a second copy. Both features simply say so and stay off
-when nothing resolves (their buttons are disabled with the reason); the rest of Argus (indexing, search, duplicates,
+when nothing resolves (their buttons are disabled with the reason); the rest of Daguerre (indexing, search, duplicates,
 timeline, places, albums) works fully offline with no model at all. See
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#shared-model-backend-hoard-link).
 
@@ -89,7 +91,7 @@ timeline, places, albums) works fully offline with no model at all. See
 
 ## Connect it to Faustus
 
-Argus is a plugin for [Faustus](https://github.com/Luissalet/Faustus), a
+Daguerre is a plugin for [Faustus](https://github.com/Luissalet/Faustus), a
 local AI workspace, and declares itself with `faustus-plugin.json`. Start
 the app, then in Faustus open **Connectors -> Nearby apps -> Add**. Faustus finds it on
 `127.0.0.1:8814`, reads the manifest from the app's working directory and
@@ -100,7 +102,7 @@ launches the MCP adapter itself.
 | `photos_search` | Text (English) -> photos with relevance bands, filters, paging; a numbered contact sheet only on request | yes |
 | `photos_similar` | Photos that look like a given one | yes |
 | `photos_show` | Up to 4 images for a closer look (200 KB each at most) | yes |
-| `photos_describe` | EXIF, place, path; optional local caption | yes (a requested caption is saved in Argus's database) |
+| `photos_describe` | EXIF, place, path; optional local caption | yes (a requested caption is saved in Daguerre's database) |
 | `photos_duplicates` | Exact or near duplicate groups with a keeper | yes |
 | `photos_timeline` | Counts per year and month, "on this day" | yes |
 | `photos_library` | Folders, counts, active model, running jobs | yes |
@@ -112,16 +114,16 @@ It works with any MCP client over stdio:
 ```json
 {
   "mcpServers": {
-    "argus": {
-      "command": "C:/path/to/argus-hoard/.venv/Scripts/python.exe",
-      "args": ["C:/path/to/argus-hoard/argus_hoard/mcp_server.py"],
-      "env": { "ARGUS_URL": "http://127.0.0.1:8814" }
+    "daguerre": {
+      "command": "C:/path/to/daguerres-hoard/.venv/Scripts/python.exe",
+      "args": ["C:/path/to/daguerres-hoard/daguerre_hoard/mcp_server.py"],
+      "env": { "DAGUERRE_URL": "http://127.0.0.1:8814" }
     }
   }
 }
 ```
 
-On Linux or macOS the interpreter is `argus-hoard/.venv/bin/python`.
+On Linux or macOS the interpreter is `daguerres-hoard/.venv/bin/python`.
 
 Arguments, output shapes, error codes and limits: [docs/MCP.md](docs/MCP.md).
 The skill that tells the model when and how to use the tools:
@@ -143,12 +145,12 @@ colours only and says so.
 ### Windows (PowerShell)
 
 ```powershell
-git clone https://github.com/Luissalet/ArgusHoard.git
-cd ArgusHoard
+git clone https://github.com/Luissalet/DaguerresHoard.git
+cd DaguerresHoard
 .\scripts\start.ps1 -Demo      # first run: creates .venv, installs the lock, builds the UI, opens the browser
 ```
 
-Or double-click **`Iniciar Argus.cmd`** (and **`Detener Argus.cmd`** to
+Or double-click **`Iniciar Daguerre.cmd`** (and **`Detener Daguerre.cmd`** to
 stop). More launcher options:
 
 ```powershell
@@ -162,7 +164,7 @@ reinstalls dependencies whenever `requirements-lock.txt` changes, starts
 the app hidden with the repository as working directory, waits for
 `/api/health` and opens the browser. Logs go to `data\logs\`.
 `stop.ps1` stops the process listening on the port after confirming it is
-Argus.
+Daguerre.
 
 The same steps by hand:
 
@@ -170,24 +172,24 @@ The same steps by hand:
 python -m venv .venv
 .venv\Scripts\python -m pip install -r requirements-lock.txt
 cd frontend; npm ci; npm run build; cd ..
-.venv\Scripts\python -m argus_hoard --demo     # synthetic library in data-demo\
-.venv\Scripts\python -m argus_hoard            # your own library, http://127.0.0.1:8814
+.venv\Scripts\python -m daguerre_hoard --demo     # synthetic library in data-demo\
+.venv\Scripts\python -m daguerre_hoard            # your own library, http://127.0.0.1:8814
 ```
 
 ### Linux / macOS
 
 ```bash
-git clone https://github.com/Luissalet/ArgusHoard.git
-cd ArgusHoard
+git clone https://github.com/Luissalet/DaguerresHoard.git
+cd DaguerresHoard
 python3 -m venv .venv
 .venv/bin/python -m pip install -r requirements-lock.txt
 (cd frontend && npm ci && npm run build)
-.venv/bin/python -m argus_hoard --demo --no-browser   # synthetic library in data-demo/
-curl http://127.0.0.1:8814/api/health                 # {"service":"argus-hoard",...}
+.venv/bin/python -m daguerre_hoard --demo --no-browser   # synthetic library in data-demo/
+curl http://127.0.0.1:8814/api/health                 # {"service":"daguerres-hoard",...}
 ```
 
 Then open <http://127.0.0.1:8814>. Flags: `--port`, `--data-dir` (or
-`ARGUS_DATA_DIR`), `--demo`, `--no-browser`. Everything Argus writes lives
+`DAGUERRE_DATA_DIR`), `--demo`, `--no-browser`. Everything Daguerre writes lives
 in the data folder (`data/` by default, `data-demo/` with `--demo`):
 database, thumbnails, vectors, model cache, logs.
 
@@ -262,7 +264,7 @@ Python 3.11, 3.12 and 3.13, builds the UI with Node 22, and drives
 - Every assistant call is recorded under **Assistant activity** (tool,
   arguments, duration, result or error); the interface's own clicks use
   separate routes and are not mixed in.
-- Originals are only read. Removing a folder in Settings forgets Argus's
+- Originals are only read. Removing a folder in Settings forgets Daguerre's
   own data about it (index rows, thumbnails, album entries), never the
   files. The agent can add folders and albums but not remove anything.
 - Place names come from [GeoNames](https://www.geonames.org/) (CC BY 4.0)

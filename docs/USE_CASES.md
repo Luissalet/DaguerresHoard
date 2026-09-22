@@ -1,6 +1,6 @@
 # Use cases
 
-Eight concrete scenarios Argus's Hoard has to serve. They are the script
+Eight concrete scenarios Daguerre's Hoard has to serve. They are the script
 for the usability walkthroughs (`docs/USABILITY_REPORT.md`): each one was
 walked in the browser (Playwright, screenshots read by a person) and the
 agent ones over real MCP stdio (`scripts/agent_walkthrough.py`).
@@ -95,7 +95,7 @@ data.
 
 ## UC5 - A vertical portrait for a CV, copied to the CV folder (combined with Faustus's own file tools)
 
-- **Who**: Faustus, combining Argus with its own file tools.
+- **Who**: Faustus, combining Daguerre with its own file tools.
 - **Goal**: find a good-resolution vertical portrait and copy it to
   `Documents\CV\` for a CV.
 - **Prompt**: *"Faustus, busca una foto de retrato vertical con buena
@@ -103,7 +103,7 @@ data.
 - **Expected calls**: `photos_search(query="portrait photo of a person",
   orientation="portrait", min_megapixels=2)` -> `photos_describe(photo_id)`
   for the path and resolution -> Faustus's own file-copy tool with that
-  path. Argus itself never copies or moves anything.
+  path. Daguerre itself never copies or moves anything.
 - **Done when**: the chosen photo really is a portrait (vertical, a
   person), the path is absolute and usable by another tool, and a
   text-only model had enough information (score band, size, orientation)

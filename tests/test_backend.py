@@ -1,4 +1,4 @@
-"""argus_hoard.backend.Backend: the legacy-Ollama-as-vision-override
+"""daguerre_hoard.backend.Backend: the legacy-Ollama-as-vision-override
 mapping, config persistence (token never read back), and reload/recheck."""
 from __future__ import annotations
 
@@ -7,10 +7,10 @@ import json
 import httpx
 import pytest
 
-from argus_hoard.backend import Backend
-from argus_hoard.config import Settings
-from argus_hoard.db import ThreadLocalConnections, set_setting
-from argus_hoard.hoard_link import LinkConfig
+from daguerre_hoard.backend import Backend
+from daguerre_hoard.config import Settings
+from daguerre_hoard.db import ThreadLocalConnections, set_setting
+from daguerre_hoard.hoard_link import LinkConfig
 
 
 def _conn(tmp_path):
@@ -118,7 +118,7 @@ def test_reload_retires_the_old_link_instead_of_leaking_its_thread(tmp_path, mon
     lets an in-flight call finish), not leaked once per click."""
     import time
 
-    import argus_hoard.backend as backend_mod
+    import daguerre_hoard.backend as backend_mod
 
     monkeypatch.setattr(backend_mod, "RETIRE_GRACE_S", 0.05)
     settings, conn = _conn(tmp_path)

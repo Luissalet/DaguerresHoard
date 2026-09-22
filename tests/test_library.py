@@ -50,7 +50,7 @@ def test_incremental_rescan_skips_unchanged_files(library, tmp_path, monkeypatch
     root = _index_sync(library, photos_dir)
 
     calls = []
-    from argus_hoard import hashing
+    from daguerre_hoard import hashing
 
     original = hashing.content_hash
 
@@ -61,7 +61,7 @@ def test_incremental_rescan_skips_unchanged_files(library, tmp_path, monkeypatch
     monkeypatch.setattr(hashing, "content_hash", spy)
     # library._index_one references the module-level function directly via
     # `from .hashing import content_hash`, so patch that binding too.
-    import argus_hoard.library as library_mod
+    import daguerre_hoard.library as library_mod
 
     monkeypatch.setattr(library_mod, "content_hash", spy)
 
@@ -109,7 +109,7 @@ def test_place_filter_matches_neighbourhood_via_parent_region(library, tmp_path,
     # B4 (live report): after the world-cities download, photos are
     # labelled with the nearest neighbourhood and `place="Lisbon"` stopped
     # finding them. `region` now carries the parent municipality.
-    from argus_hoard.geocode import CityMatch
+    from daguerre_hoard.geocode import CityMatch
 
     photos_dir = tmp_path / "photos"
     make_image(photos_dir / "restelo.jpg", gps=(38.702, -9.205))
@@ -131,7 +131,7 @@ def test_place_filter_matches_neighbourhood_via_parent_region(library, tmp_path,
 def test_places_groups_neighbourhoods_under_their_city(library, tmp_path, monkeypatch):
     # Re-walk (UC8): with the world-cities data the Places page listed
     # Madrid's districts ("Ibiza", "Salamanca") and never "Madrid".
-    from argus_hoard.geocode import CityMatch
+    from daguerre_hoard.geocode import CityMatch
 
     photos_dir = tmp_path / "photos"
     make_image(photos_dir / "retiro.jpg", gps=(40.413, -3.683))
@@ -153,7 +153,7 @@ def test_places_groups_neighbourhoods_under_their_city(library, tmp_path, monkey
 def test_bundled_cities_have_no_admin_region_as_parent():
     # the bundled table's region column is an admin area (Ile-de-France),
     # not the city a place belongs to; Paris is its own city
-    from argus_hoard.geocode import ReverseGeocoder
+    from daguerre_hoard.geocode import ReverseGeocoder
 
     paris = ReverseGeocoder(None).lookup(48.8566, 2.3522)
     assert (paris.city, paris.region, paris.country) == ("Paris", None, "France")
@@ -177,7 +177,7 @@ def test_places_suggests_world_cities_for_photos_the_bundled_table_cannot_place(
 def test_place_beyond_cutoff_keeps_country_without_a_wrong_city(library, tmp_path, monkeypatch):
     # A11 (live report): a photo far from any reference point got a
     # confidently wrong city; it should keep only the country.
-    from argus_hoard.geocode import CityMatch
+    from daguerre_hoard.geocode import CityMatch
 
     photos_dir = tmp_path / "photos"
     make_image(photos_dir / "far.jpg", gps=(41.9, 12.5))
@@ -195,9 +195,9 @@ def test_existing_library_is_relabelled_when_the_geocoder_changes(tmp_settings, 
     # B4/A11 (re-walk): the fixed labels only reached photos indexed after
     # the fix -- a rescan skips unchanged files -- so an upgraded library
     # kept "Restelo, Portugal" and a Cadiz beach kept "Lisbon, Portugal".
-    from argus_hoard import db as dbmod
-    from argus_hoard.embeddings import FakeEmbedder
-    from argus_hoard.library import Library
+    from daguerre_hoard import db as dbmod
+    from daguerre_hoard.embeddings import FakeEmbedder
+    from daguerre_hoard.library import Library
 
     lib = Library(tmp_settings, embedder=FakeEmbedder())
     photos_dir = tmp_path / "photos"
@@ -306,7 +306,7 @@ def test_search_query_optional_with_filters_is_chronological_listing(library, tm
     assert result["indexed_total"] == 2
     assert all("relevance" not in r for r in result["results"])
 
-    from argus_hoard.library import ValidationError
+    from daguerre_hoard.library import ValidationError
 
     try:
         library.search("", filters=None)
@@ -384,7 +384,7 @@ def test_model_download_reports_megabytes_on_disk(library, monkeypatch):
     # minutes and looked frozen; the job now reports the bytes on disk.
     import threading
 
-    from argus_hoard import library as libmod
+    from daguerre_hoard import library as libmod
 
     monkeypatch.setattr(libmod, "MODEL_DOWNLOAD_BYTES", 4 * 1024 * 1024)
     models = library.settings.models_dir
@@ -410,8 +410,8 @@ def test_model_download_reports_megabytes_on_disk(library, monkeypatch):
 def test_model_download_ends_by_saying_content_search_is_on(library, tmp_path, monkeypatch):
     # A1 (re-walk): the finished download read "indexed 263 files: 0 new,
     # 0 changed, 0 moved" -- nothing about the image model being ready.
-    from argus_hoard import library as libmod
-    from argus_hoard.embeddings import FakeEmbedder
+    from daguerre_hoard import library as libmod
+    from daguerre_hoard.embeddings import FakeEmbedder
 
     class StandInClip(FakeEmbedder):
         name = "stand-in-clip"
