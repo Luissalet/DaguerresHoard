@@ -98,7 +98,7 @@ def generate_demo_photos(dest_dir: Path, count: int = 80, seed: int = 7) -> list
     for i in range(count):
         scene = SCENES[i % len(SCENES)]
         taken_at = start + dt.timedelta(days=rng.randint(0, 900), hours=rng.randint(0, 23))
-        gps = CITIES[city_names[i % len(city_names)]] if i % 3 != 2 else None
+        gps = CITIES[city_names[i % len(city_names)]] if i % 5 != 4 else None
         img = _draw_scene(scene, rng)
         folder = dest_dir / f"{taken_at.year}" / f"{taken_at.month:02d}"
         folder.mkdir(parents=True, exist_ok=True)
