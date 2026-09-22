@@ -68,19 +68,20 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
-      - name: Start with the launcher script
-        shell: powershell
-        run: .\scripts\start.ps1 -Demo -NoBrowser -Port 18899
-      - name: Health and UI answer
+      - name: Start, check and stop with the launcher scripts
+        # One step: a background process started in an earlier step does not
+        # survive into the next one on Windows runners.
         shell: powershell
         run: |
+          .\scripts\start.ps1 -Demo -NoBrowser -Port 18899
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
           $h = Invoke-RestMethod http://127.0.0.1:18899/api/health
           if ($h.service -ne "daguerres-hoard") { throw "unexpected health: $h" }
           $r = Invoke-WebRequest http://127.0.0.1:18899/ -UseBasicParsing
           if ($r.StatusCode -ne 200) { throw "UI did not load" }
-      - name: Stop with the launcher script
-        shell: powershell
-        run: |
           .\scripts\stop.ps1 -Port 18899
           Start-Sleep -Seconds 2
-          try { Invoke-RestMethod http://127.0.0.1:18899/api/health -TimeoutSec 2; throw "still running" } catch { Write-Host "stopped" }
+          $still = $true
+          try { Invoke-RestMethod http://127.0.0.1:18899/api/health -TimeoutSec 2 | Out-Null } catch { $still = $false }
+          if ($still) { throw "still running" }
+          Write-Host "stopped"
