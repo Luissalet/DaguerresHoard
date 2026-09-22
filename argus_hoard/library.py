@@ -55,6 +55,13 @@ FILTER_NAMES = (
     "taken_after", "taken_before", "year", "month", "place", "folder",
     "camera", "orientation", "min_megapixels", "has_gps",
 )
+# CLIP ViT-B/32 (Qdrant ONNX, vision + text) as the Hugging Face cache
+# stores it, measured on a real download.
+MODEL_DOWNLOAD_BYTES = 608_000_000
+_MB = 1024 * 1024  # the UI's formatBytes counts in binary megabytes too
+
+_LANGUAGE_NAMES = {"es": "Spanish", "fr": "French", "pt": "Portuguese", "it": "Italian", "de": "German"}
+
 FAKE_EMBEDDER_NOTE = (
     "The semantic image model is not installed, so search only understands "
     "colour words (red, orange, yellow, green, blue, purple, pink, white, black). "
@@ -1196,9 +1203,22 @@ class Library:
             "active": self.embedder.name,
             "clip_downloaded": state["image"] and state["text"],
             "cache_bytes": state["bytes"],
-            "download_size_hint_mb": 600,
+            "download_size_hint_mb": MODEL_DOWNLOAD_BYTES // _MB,
             "downloading": bool(self.jobs.running("model_download")),
         }
+
+    def _watch_model_download(self, handle: JobHandle, done: threading.Event, every_s: float = 2.0) -> None:
+        """A1 (re-walk): the download sat at a static "5%" for over ten
+        minutes on a slow connection, which looks frozen. Report the bytes
+        already on disk instead ("downloading the image model: 322 of about
+        579 MB"), moving the bar from 5% to 85%."""
+        while not done.wait(every_s):
+            got = ClipEmbedder.cache_state(self.settings.models_dir)["bytes"]
+            fraction = min(1.0, got / MODEL_DOWNLOAD_BYTES)
+            handle.progress(
+                0.05 + 0.8 * fraction,
+                f"downloading the image model: {got // _MB} of about {MODEL_DOWNLOAD_BYTES // _MB} MB",
+            )
 
     def start_model_download(self) -> str:
         running = self.jobs.running("model_download")
@@ -1207,8 +1227,15 @@ class Library:
 
         def run(handle: JobHandle) -> None:
             with self._model_lock:
-                handle.progress(0.05, "downloading the CLIP model from Hugging Face (about 600 MB)")
-                clip = ClipEmbedder(self.settings.models_dir, local_only=False)
+                handle.progress(0.05, "downloading the image model (about 600 MB)")
+                done = threading.Event()
+                watcher = threading.Thread(target=self._watch_model_download, args=(handle, done), daemon=True)
+                watcher.start()
+                try:
+                    clip = ClipEmbedder(self.settings.models_dir, local_only=False)
+                finally:
+                    done.set()
+                    watcher.join(timeout=5)
             handle.progress(0.9, "model ready; waiting for any running scan, then re-embedding")
             # Swap only between index runs: a run in progress keeps the
             # embedder it started with, so its vectors are never labelled
@@ -1216,6 +1243,11 @@ class Library:
             with self._index_lock:
                 self.embedder = clip
             self._run_index(None, handle)
+            # A1: "indexed 263 files: 0 new, 0 changed" did not say that the
+            # thing the owner asked for -- content search -- is now ready.
+            job = self.jobs.get(handle.id) or {}
+            embedded = (job.get("stats") or {}).get("embedded", 0)
+            handle.progress(1.0, f"image model ready: {embedded} photos analysed, content search is on")
 
         return self.jobs.start("model_download", run)
 

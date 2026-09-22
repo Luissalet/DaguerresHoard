@@ -360,3 +360,54 @@ def test_search_fallback_relevance_never_strong(library, tmp_path):
     colorful = library.search("a red square", limit=5)
     assert all(r["relevance"] in ("weak", "medium") for r in colorful["results"])
     assert "strong" not in {r["relevance"] for r in colorful["results"]}
+
+
+def test_model_download_reports_megabytes_on_disk(library, monkeypatch):
+    # A1 (re-walk): a slow download sat at a static "5%" for over ten
+    # minutes and looked frozen; the job now reports the bytes on disk.
+    import threading
+
+    from argus_hoard import library as libmod
+
+    monkeypatch.setattr(libmod, "MODEL_DOWNLOAD_BYTES", 4 * 1024 * 1024)
+    models = library.settings.models_dir
+    models.mkdir(parents=True, exist_ok=True)
+    (models / "blob.incomplete").write_bytes(b"\0" * (2 * 1024 * 1024))
+    seen = []
+
+    def fn(handle):
+        done = threading.Event()
+        watcher = threading.Thread(target=library._watch_model_download, args=(handle, done, 0.05))
+        watcher.start()
+        time.sleep(0.4)
+        done.set()
+        watcher.join()
+        seen.append(library.jobs.get(handle.id))
+
+    _wait_job(library, library.jobs.start("model_download", fn))
+    job = seen[0]
+    assert job["message"] == "downloading the image model: 2 of about 4 MB"
+    assert abs(job["progress"] - 0.45) < 0.01
+
+
+def test_model_download_ends_by_saying_content_search_is_on(library, tmp_path, monkeypatch):
+    # A1 (re-walk): the finished download read "indexed 263 files: 0 new,
+    # 0 changed, 0 moved" -- nothing about the image model being ready.
+    from argus_hoard import library as libmod
+    from argus_hoard.embeddings import FakeEmbedder
+
+    class StandInClip(FakeEmbedder):
+        name = "stand-in-clip"
+
+        def __init__(self, *args, **kwargs):
+            super().__init__()
+
+    photos_dir = tmp_path / "photos"
+    make_image(photos_dir / "a.jpg")
+    make_image(photos_dir / "b.jpg", color=(20, 200, 20))
+    _index_sync(library, photos_dir)
+    monkeypatch.setattr(libmod, "ClipEmbedder", StandInClip)
+
+    job = _wait_job(library, library.start_model_download())
+    assert job["status"] == "done", job
+    assert job["message"] == "image model ready: 2 photos analysed, content search is on"
