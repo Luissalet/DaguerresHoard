@@ -1,78 +1,102 @@
 #!/usr/bin/env python3
-"""Capture a handful of real screenshots of the running --demo app.
+"""Capture real screenshots of the running --demo app for the READMEs.
 
 Usage: start the app with `python -m argus_hoard --demo --no-browser --port <p>`,
-then run this script with `python3 scripts/screenshots.py --port <p>`.
-Requires the system `playwright` package (not a project dependency) with
-PLAYWRIGHT_BROWSERS_PATH pointing at a cached chromium build.
+then run `python scripts/screenshots.py --port <p> [--out docs/media] [--lang en]`.
+Requires the `playwright` package (not a project dependency) and a cached
+Chromium (PLAYWRIGHT_BROWSERS_PATH). Output: 1440x900 PNGs, each under
+400 KB (palette-quantised with Pillow when a plain PNG is larger).
 """
 from __future__ import annotations
 
 import argparse
-import time
+import io
 from pathlib import Path
 
+from PIL import Image
 from playwright.sync_api import sync_playwright
 
-OUT_DIR = Path(__file__).resolve().parents[1] / "docs" / "media"
+REPO = Path(__file__).resolve().parents[1]
+MAX_BYTES = 400_000
 
 
-def shoot(page, path: Path, max_bytes: int = 400_000) -> None:
-    page.screenshot(path=str(path))
-    if path.stat().st_size <= max_bytes:
-        return
-    from PIL import Image
+def save_png(raw: bytes, path: Path) -> None:
+    img = Image.open(io.BytesIO(raw)).convert("RGB")
+    for colors in (None, 256, 192, 128):
+        buf = io.BytesIO()
+        out = img if colors is None else img.quantize(colors=colors, method=Image.Quantize.MEDIANCUT, dither=Image.Dither.NONE)
+        out.save(buf, format="PNG", optimize=True)
+        if buf.tell() <= MAX_BYTES:
+            break
+    path.write_bytes(buf.getvalue())
+    print(f"{path.name}: {path.stat().st_size // 1024} KB")
 
-    img = Image.open(path).convert("RGB")
-    quality = 85
-    while quality >= 40:
-        jpg_path = path.with_suffix(".jpg")
-        img.save(jpg_path, format="JPEG", quality=quality, optimize=True)
-        if jpg_path.stat().st_size <= max_bytes:
-            path.unlink()
-            jpg_path.rename(path.with_suffix(".png"))
-            return
-        quality -= 10
+
+def nav(page, label: str) -> None:
+    page.locator(".sidebar-item", has_text=label).first.click()
+    page.wait_for_load_state("networkidle")
+    page.wait_for_timeout(500)
 
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--port", type=int, default=18841)
+    parser.add_argument("--port", type=int, default=8814)
+    parser.add_argument("--out", type=Path, default=REPO / "docs" / "media")
+    parser.add_argument("--lang", choices=["en", "es"], default="en")
+    parser.add_argument("--theme", choices=["light", "dark"], default="light")
+    parser.add_argument("--query", default="sunset over the sea")
     args = parser.parse_args()
     base = f"http://127.0.0.1:{args.port}"
-    OUT_DIR.mkdir(parents=True, exist_ok=True)
+    args.out.mkdir(parents=True, exist_ok=True)
+    labels = {
+        "en": ["Search", "Duplicates", "Near duplicates", "Timeline", "Places", "Settings"],
+        "es": ["Buscar", "Duplicados", "Duplicados aproximados", "Cronología", "Lugares", "Ajustes"],
+    }[args.lang]
 
     with sync_playwright() as p:
         browser = p.chromium.launch()
-        page = browser.new_page(viewport={"width": 1440, "height": 900}, device_scale_factor=1)
+        context = browser.new_context(viewport={"width": 1440, "height": 900}, device_scale_factor=1,
+                                      locale="es-ES" if args.lang == "es" else "en-US")
+        context.add_init_script(
+            f"localStorage.setItem('argus-lang', '{args.lang}'); localStorage.setItem('argus-theme', '{args.theme}');"
+        )
+        page = context.new_page()
 
         page.goto(f"{base}/", wait_until="networkidle")
-        page.wait_for_timeout(600)
-        shoot(page, OUT_DIR / "library.png")
-
-        page.get_by_text("Search", exact=True).click()
-        page.wait_for_timeout(200)
-        page.locator("input.input").first.fill("sunset over the sea")
-        page.get_by_text("Search", exact=True).nth(1).click() if False else None
-        page.locator("button[type=submit]").click()
         page.wait_for_timeout(900)
-        shoot(page, OUT_DIR / "search.png")
+        save_png(page.screenshot(), args.out / "library.png")
 
-        page.get_by_text("Duplicates", exact=True).click()
+        nav(page, labels[0])
+        page.locator(".search-input-wrap input").fill(args.query)
+        page.locator("form.search-bar button[type=submit]").click()
+        page.wait_for_selector(".grid .thumb")
+        page.wait_for_load_state("networkidle")
         page.wait_for_timeout(700)
-        shoot(page, OUT_DIR / "duplicates.png")
+        save_png(page.screenshot(), args.out / "search.png")
 
-        page.get_by_text("Timeline", exact=True).click()
-        page.wait_for_timeout(500)
-        shoot(page, OUT_DIR / "timeline.png")
+        page.locator(".grid .thumb").first.click()
+        page.wait_for_selector(".lightbox-side .similar-strip")
+        page.wait_for_load_state("networkidle")
+        page.wait_for_timeout(900)
+        save_png(page.screenshot(), args.out / "lightbox.png")
+        page.keyboard.press("Escape")
 
-        page.get_by_text("Places", exact=True).click()
-        page.wait_for_timeout(500)
-        shoot(page, OUT_DIR / "places.png")
+        nav(page, labels[1])
+        page.locator(".segmented button", has_text=labels[2]).click()
+        page.wait_for_load_state("networkidle")
+        page.wait_for_timeout(700)
+        save_png(page.screenshot(), args.out / "duplicates.png")
+
+        nav(page, labels[3])
+        save_png(page.screenshot(), args.out / "timeline.png")
+
+        nav(page, labels[4])
+        save_png(page.screenshot(), args.out / "places.png")
+
+        nav(page, labels[5])
+        save_png(page.screenshot(), args.out / "settings.png")
 
         browser.close()
-
-    print("Saved screenshots to", OUT_DIR)
 
 
 if __name__ == "__main__":

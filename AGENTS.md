@@ -30,10 +30,14 @@ Reglas para cualquier agente de código que trabaje en este repositorio.
 ## Al añadir una herramienta de agente
 
 1. Añade el método en `Library` (sin FastAPI).
-2. Expón `/api/agent/<tool>` en `api.py`, envuelto en `call_agent_tool`
-   para que quede registrado en `agent_calls`.
-3. Añade el tool equivalente en `mcp_server.py`, con docstring +
-   `Keywords:` en inglés y español, y `ToolAnnotations` honestos.
+2. Expón `/api/agent/<tool>` en `api.py` con `run(..., tool="<tool>")`
+   para que quede registrado en `agent_calls`. La interfaz usa rutas
+   propias sin `tool=`: los clics del usuario no son actividad del
+   asistente.
+3. Añade el tool equivalente en `mcp_server.py`, con docstring (qué,
+   cuándo, qué devuelve, límites) + `Keywords:` en inglés y español,
+   `ToolAnnotations` honestos y salida con `_text(...)` (JSON compacto).
+   Los errores de validación deben decir qué valores se aceptan.
 4. Añade un test en `tests/test_api.py` como mínimo; si cambia el
    protocolo MCP, actualiza `tests/test_mcp_protocol.py`.
 5. Actualiza `docs/MCP.md` y `skills/find-photos/SKILL.md` si cambia el
@@ -46,6 +50,13 @@ probar el modelo CLIP real, márcalo `-m model` y no lo metas en la
 suite por defecto. Antes de dar algo por terminado: `pytest -q`,
 `npm run build` en `frontend/`, y arranca la app con `--demo` una vez
 para comprobar que no hay una regresión visual obvia.
+
+## Windows
+
+- `scripts/*.ps1` solo en ASCII (PowerShell 5.1 lee sin BOM como ANSI).
+- Rutas con `pathlib`, `encoding="utf-8"` en todo texto, nada de `/tmp`.
+- No sustituyas un archivo mapeado en memoria (`vectors.f32`): en Windows
+  falla. Crece en el sitio, como hace `VectorStore._grow`.
 
 ## Commits
 

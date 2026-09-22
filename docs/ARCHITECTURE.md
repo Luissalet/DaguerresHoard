@@ -2,121 +2,157 @@
 
 ## Modules (`argus_hoard/`)
 
-- `config.py` -- paths, ports, supported extensions. One `Settings`
-  dataclass; every other module takes a `Settings` or plain `Path`,
-  never reads environment variables itself (except `__main__.py` and
-  `mcp_server.py`, the two entry points).
-- `db.py` -- SQLite schema (WAL mode, `stdlib sqlite3`) and a tiny
-  key/value `settings` table for runtime config (Ollama URL/model).
+- `config.py` -- paths, port, supported extensions. One `Settings`
+  dataclass; only the two entry points (`__main__.py`, `mcp_server.py`)
+  read environment variables.
+- `db.py` -- SQLite schema (stdlib `sqlite3`, WAL), in-place migrations
+  for databases created by older builds, and `ThreadLocalConnections`:
+  one connection per thread.
+- `scanning.py` -- the `os.scandir` walker: stable order, skips
+  dot-folders, Windows Hidden/System folders, symlinked folders and
+  junctions, known system folders, files under 8 KB, excluded globs, and
+  Argus's own data folders.
+- `formats.py` -- registers `pillow-heif` when installed so HEIC/HEIF
+  decode everywhere; without it those extensions are not listed at all.
 - `hashing.py` -- streamed BLAKE2b content hash.
-- `metadata.py` -- EXIF extraction with Pillow (dates, GPS DMS->decimal,
-  camera fields, orientation).
-- `thumbnails.py` -- EXIF-orientation-corrected WebP thumbnails, JPEG
-  `draft()` fast decode, 512px long side.
-- `phash.py` -- 64-bit perceptual hash + a chunked candidate index for
-  near-duplicate lookup (see the note in that file on why the chunk
-  index alone is a prune-only optimization, verified exact by brute
-  force below ~5000 photos).
-- `embeddings.py` -- the `Embedder` interface, `FakeEmbedder` (colour
-  histogram, deterministic, used by tests and until the real model is
-  downloaded), `ClipEmbedder` (fastembed/ONNX Runtime CLIP ViT-B/32,
-  no PyTorch), and `VectorStore` (append-only memory-mapped float32
-  matrix with brute-force cosine search -- documented fine to ~200k
-  photos; a future version could add an ANN index without changing the
-  interface).
-- `geocode.py` -- offline reverse geocoding: a bundled 10-city fixture
-  by default, or the full GeoNames `cities1000` dataset once
-  downloaded (opt-in, `/api/geocoder/download`).
-- `captions.py` -- optional Ollama vision client, off by default, never
-  blocks indexing.
-- `duplicates.py` -- exact (content hash) and near (pHash union-find)
-  duplicate grouping with a keeper rule.
-- `contact_sheet.py` -- numbered JPEG grid renderer, size-capped.
-- `jobs.py` -- a `JobManager`/`JobHandle` pair: background work runs in
-  a daemon thread, progress is written to the `jobs` table and polled
-  by the UI (`/api/jobs`). No task queue, no external dependency --
-  indexing a personal photo folder does not need one.
-- `scanning.py` -- pure filesystem walk + change-detection helpers
-  (`(size, mtime_ns)` signature), used by `library.py`'s pipeline.
-- `library.py` -- the engine: everything in one place that is not
-  transport (no FastAPI import). `Library` owns the DB connection, the
-  embedder, the vector store, the geocoder and the job manager, and
-  implements the indexing pipeline plus every read/write operation the
-  API and MCP adapter expose. This is what `tests/test_library.py`
-  exercises directly.
-- `api.py` -- FastAPI app: the guard middleware, UI-facing routes, and
-  `/api/agent/<tool>` (thin wrappers around `Library` methods with
-  agent-call logging).
-- `guard.py` -- the browser-attack guard (Host header / Origin /
-  Sec-Fetch-Site checks), independent of FastAPI's routing so it is
-  easy to unit test.
-- `mcp_server.py` -- standalone stdio adapter (stdlib + httpx + mcp
-  only). Talks to the running app over HTTP, exactly like any other
-  client of `/api/agent/*`.
-- `demo.py` -- synthetic demo photo generator (`--demo`).
+- `metadata.py` -- EXIF with Pillow: IFD0 (make, model, orientation), the
+  Exif sub-IFD (DateTimeOriginal + OffsetTimeOriginal, exposure, ISO,
+  focal length, lens) and the GPS IFD (DMS -> signed decimal). Tuple
+  values, zeroed dates and 0,0 fixes are handled. `taken_at` falls back to
+  the file time with `date_source = "file_mtime"`.
+- `thumbnails.py` -- EXIF-rotated WebP thumbnails, JPEG `draft()` decode,
+  512 px long side, q80, `data/thumbs/<id[:2]>/<id>.webp`.
+- `phash.py` -- 64-bit pHash and an exact multi-index near-duplicate
+  lookup (below), plus union-find.
+- `duplicates.py` -- exact and near groups and the keeper rule.
+- `embeddings.py` -- the `Embedder` protocol; `FakeEmbedder` (colour
+  histogram, deterministic across processes); `ClipEmbedder` (fastembed /
+  ONNX Runtime CLIP ViT-B/32, 512-d, no PyTorch); `VectorStore`.
+- `geocode.py` -- offline reverse geocoding: bundled 10-city fixture, or
+  GeoNames `cities1000` once the user downloads it.
+- `captions.py` -- optional Ollama vision client (downscales to 1024 px,
+  bypasses system proxies for a loopback Ollama).
+- `contact_sheet.py` -- numbered JPEG grid (at most 20 cells, 200 KB) and
+  the shared "encode JPEG under N bytes" helper.
+- `jobs.py` -- `JobManager` / `JobHandle`: a daemon thread per job,
+  progress and stats in the `jobs` table.
+- `library.py` -- the engine (no FastAPI import): indexing pipeline and
+  every operation the UI and the agent use.
+- `api.py` -- FastAPI app: guard middleware, UI routes, audited
+  `/api/agent/<tool>` routes, flat `{error, message}` errors, static
+  files confined to `frontend/dist`.
+- `guard.py` -- DNS-rebinding and cross-site write guard.
+- `mcp_server.py` -- standalone stdio adapter (stdlib + httpx + mcp).
+- `demo.py` -- synthetic demo library for `--demo`.
 
 ## Data model
 
-SQLite, one file (`data/argus.db`), WAL mode. Tables: `roots`, `photos`
-(one row per registered file; `id` is a UUID stable across moves/renames),
-`photos_fts` (FTS5, captions only, contentless), `albums`/`album_photos`,
-`jobs`, `agent_calls`, `settings`. Vectors live outside SQLite in
-`data/vectors.f32`, a flat float32 matrix; `photos.embed_row` is the row
-index into it. Thumbnails are WebP files under `data/thumbs/<id[:2]>/`.
+`data/argus.db` (SQLite, WAL): `roots`, `photos` (one row per file; `id`
+is a random 32-hex id that survives moves), `photos_fts` (FTS5 over
+captions), `albums` / `album_photos`, `jobs`, `agent_calls`, `settings`.
+Vectors live in `data/vectors.f32`, a float32 matrix addressed by
+`photos.embed_row`; `photos.embed_model` records which embedder wrote the
+vector, and search only compares vectors of the active model. The CLIP
+cache is `data/models`, GeoNames data `data/geodata`, logs
+`data/logs/app.log` (rotating).
 
 ## Indexing pipeline
 
-`Library._run_index` (background thread via `JobManager`):
+`Library._run_index`, in a job thread. Index runs are serialised by a
+lock: a second request waits for the first instead of racing it.
 
-1. Walk every registered root (`scanning.walk_images`), skip hidden/
-   system folders, unsupported extensions, and files under 8 KB.
-2. For each file: compare `(size, mtime_ns)` against the DB row for
-   that path. Unchanged -> skip without hashing (this is what makes
-   incremental rescans fast and is directly tested).
-3. If different (or new), hash the content. If the hash matches an
-   existing row whose old path no longer exists on disk, treat it as a
-   **moved/renamed file**: update the path, keep the id, embedding and
-   thumbnail. Otherwise extract metadata, build the thumbnail, compute
-   the pHash, reverse-geocode GPS if present, and upsert the row.
-4. Once every file in the batch has been processed, embed every new/
-   changed thumbnail in batches of 32 (`Library._store_embedding`),
-   which is the expensive step and the reason it is batched separately
-   from the per-file metadata work.
-5. Any previously-indexed file under a scanned root whose path was not
-   seen this walk and no longer exists on disk is marked `missing`
-   (hidden from the grid, not deleted from the index -- Argus never
-   guesses that a file is gone forever).
+1. Walk every registered root (`walk_images`). An unreachable root is
+   reported in the job stats and its photos are left alone.
+2. In chunks of 64 files:
+   - stat each file; same `(size, mtime_ns)` as the stored row -> skip
+     without reading it (incremental rescans cost one `stat` per file);
+   - stream-hash the rest in a thread pool;
+   - same hash as the stored row -> refresh size/mtime only; same hash as
+     a row whose file no longer exists -> a moved or renamed file: update
+     the path, keep the id, vector, caption and album memberships;
+   - otherwise, in the thread pool (Pillow releases the GIL): EXIF,
+     thumbnail, pHash; then write the row on the job thread. New content
+     at a known path keeps the id but drops the old caption.
+   - any exception is recorded for that file (count + first five
+     messages in the job stats) and the scan continues.
+3. Embed new, changed and stale photos from their thumbnails, 32 at a
+   time. "Stale" = no vector, or a vector from another embedder (for
+   example photos indexed before the CLIP model was downloaded).
+4. Rows under reachable roots whose file vanished (and was not found as
+   moved) are flagged `missing` -- hidden, never deleted, so an unplugged
+   drive does not lose albums or captions.
 
-Argus never opens a source file for writing and never calls `os.remove`,
-`os.rename` or `shutil.move` on anything under a registered root -- the
-only filesystem writes are inside `data/`. This is a tested invariant
-(`test_full_index_preserves_original_files`).
+Progress (files/s and ETA) and stats are written to the job row and
+polled by the UI. Jobs still `running` when the process stopped are
+marked `interrupted` on the next start.
+
+Argus never opens an original for writing and never renames, moves or
+deletes anything under a root; all writes go to the data folder. Tested
+by `test_full_index_preserves_original_files`.
+
+## Near duplicates: exact multi-index lookup
+
+The 64-bit pHash is split into four 16-bit chunks with one bucket table
+each. If two hashes differ in at most `t` bits, at least one chunk
+differs in at most `floor(t/4)` bits (pigeonhole), so probing every chunk
+with its exact value and every value within `floor(t/4)` flipped bits
+(17 probes per chunk for `t = 6`) finds every true neighbour. Candidates
+are confirmed with a real Hamming distance, then joined with union-find.
+`test_chunk_index_is_exact_without_brute_force_fallback` checks this on
+8,000 random hashes with planted 2+2+1+1 neighbours against brute force.
+
+## Search
+
+Filters become one SQL `WHERE` clause (validated first: unknown names and
+bad values are errors that list what is accepted). The query text is
+embedded once and scored against the filtered rows' vectors with one
+matrix product (brute force; fine to about 200k photos). If captions
+exist, the rank is `0.8 * cosine_norm + 0.2 * bm25_norm`; the reported
+`score` is always the raw cosine.
 
 ## Threads and processes
 
-One process, one background daemon thread per running job (indexing,
-GeoNames download). SQLite connections are created with
-`check_same_thread=False` and used from both the request thread and job
-threads; WAL mode plus a 5s busy timeout keep that safe for a
-single-writer, low-concurrency desktop app. The embedder is a
-module-level singleton per model-cache directory so a real CLIP model is
-never loaded twice in the same process.
+One process. uvicorn's thread pool serves the sync routes; each job runs
+in its own daemon thread, and the index job uses a small thread pool for
+hashing and decoding. Every thread has its own SQLite connection (WAL,
+10 s busy timeout), so transactions never interleave. The vector store is
+guarded by a lock; it grows by closing the mapping, extending the file
+and re-mapping (Windows cannot replace a mapped file). The CLIP model is
+a per-cache-directory singleton, loaded once per process with
+`local_files_only` at start-up; downloading is an explicit user action
+(`/api/model/download`), after which the library is re-embedded.
+
+No `multiprocessing`, no subprocesses except `explorer /select,` on
+Windows for "Open in Explorer".
+
+## HTTP surface
+
+- `/api/health` -- `{service: "argus-hoard", name, version, status,
+  photo_count, roots, embedder}`.
+- `/api/agent/<tool>` -- the nine MCP tools, audited in `agent_calls`.
+- UI routes (not audited): `/api/photos`, `/api/photos/{id}`,
+  `/thumbnail`, `/preview` (large JPEG of the original, EXIF-rotated,
+  also for HEIC/TIFF), `/open`, `/caption`, `/api/search`,
+  `/api/similar`, `/api/duplicates`, `/api/timeline`, `/api/places`,
+  `/api/roots`, `/api/scan`, `/api/jobs`, `/api/albums`,
+  `/api/settings`, `/api/model`, `/api/geocoder/download`,
+  `/api/captions/batch`, `/api/agent-calls`.
+- Guard: requests whose `Host` is not `127.0.0.1:<port>` or
+  `localhost:<port>` get 403; non-GET requests with a foreign `Origin` or
+  `Sec-Fetch-Site: cross-site` get 403. No CORS headers.
+- Static files: only files whose resolved path is inside `frontend/dist`;
+  every other non-API path gets `index.html`.
 
 ## Key decisions
 
-- **No task queue / no Celery / no Redis.** A thread + a SQLite table is
-  enough for a single local user; adding infrastructure here would be
-  the wrong kind of complexity for what this is.
-- **Brute-force vector search, not an ANN index.** Documented as fine to
-  ~200k photos (a numpy matmul over that many 512-d float32 vectors is
-  a few hundred ms); an ANN index is an obvious extension point behind
-  the same `VectorStore` interface if a user's library grows past that.
-- **FakeEmbedder as the default until CLIP is cached.** Keeps the app
-  fully functional offline on first run and keeps every test free of
-  network access and a ~350 MB download, while still exercising the
-  exact same search/embedding code paths as production.
-- **HTTP between the MCP adapter and the app**, not a shared Python
-  process. This is what the contract asks for (the same `/api/agent/*`
-  logic testable via FastAPI's `TestClient`), and it also means the
-  adapter has no dependency on the app's Python environment beyond
-  `httpx` and `mcp`.
+- **A thread and a SQLite table instead of a task queue.** One local user
+  does not need more infrastructure.
+- **Brute-force vector search.** A matrix product over 200k x 512 float32
+  is a few hundred milliseconds; an ANN index can sit behind
+  `VectorStore` later.
+- **Fallback embedder until the model is downloaded.** The app and every
+  default test work offline; the agent is told (a `note` in results) that
+  the fallback only understands colours.
+- **HTTP between the MCP adapter and the app.** The adapter needs nothing
+  from the app's environment, and the same logic is tested through
+  FastAPI's `TestClient`.

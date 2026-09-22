@@ -1,45 +1,65 @@
 # Argus's Hoard
 
-### Do you have the photo of the dog on the beach from last summer?
+### Do you still have the photo of the dog on the beach from last summer?
 
-**A local, private photo library that understands what is in your pictures -- and hands the answer to a local AI model as data it can act on, not a folder it cannot see.**
+**A private photo library that indexes your folders locally, understands what is in each picture, and hands a local AI model compact results plus one numbered contact sheet it can actually look at.**
 
 [Español](README.es.md) · [Run locally](#run-locally-on-windows) · [Connect an AI](docs/MCP.md) · [Portfolio](https://luissalet.github.io/Portfolio/#projects)
 
-![Argus's Hoard library grid, demo data](docs/media/library.png)
-*Actual application, synthetic demo data (generated gradients, not real photos).*
+![Argus's Hoard library grid with demo data](docs/media/library.png)
+*Actual application, synthetic demo data: 87 generated images (gradients and simple shapes, not real photos) with EXIF dates, GPS for three cities, and planted duplicates.*
 
 ## Why
 
-A local assistant can read files and answer questions about text, but it
-cannot look at a folder of 20,000 photos and tell you which one has the
-whiteboard notes from March, or whether you already have three copies of
-the same trip photo taking up space. Argus indexes the owner's photo
-folders locally -- CLIP embeddings via ONNX Runtime, no PyTorch, no cloud
-call -- extracts EXIF and reverse-geocodes GPS offline, finds exact and
-near duplicates, and hands a model compact, filtered results plus a single
-numbered contact-sheet image so a vision-capable model can look at ten
-candidates for the price of one. Argus never modifies, moves or deletes an
-original file; that is a hard invariant, and it is tested.
+A language model can read a text file, but a folder of 20,000 photos is
+opaque to it: it cannot tell which one shows the whiteboard from March,
+where a trip was, or that three copies of the same picture are taking up
+space. Pasting images into a chat does not scale, and describing photos
+from their file names invites confident guesses.
+
+Argus indexes the owner's folders on their own machine (CLIP image
+embeddings through ONNX Runtime, no PyTorch, no cloud call), reads EXIF
+and GPS, reverse-geocodes offline, and finds exact and near duplicates.
+The model gets short, filtered, numbered results with stable ids and a
+single contact-sheet image of the candidates, so a vision model can check
+ten photos for the price of one image before it claims anything. Argus
+never modifies, moves or deletes an original file; that invariant is
+tested.
 
 ## What is implemented
 
 | Area | Available now | Boundary |
 | --- | --- | --- |
-| Indexing | Incremental scan, change detection by size+mtime, moved/renamed files keep their id, EXIF (dates, GPS, camera), WebP thumbnails, background job with progress | No file-watcher (rescans are manual/on-demand, not automatic on file-system events) |
-| Search | CLIP text->image search (`FakeEmbedder` fallback before the ~350MB model is downloaded), filters (date, place, folder, camera, orientation, GPS), hybrid with captions when present | English queries work best with CLIP; the tools tell the model to translate first |
-| Duplicates | Exact (content hash) and near (perceptual hash, chunked candidate index verified against brute force) grouping with a keeper suggestion | Read-only by design -- Argus never deletes; "Copy paths" is the closest it gets to cleanup |
-| Places | Offline reverse geocoding (bundled 10-city fixture, or the full GeoNames `cities1000` on demand) | No map tiles (no external network for a view); country/city grouping only |
-| Captions | Optional local Ollama vision model, off by default, written into an FTS index for hybrid search | Never generated automatically; only on request per photo or a batch job |
-| Albums | Agent- and human-created collections, non-destructive | No nested albums |
-| Assistant integration | `faustus-plugin.json`, 9 MCP tools over stdio, every agent call audited in "Assistant activity" | `photos_add_folder` can only add a root; removing one is a human-only UI action |
+| Indexing | Background, incremental scans: unchanged files cost one `stat`; changed files are re-read; moved or renamed files keep their id, vector, caption and albums. Parallel hashing and decoding, progress with files/s and ETA, one unreadable file is reported instead of stopping the scan. JPEG, PNG, WebP, GIF, BMP, TIFF, HEIC/HEIF | No file-system watcher: rescans are started by the user, the agent or a new folder |
+| Metadata | EXIF date with time-zone offset, camera, lens, exposure, ISO, focal length, orientation, GPS; file time as fallback, flagged as such | EXIF only; XMP sidecars are not read |
+| Search | Text to image with CLIP ViT-B/32 (English queries work best; the tools tell the model to translate), similar photos, filters (date range, year, month, place, folder, camera, orientation, megapixels, GPS). Hybrid with captions when they exist | The model (about 600 MB) is downloaded only when the user clicks it in Settings. Until then a colour-only fallback is active and every result says so |
+| Duplicates | Exact (BLAKE2b) and near (pHash, Hamming distance up to 6, exact multi-index lookup, union-find) with a suggested keeper and the space that extra copies use | Read-only by design: "Copy paths" and "Open folder", deleting is up to the owner |
+| Places and time | Offline reverse geocoding (bundled 10-city table, or GeoNames `cities1000` on request), countries and cities with photo counts, timeline by year and month, "on this day" | No map tiles, to avoid any network request for a view |
+| Captions | Optional local Ollama vision model per photo or as a background batch, stored in a full-text index for hybrid search | Off by default; never generated during indexing |
+| Albums | Created by the owner or the agent from the lightbox or by tool call; the agent can only add | No nested albums |
+| Interface | React desktop-style UI: thumbnail grid with infinite scroll, lightbox with zoom and pan on a large (1600 px) preview of the original, EXIF panel, similar strip, English and Spanish, light and dark | Sidebar sections are not deep-linkable URLs |
+| Assistant integration | `faustus-plugin.json`, 9 MCP tools over stdio, every agent call audited in "Assistant activity" | The agent can add a folder but not remove one |
 
 ## Connect it to Faustus
 
 Argus declares itself with `faustus-plugin.json`. Start the app, then in
-Faustus: **Connectors -> Nearby apps -> Add**.
+Faustus open **Connectors -> Nearby apps -> Add**. Faustus finds it on
+`127.0.0.1:8814`, reads the manifest from the app's working directory and
+launches the MCP adapter itself.
 
-It also works with any MCP client over stdio:
+| Tool | What | Read-only |
+| --- | --- | --- |
+| `photos_search` | Text (English) -> photos, filters, numbered contact sheet | yes |
+| `photos_similar` | Photos that look like a given one | yes |
+| `photos_show` | Up to 4 images for a closer look (200 KB each at most) | yes |
+| `photos_describe` | EXIF, place, path; optional local caption | yes (a requested caption is saved in Argus's database) |
+| `photos_duplicates` | Exact or near duplicate groups with a keeper | yes |
+| `photos_timeline` | Counts per year and month, "on this day" | yes |
+| `photos_library` | Folders, counts, active model, running jobs | yes |
+| `photos_add_folder` | Register a folder and index it | adds only |
+| `photos_album` | Create or extend an album | adds only |
+
+It works with any MCP client over stdio:
 
 ```json
 {
@@ -53,71 +73,102 @@ It also works with any MCP client over stdio:
 }
 ```
 
-| Tool | What | Read-only? |
-| --- | --- | --- |
-| `photos_search` | Text -> photos, with filters and a contact sheet | yes |
-| `photos_similar` | Visually similar photos | yes |
-| `photos_show` | Up to 4 full images for the model to look at | yes |
-| `photos_describe` | EXIF, place, path, optional caption | mostly (caption write only) |
-| `photos_duplicates` | Exact/near duplicate groups + keeper | yes |
-| `photos_timeline` | Counts per year/month, "on this day" | yes |
-| `photos_library` | Roots, counts, model/job status | yes |
-| `photos_add_folder` | Register a new root and index it | adds only |
-| `photos_album` | Create/extend an album | adds only |
+Arguments, output shapes, error codes and limits: [docs/MCP.md](docs/MCP.md).
+The skill that tells the model when and how to use the tools:
+[skills/find-photos/SKILL.md](skills/find-photos/SKILL.md).
 
-Full argument/output reference: [docs/MCP.md](docs/MCP.md).
+![Search for "sunset over the sea" with the CLIP model](docs/media/search.png)
+*Actual application: "sunset over the sea" with the real CLIP model on the synthetic demo images.*
+
+![Lightbox with EXIF panel and similar photos](docs/media/lightbox.png)
+*The lightbox: preview of the original, EXIF, place, captions, albums and visually similar photos.*
 
 ## Run locally on Windows
 
-Double-click **`Iniciar Argus.cmd`**, or from PowerShell:
+Requirements: Python 3.11 or newer (3.13 at `C:\Python313` is preferred)
+and Node.js 22 for the first build of the interface.
+
+Double-click **`Iniciar Argus.cmd`** (and **`Detener Argus.cmd`** to stop),
+or from PowerShell:
 
 ```powershell
-./scripts/start.ps1              # first run: creates .venv, installs, builds the UI
-./scripts/start.ps1 -Demo        # same, with synthetic demo data
-./scripts/stop.ps1
+.\scripts\start.ps1              # first run: creates .venv, installs the lock, builds the UI
+.\scripts\start.ps1 -Demo        # same, with the synthetic demo library in data-demo\
+.\scripts\start.ps1 -Port 8820 -NoBrowser
+.\scripts\stop.ps1
 ```
+
+`start.ps1` reinstalls dependencies whenever `requirements-lock.txt`
+changes, starts the app hidden with the repository as working directory,
+waits for `/api/health` and opens the browser. Logs go to `data\logs\`.
+`stop.ps1` stops the process listening on the port after confirming it is
+Argus.
 
 Manual steps:
 
 ```powershell
 python -m venv .venv
-.venv\Scripts\pip install -r requirements-lock.txt
-.venv\Scripts\pip install --no-deps -e .
+.venv\Scripts\python -m pip install -r requirements-lock.txt
 cd frontend; npm ci; npm run build; cd ..
-.venv\Scripts\python -m argus_hoard --demo
+.venv\Scripts\python -m argus_hoard            # http://127.0.0.1:8814
+.venv\Scripts\python -m argus_hoard --demo     # synthetic library in data-demo\
 ```
 
-`--demo` uses `data-demo/` (synthetic photos, generated fresh) instead of
-`data/`, so you can try Argus without pointing it at real files.
+Flags: `--port`, `--data-dir` (or `ARGUS_DATA_DIR`), `--demo`,
+`--no-browser`. Everything Argus writes lives in the data folder
+(`data\` by default): database, thumbnails, vectors, model cache, logs.
 
 ## Architecture
 
-FastAPI + SQLite (WAL) core, React 19 + Vite frontend, a standalone MCP
-stdio adapter. Details, data model and the indexing pipeline:
-[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+FastAPI and SQLite (WAL) around a plain-Python engine, a React 19 + Vite
+interface, and a standalone MCP adapter that talks to the app over HTTP.
+Modules, data model, the indexing pipeline, threads and the duplicate
+index are described in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+
+![Near duplicates with the suggested keeper](docs/media/duplicates.png)
+*Near duplicates in the demo library: each planted downscaled copy is grouped with its original, keeper first.*
+
+![Timeline by year and month](docs/media/timeline.png)
+*Timeline: months with sample thumbnails; a month opens its photos.*
 
 ## Tests
 
-```
-pytest -q      # 37 tests, ~3.5s, no network
+```powershell
+.venv\Scripts\python -m pytest -q          # 79 tests, about 20 s, no network
+.venv\Scripts\python -m pytest -q -m model # 1 opt-in test with the real CLIP model (downloads it if missing)
+cd frontend; npm run build                 # TypeScript strict
 ```
 
-Covers: EXIF/GPS extraction and orientation, thumbnailing, perceptual-hash
-near-duplicate grouping (chunk index verified against brute force),
-exact/near duplicate keeper selection, contact-sheet size/byte caps, the
-deterministic `FakeEmbedder` search ranking, the vector store's grow/
-persist behaviour, offline reverse geocoding, a mocked Ollama caption
-client, the `faustus-plugin.json` manifest, the full indexing pipeline
-(original files untouched, incremental rescan skips unchanged files,
-moved files keep their id), the HTTP API including the browser-attack
-guard, and a real MCP protocol round trip over stdio against a live,
-indexed instance of the app.
+The default suite covers: originals untouched after indexing, duplicates
+and album work; incremental rescans; moved files keeping their id;
+corrupt files not stopping a scan; serialised concurrent scans; the data
+folder never indexed as photos; re-embedding after an embedder change;
+EXIF as cameras write it (sub-IFD, tuples, zeroed dates) and GPS signs;
+thumbnail orientation; every supported format including HEIC; the near-duplicate index against brute force on
+8,000 hashes; union-find and the keeper rule; contact-sheet and
+`photos_show` size caps; fallback-embedder ranking and its determinism
+across processes; the vector store; reverse geocoding on a fixture; the
+Ollama client against a mock server, including hybrid caption search;
+filter validation; the HTTP guard, path traversal attempts and error
+shapes; the manifest; and the MCP adapter spawned over stdio against a
+live app (tool list, annotations, keywords, contact-sheet image,
+`photos_show`, albums, errors, and the message when the app is down). The
+model test indexes the demo scenes with real CLIP and checks that four
+English descriptions find the right scene. The CI workflow is set up to
+run the suite on Ubuntu and Windows with Python 3.11 and 3.13, build the
+UI, and drive `start.ps1`/`stop.ps1` on Windows.
 
 ## Privacy and limits
 
-Everything runs on `127.0.0.1`; no telemetry, no network call the UI
-does not explicitly say it is making (the CLIP model download and the
-optional GeoNames dataset are the only two, both opt-in and visible in
-Settings). Vector search is brute-force cosine, documented fine to
-around 200k photos on a single machine; a larger library would want an
-ANN index behind the same `VectorStore` interface.
+- Binds to `127.0.0.1` only; requests with another `Host` header, and
+  cross-site writes, are rejected. No telemetry.
+- The only network requests are the ones the user starts in Settings: the
+  CLIP model from Hugging Face and the GeoNames dataset. A local Ollama is
+  contacted only for captions the user or the agent asks for.
+- Originals are only read. Removing a folder in Settings forgets Argus's
+  own data about it (index rows, thumbnails, album entries), never the
+  files.
+- Vector search is brute-force cosine: fine to about 200,000 photos on
+  one machine.
+- Place names come from [GeoNames](https://www.geonames.org/) (CC BY 4.0)
+  when the full dataset is downloaded.
