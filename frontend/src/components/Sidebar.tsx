@@ -9,6 +9,7 @@ import {
   Settings as SettingsIcon,
 } from "lucide-react";
 import type { Dict } from "../i18n";
+import type { LibraryStatus } from "../types";
 
 export type Page =
   | "library"
@@ -24,6 +25,7 @@ interface Props {
   page: Page;
   onNavigate: (p: Page) => void;
   t: Dict;
+  status: LibraryStatus | null;
 }
 
 const ITEMS: { id: Page; icon: typeof Images; labelKey: keyof Dict }[] = [
@@ -37,7 +39,8 @@ const ITEMS: { id: Page; icon: typeof Images; labelKey: keyof Dict }[] = [
   { id: "activity", icon: Eye, labelKey: "nav_activity" },
 ];
 
-export default function Sidebar({ page, onNavigate, t }: Props) {
+export default function Sidebar({ page, onNavigate, t, status }: Props) {
+  const semantic = status?.embedder.semantic ?? false;
   return (
     <nav className="sidebar">
       <div className="sidebar-brand">
@@ -59,6 +62,16 @@ export default function Sidebar({ page, onNavigate, t }: Props) {
           );
         })}
       </div>
+      {status && (
+        <button
+          className={`sidebar-status${semantic ? "" : " warn"}`}
+          onClick={() => onNavigate("settings")}
+          title={semantic ? t.model_semantic : t.model_fallback}
+        >
+          <span className="dot" />
+          <span className="label">{semantic ? "CLIP ViT-B/32" : t.fallback_title}</span>
+        </button>
+      )}
     </nav>
   );
 }

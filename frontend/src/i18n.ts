@@ -86,6 +86,49 @@ export interface Dict {
   lens: string;
   exposure: string;
   path: string;
+  library_count: (n: number) => string;
+  indexing_now: string;
+  fallback_title: string;
+  fallback_body: string;
+  open_settings: string;
+  filter_from: string;
+  filter_to: string;
+  add_to_album: string;
+  album_input_placeholder: string;
+  added_to: (name: string) => string;
+  dup_summary: (groups: number, bytes: string) => string;
+  dup_group_reclaim: (bytes: string) => string;
+  open_folder: string;
+  back_to_timeline: string;
+  model_active: string;
+  model_semantic: string;
+  model_fallback: string;
+  model_download: string;
+  model_downloading: string;
+  model_note: string;
+  model_downloaded: (size: string) => string;
+  stale_photos: (n: number) => string;
+  excluded_globs: string;
+  excluded_placeholder: string;
+  edit: string;
+  captions_batch: string;
+  captions_note: string;
+  geocoder_note: string;
+  geocoder_bundled: string;
+  geocoder_full: string;
+  delete_album: string;
+  confirm_delete_album: string;
+  yes_delete: string;
+  heic_missing: string;
+  job_errors: (n: number) => string;
+  file_date: string;
+  missing_file: string;
+  arguments: string;
+  by_assistant: string;
+  error_generic: string;
+  job_started: string;
+  folder_unreachable: string;
+  score: string;
 }
 
 export const dict: Record<Lang, Dict> = {
@@ -113,7 +156,7 @@ export const dict: Record<Lang, Dict> = {
     empty_library_title: "No photos indexed yet",
     empty_library_body: "Add a folder in Settings to start indexing your photos.",
     empty_search_title: "Search your photos",
-    empty_search_body: "Try “sunset on the beach” or “whiteboard notes”.",
+    empty_search_body: "Try “sunset on the beach” or “whiteboard notes”. English works best.",
     no_results: "No photos matched your search.",
     loading: "Loading…",
     photos_count: (n: number) => `${n} photo${n === 1 ? "" : "s"}`,
@@ -132,15 +175,15 @@ export const dict: Record<Lang, Dict> = {
     ],
     roots: "Indexed folders",
     add_folder: "Add folder",
-    folder_path_placeholder: "/absolute/path/to/photos",
+    folder_path_placeholder: "Absolute folder path, e.g. C:\\Users\\you\\Pictures",
     add: "Add",
     scan_now: "Scan now",
     scanning: "Scanning…",
     remove: "Remove",
-    confirm_remove: "Remove this folder and its photos from the index?",
+    confirm_remove: "Remove this folder from the index? Files are not touched.",
     yes_remove: "Yes, remove",
     cancel: "Cancel",
-    model_status: "Embedding model",
+    model_status: "Image model",
     geocoder_status: "Places data",
     download_geonames: "Download full world cities dataset",
     ollama_url: "Ollama URL",
@@ -150,7 +193,7 @@ export const dict: Record<Lang, Dict> = {
     connection_failed: "Connection failed",
     save: "Save",
     saved: "Saved",
-    albums_empty: "No albums yet. Select photos in the library and create one.",
+    albums_empty: "No albums yet. Open a photo and use “Add to album”, or ask the assistant to make one.",
     new_album: "New album",
     album_name_placeholder: "Album name",
     create: "Create",
@@ -177,6 +220,51 @@ export const dict: Record<Lang, Dict> = {
     lens: "Lens",
     exposure: "Exposure",
     path: "Path",
+    library_count: (n: number) => `${n.toLocaleString("en")} photo${n === 1 ? "" : "s"}`,
+    indexing_now: "Indexing…",
+    fallback_title: "Content search is not available yet",
+    fallback_body:
+      "Argus is using its colour-only fallback, so searches only understand colours. Download the image model in Settings to search by what is in your photos.",
+    open_settings: "Open Settings",
+    filter_from: "From",
+    filter_to: "To",
+    add_to_album: "Add to album",
+    album_input_placeholder: "New or existing album",
+    added_to: (name: string) => `Added to “${name}”`,
+    dup_summary: (groups: number, bytes: string) =>
+      `${groups} group${groups === 1 ? "" : "s"} · ${bytes} would be freed by keeping one copy of each`,
+    dup_group_reclaim: (bytes: string) => `${bytes} in extra copies`,
+    open_folder: "Open folder",
+    back_to_timeline: "Timeline",
+    model_active: "Active model",
+    model_semantic: "CLIP ViT-B/32: searches by content",
+    model_fallback: "Colour-only fallback: the image model is not downloaded",
+    model_download: "Download image model (about 600 MB)",
+    model_downloading: "Downloading and re-indexing…",
+    model_note: "Downloaded once from Hugging Face into the data folder; afterwards everything runs offline.",
+    model_downloaded: (size: string) => `Downloaded (${size} on disk)`,
+    stale_photos: (n: number) => `${n} photo${n === 1 ? "" : "s"} still to be analysed with this model (run a scan).`,
+    excluded_globs: "Excluded patterns",
+    excluded_placeholder: "e.g. */Screenshots/*, *.gif",
+    edit: "Edit",
+    captions_batch: "Caption photos that have none",
+    captions_note: "Sends each photo to your local Ollama model; it can take a while and runs in the background.",
+    geocoder_note: "Downloads about 10 MB from GeoNames (CC BY 4.0) and relabels every photo with GPS.",
+    geocoder_bundled: "Built-in list of 10 cities",
+    geocoder_full: "GeoNames cities1000 (worldwide)",
+    delete_album: "Delete album",
+    confirm_delete_album: "Delete this album? The photos stay where they are.",
+    yes_delete: "Yes, delete",
+    heic_missing: "HEIC support is not installed, so .heic files are skipped.",
+    job_errors: (n: number) => `${n} file${n === 1 ? "" : "s"} could not be read`,
+    file_date: "file date, no EXIF",
+    missing_file: "The original file is not reachable right now.",
+    arguments: "Arguments",
+    by_assistant: "by the assistant",
+    error_generic: "Something went wrong",
+    job_started: "Started in the background",
+    folder_unreachable: "Folder not reachable",
+    score: "Match",
   },
   es: {
     appName: "El Tesoro de Argos",
@@ -202,7 +290,7 @@ export const dict: Record<Lang, Dict> = {
     empty_library_title: "Aún no hay fotos indexadas",
     empty_library_body: "Añade una carpeta en Ajustes para empezar a indexar tus fotos.",
     empty_search_title: "Busca en tus fotos",
-    empty_search_body: "Prueba “atardecer en la playa” o “notas en pizarra”.",
+    empty_search_body: "Prueba «atardecer en la playa» o «notas en la pizarra». En inglés funciona mejor.",
     no_results: "Ninguna foto coincide con tu búsqueda.",
     loading: "Cargando…",
     photos_count: (n: number) => `${n} foto${n === 1 ? "" : "s"}`,
@@ -221,15 +309,15 @@ export const dict: Record<Lang, Dict> = {
     ],
     roots: "Carpetas indexadas",
     add_folder: "Añadir carpeta",
-    folder_path_placeholder: "/ruta/absoluta/a/fotos",
+    folder_path_placeholder: "Ruta absoluta, p. ej. C:\\Users\\tu\\Imágenes",
     add: "Añadir",
     scan_now: "Escanear ahora",
     scanning: "Escaneando…",
     remove: "Quitar",
-    confirm_remove: "¿Quitar esta carpeta y sus fotos del índice?",
+    confirm_remove: "¿Quitar esta carpeta del índice? Los archivos no se tocan.",
     yes_remove: "Sí, quitar",
     cancel: "Cancelar",
-    model_status: "Modelo de embeddings",
+    model_status: "Modelo de imagen",
     geocoder_status: "Datos de lugares",
     download_geonames: "Descargar base de datos mundial de ciudades",
     ollama_url: "URL de Ollama",
@@ -239,7 +327,7 @@ export const dict: Record<Lang, Dict> = {
     connection_failed: "Conexión fallida",
     save: "Guardar",
     saved: "Guardado",
-    albums_empty: "Aún no hay álbumes. Selecciona fotos en la biblioteca y crea uno.",
+    albums_empty: "Aún no hay álbumes. Abre una foto y usa «Añadir a álbum», o pídele al asistente que cree uno.",
     new_album: "Nuevo álbum",
     album_name_placeholder: "Nombre del álbum",
     create: "Crear",
@@ -261,11 +349,56 @@ export const dict: Record<Lang, Dict> = {
     generate_caption: "Generar descripción",
     generating: "Generando…",
     photo_details: "Detalles de la foto",
-    taken: "Tomada",
+    taken: "Fecha",
     camera: "Cámara",
     lens: "Objetivo",
     exposure: "Exposición",
     path: "Ruta",
+    library_count: (n: number) => `${n.toLocaleString("es")} foto${n === 1 ? "" : "s"}`,
+    indexing_now: "Indexando…",
+    fallback_title: "La búsqueda por contenido aún no está disponible",
+    fallback_body:
+      "Argos está usando su modo básico, que solo entiende colores. Descarga el modelo de imagen en Ajustes para buscar por lo que aparece en tus fotos.",
+    open_settings: "Abrir Ajustes",
+    filter_from: "Desde",
+    filter_to: "Hasta",
+    add_to_album: "Añadir a álbum",
+    album_input_placeholder: "Álbum nuevo o existente",
+    added_to: (name: string) => `Añadida a «${name}»`,
+    dup_summary: (groups: number, bytes: string) =>
+      `${groups} grupo${groups === 1 ? "" : "s"} · se liberarían ${bytes} conservando una copia de cada uno`,
+    dup_group_reclaim: (bytes: string) => `${bytes} en copias de más`,
+    open_folder: "Abrir carpeta",
+    back_to_timeline: "Cronología",
+    model_active: "Modelo activo",
+    model_semantic: "CLIP ViT-B/32: busca por contenido",
+    model_fallback: "Modo básico por colores: el modelo de imagen no está descargado",
+    model_download: "Descargar el modelo de imagen (unos 600 MB)",
+    model_downloading: "Descargando y reindexando…",
+    model_note: "Se descarga una sola vez desde Hugging Face a la carpeta de datos; después todo funciona sin conexión.",
+    model_downloaded: (size: string) => `Descargado (${size} en disco)`,
+    stale_photos: (n: number) => `Quedan ${n} foto${n === 1 ? "" : "s"} por analizar con este modelo (lanza un escaneo).`,
+    excluded_globs: "Patrones excluidos",
+    excluded_placeholder: "p. ej. */Capturas/*, *.gif",
+    edit: "Editar",
+    captions_batch: "Describir las fotos que no tienen descripción",
+    captions_note: "Envía cada foto a tu modelo local de Ollama; puede tardar y se ejecuta en segundo plano.",
+    geocoder_note: "Descarga unos 10 MB de GeoNames (CC BY 4.0) y vuelve a etiquetar todas las fotos con GPS.",
+    geocoder_bundled: "Lista integrada de 10 ciudades",
+    geocoder_full: "GeoNames cities1000 (todo el mundo)",
+    delete_album: "Eliminar álbum",
+    confirm_delete_album: "¿Eliminar este álbum? Las fotos se quedan donde están.",
+    yes_delete: "Sí, eliminar",
+    heic_missing: "El soporte HEIC no está instalado, así que los archivos .heic se omiten.",
+    job_errors: (n: number) => `${n} archivo${n === 1 ? "" : "s"} no se ${n === 1 ? "ha" : "han"} podido leer`,
+    file_date: "fecha del archivo, sin EXIF",
+    missing_file: "El archivo original no está accesible ahora mismo.",
+    arguments: "Argumentos",
+    by_assistant: "por el asistente",
+    error_generic: "Algo ha fallado",
+    job_started: "En marcha en segundo plano",
+    folder_unreachable: "Carpeta no accesible",
+    score: "Coincidencia",
   },
 };
 

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { FolderOpen, Plus } from "lucide-react";
-import { api } from "../api";
+import { ArrowLeft, Bot, FolderOpen, Plus, Trash2 } from "lucide-react";
+import { api, errorText } from "../api";
 import Lightbox from "../components/Lightbox";
 import PhotoGrid from "../components/PhotoGrid";
 import type { Dict } from "../i18n";
@@ -16,47 +16,80 @@ export default function AlbumsPage({ t, platformIsWindows }: Props) {
   const [openAlbum, setOpenAlbum] = useState<Album | null>(null);
   const [openIndex, setOpenIndex] = useState<number | null>(null);
   const [newName, setNewName] = useState("");
-  const [creating, setCreating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   function refresh() {
-    api.listAlbums().then(setAlbums);
+    api
+      .listAlbums()
+      .then(setAlbums)
+      .catch((e) => setError(errorText(e)));
   }
 
   useEffect(refresh, []);
 
   async function openDetail(album: Album) {
-    const full = await api.getAlbum(album.id);
-    setOpenAlbum(full);
+    try {
+      setOpenAlbum(await api.getAlbum(album.id));
+      setConfirmDelete(false);
+    } catch (e) {
+      setError(errorText(e));
+    }
   }
 
   async function createAlbum(e: React.FormEvent) {
     e.preventDefault();
     if (!newName.trim()) return;
-    setCreating(true);
     try {
-      await api.createAlbum(newName.trim(), []);
+      await api.albumAdd(newName.trim(), []);
       setNewName("");
       refresh();
-    } finally {
-      setCreating(false);
+    } catch (err) {
+      setError(errorText(err));
+    }
+  }
+
+  async function deleteAlbum(album: Album) {
+    try {
+      await api.deleteAlbum(album.id);
+      setOpenAlbum(null);
+      refresh();
+    } catch (err) {
+      setError(errorText(err));
     }
   }
 
   if (openAlbum) {
+    const photos = openAlbum.photos ?? [];
     return (
       <div>
-        <button className="btn" style={{ marginBottom: 16 }} onClick={() => setOpenAlbum(null)}>
-          &larr; {t.nav_albums}
-        </button>
-        <h2 style={{ marginTop: 0 }}>{openAlbum.name}</h2>
-        {(openAlbum.photos?.length ?? 0) === 0 ? (
-          <p style={{ color: "var(--text-muted)" }}>{t.no_results}</p>
+        <div className="toolbar">
+          <button className="btn" onClick={() => setOpenAlbum(null)}>
+            <ArrowLeft size={14} /> {t.nav_albums}
+          </button>
+          <h2 className="section-title">{openAlbum.name}</h2>
+          <span className="muted">{t.photos_count(photos.length)}</span>
+          <span className="spacer" />
+          {confirmDelete ? (
+            <span className="confirm-inline">
+              {t.confirm_delete_album}
+              <button onClick={() => deleteAlbum(openAlbum)}>{t.yes_delete}</button>
+              <button onClick={() => setConfirmDelete(false)}>{t.cancel}</button>
+            </span>
+          ) : (
+            <button className="btn btn-danger" onClick={() => setConfirmDelete(true)}>
+              <Trash2 size={14} /> {t.delete_album}
+            </button>
+          )}
+        </div>
+        {photos.length === 0 ? (
+          <p className="muted">{t.no_results}</p>
         ) : (
-          <PhotoGrid photos={openAlbum.photos!} onOpen={setOpenIndex} />
+          <PhotoGrid photos={photos} onOpen={setOpenIndex} />
         )}
-        {openIndex !== null && openAlbum.photos && (
+        {openIndex !== null && photos.length > 0 && (
           <Lightbox
-            photos={openAlbum.photos}
+            photos={photos}
             index={openIndex}
             onClose={() => setOpenIndex(null)}
             onIndexChange={setOpenIndex}
@@ -73,15 +106,16 @@ export default function AlbumsPage({ t, platformIsWindows }: Props) {
       <form className="toolbar" onSubmit={createAlbum}>
         <input
           className="input"
-          style={{ maxWidth: 260 }}
+          style={{ maxWidth: 280 }}
           placeholder={t.album_name_placeholder}
           value={newName}
           onChange={(e) => setNewName(e.target.value)}
         />
-        <button className="btn btn-primary" type="submit" disabled={creating}>
+        <button className="btn btn-primary" type="submit" disabled={!newName.trim()}>
           <Plus size={14} /> {t.create}
         </button>
       </form>
+      {error && <p className="error-text">{error}</p>}
 
       {albums.length === 0 ? (
         <div className="empty-state">
@@ -89,13 +123,25 @@ export default function AlbumsPage({ t, platformIsWindows }: Props) {
           <h3>{t.albums_empty}</h3>
         </div>
       ) : (
-        <div className="grid">
+        <div className="album-grid">
           {albums.map((a) => (
-            <div key={a.id} className="card" style={{ padding: 16, cursor: "pointer" }} onClick={() => openDetail(a)}>
-              <FolderOpen size={22} color="var(--accent)" />
-              <div style={{ fontWeight: 700, marginTop: 8 }}>{a.name}</div>
-              <div style={{ color: "var(--text-muted)", fontSize: 12.5 }}>{t.photos_count(a.photo_count ?? 0)}</div>
-            </div>
+            <button key={a.id} className="album-card" onClick={() => openDetail(a)}>
+              <div className="album-cover">
+                {a.cover_thumbnail_url ? <img src={a.cover_thumbnail_url} alt="" /> : <FolderOpen size={28} />}
+              </div>
+              <div className="album-info">
+                <strong>{a.name}</strong>
+                <span className="muted small">
+                  {t.photos_count(a.photo_count)}
+                  {a.created_by === "agent" && (
+                    <>
+                      {" · "}
+                      <Bot size={12} /> {t.by_assistant}
+                    </>
+                  )}
+                </span>
+              </div>
+            </button>
           ))}
         </div>
       )}
