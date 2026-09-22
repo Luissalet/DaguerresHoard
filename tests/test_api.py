@@ -203,6 +203,24 @@ def test_agent_duplicates_are_summarised_for_a_small_context(client, tmp_path):
     assert "note" not in agent_resp.json()
 
 
+def test_owner_removes_a_photo_from_an_album_and_keeps_the_file(client, tmp_path):
+    # A6 (live report): the album view could only delete the whole album;
+    # the UI's "Select photos" -> "Remove N photos" goes through this route.
+    photos_dir = tmp_path / "albumphotos"
+    first = make_image(photos_dir / "a.jpg", color=(200, 20, 20))
+    make_image(photos_dir / "b.jpg", color=(20, 200, 20))
+    root_id = client.post("/api/roots", json={"path": str(photos_dir)}).json()["id"]
+    _wait_job(client, client.post("/api/scan", json={"root_id": root_id}).json()["job_id"])
+    ids = [p["id"] for p in client.get("/api/photos").json()["results"]]
+    album = client.post("/api/albums", json={"name": "Rodaje", "photo_ids": ids}).json()
+    assert album["photo_count"] == 2
+
+    after = client.post(f"/api/albums/{album['id']}/remove", json={"photo_ids": [ids[0]]}).json()
+    assert after["photo_count"] == 1
+    assert first.exists() and (photos_dir / "b.jpg").exists()  # only the album entry goes
+    assert client.get("/api/photos").json()["count"] == 2
+
+
 def test_places_endpoint_groups_by_country_and_city(client, tmp_path, monkeypatch):
     from argus_hoard.geocode import CityMatch
 

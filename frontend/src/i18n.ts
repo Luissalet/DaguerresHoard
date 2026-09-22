@@ -297,7 +297,7 @@ export const dict: Record<Lang, Dict> = {
     select_photos: "Select photos",
     remove_selected: (n) => `Remove ${n} photo${n === 1 ? "" : "s"}`,
     confirm_remove_from_album: (n) =>
-      `Remove ${n} photo${n === 1 ? "" : "s"} from this album? The file${n === 1 ? "" : "s"} stay where ${n === 1 ? "it is" : "they are"}.`,
+      `Remove ${n} photo${n === 1 ? "" : "s"} from this album? ${n === 1 ? "The file stays where it is" : "The files stay where they are"}.`,
     heic_missing: "HEIC support is not installed, so .heic files are skipped.",
     job_errors: (n: number) => `${n} file${n === 1 ? "" : "s"} could not be read`,
     file_date: "file date, no EXIF",
