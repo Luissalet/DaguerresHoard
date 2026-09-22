@@ -1,3 +1,5 @@
+<img src="app-icon.png" width="96" alt="">
+
 # Argus's Hoard
 
 ### Do you still have the photo of the dog on the beach from last summer?
@@ -39,6 +41,24 @@ tested.
 | Albums | Created by the owner or the agent from the lightbox or by tool call; the agent can only add | No nested albums |
 | Interface | React desktop-style UI: thumbnail grid with infinite scroll, lightbox with zoom and pan on a large (1600 px) preview of the original, EXIF panel, similar strip, English and Spanish, light and dark | Sidebar sections are not deep-linkable URLs |
 | Assistant integration | `faustus-plugin.json`, 9 MCP tools over stdio, every agent call audited in "Assistant activity" | The agent can add a folder but not remove one |
+| Shared models | Captions and query translation share whatever model server Faustus or a local Ollama/llama.cpp/OpenAI-compatible server already has running (Settings -> Shared models shows what resolved and why, with a manual override) | Image search itself (CLIP) is always local, never shared: it is not a chat model the shared backend covers |
+
+## Shared models
+
+Argus never loads its own copy of a language or vision model. Two features
+go through Hoard Link, a small vendored resolver shared with the owner's
+other local apps: photo **captions** (the `vision` capability) and
+automatic **query translation** for the search box (the `llm` capability).
+Resolution order is always the same: an explicit override set in Settings,
+then a running Faustus, then a loopback Ollama / llama.cpp / OpenAI-compatible
+server -- whichever is already serving a fitting model, so Argus never
+asks a GPU to load a second copy. Both features simply say so and stay off
+when nothing resolves; the rest of Argus (indexing, search, duplicates,
+timeline, places, albums) works fully offline with no model at all. See
+[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#shared-model-backend-hoard-link).
+
+![Settings screen showing the Shared models panel](docs/media/settings.png)
+*Actual application: neither Faustus nor a local Ollama/llama.cpp server is running in this demo, so both capabilities honestly report "Not available" with the reason why.*
 
 ## Connect it to Faustus
 
@@ -134,7 +154,7 @@ index are described in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 ## Tests
 
 ```powershell
-.venv\Scripts\python -m pytest -q          # 80 tests, about 20 s, no network
+.venv\Scripts\python -m pytest -q          # 106 tests, about 15-20 s, no network
 .venv\Scripts\python -m pytest -q -m model # 1 opt-in test with the real CLIP model (downloads it if missing)
 cd frontend; npm run build                 # TypeScript strict
 ```
@@ -152,7 +172,14 @@ Ollama client against a mock server, including hybrid caption search;
 filter validation; the HTTP guard, path traversal attempts and error
 shapes; the manifest; and the MCP adapter spawned over stdio against a
 live app (tool list, annotations, keywords, contact-sheet image,
-`photos_show`, albums, errors, and the message when the app is down). The
+`photos_show`, albums, errors, and the message when the app is down).
+Also: the shared-backend resolver (legacy Ollama settings become the
+`vision` capability's explicit override only once actually saved; manual
+overrides persist without ever returning the Faustus token); captioning
+through `Link.chat(capability="vision")` against a mocked server, resolved
+or not; the good-citizen `wait_idle("vision")` pause in a caption batch;
+the non-English query detector; and the `/api/search` vs
+`/api/agent/photos_search` split (only the UI path ever translates). The
 model test indexes the demo scenes with real CLIP and checks that four
 English descriptions find the right scene. The CI workflow is set up to
 run the suite on Ubuntu and Windows with Python 3.11 and 3.13, build the

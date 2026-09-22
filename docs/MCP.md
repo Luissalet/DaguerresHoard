@@ -114,8 +114,11 @@ model, lens, f_number, exposure_time, iso, focal_length, orientation,
 gps_lat, gps_lon, city, region, country, caption}`; fields without data
 are omitted. `date_source` is `exif` or `file_mtime` (no EXIF date). With
 `caption=true` and no caption yet, the photo (downscaled to 1024 px) is
-sent to the configured local Ollama vision model; if that fails the
-result carries `caption_error` instead of failing the call.
+sent to whatever the shared model backend resolves for the `vision`
+capability (Faustus, a loopback Ollama/llama.cpp/OpenAI-compatible
+server, or the app's own configured Ollama override -- see the README's
+"Shared models" section); if nothing resolves the result carries
+`caption_error` instead of failing the call.
 
 ## photos_duplicates
 

@@ -1,3 +1,5 @@
+<img src="app-icon.png" width="96" alt="">
+
 # El Tesoro de Argos
 
 ### ¿Sigues teniendo la foto del perro en la playa del verano pasado?
@@ -39,6 +41,26 @@ mueve ni borra un archivo original; es un invariante con su test.
 | Álbumes | Los crea el usuario o el agente, desde el visor o con una herramienta; el agente solo puede añadir | Sin álbumes anidados |
 | Interfaz | Interfaz React de escritorio: cuadrícula de miniaturas con carga continua, visor con zoom y desplazamiento sobre una vista previa grande (1600 px) del original, panel EXIF, fotos parecidas, inglés y español, tema claro y oscuro | Las secciones de la barra lateral no tienen URL propia |
 | Integración con el asistente | `faustus-plugin.json`, 9 herramientas MCP por stdio y cada llamada del agente registrada en «Actividad del asistente» | El agente puede añadir una carpeta, pero no quitarla |
+| Modelos compartidos | Las descripciones y la traducción de búsquedas usan el modelo que ya tenga en marcha Faustus, o un Ollama/llama.cpp/servidor local compatible con OpenAI (Ajustes -> Modelos compartidos muestra qué se resolvió y por qué, con un ajuste manual) | La búsqueda de imágenes (CLIP) siempre es local: no es un modelo de chat que cubra el backend compartido |
+
+## Modelos compartidos
+
+Argos nunca carga su propia copia de un modelo de lenguaje o de visión.
+Dos funciones pasan por Hoard Link, un pequeño resolutor incluido que
+comparte con las demás aplicaciones locales del propietario: las
+**descripciones** de foto (capacidad `vision`) y la **traducción
+automática** de la búsqueda (capacidad `llm`). El orden de resolución es
+siempre el mismo: primero un ajuste manual guardado en Ajustes, luego un
+Faustus en marcha, luego un servidor local Ollama / llama.cpp / compatible con OpenAI
+que ya esté sirviendo un modelo adecuado -- así Argos nunca le pide a la
+GPU que cargue una segunda copia. Si nada se resuelve, ambas funciones lo
+dicen claramente y se quedan desactivadas; el resto de Argos (indexado,
+búsqueda, duplicados, cronología, lugares, álbumes) funciona sin conexión
+y sin ningún modelo. Más detalle en
+[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#shared-model-backend-hoard-link).
+
+![Pantalla de Ajustes con el panel de Modelos compartidos](docs/media/settings.png)
+*Aplicación real: en esta demostración no hay ni Faustus ni un Ollama/llama.cpp local en marcha, así que ambas capacidades informan honestamente «No disponible» junto con el motivo.*
 
 ## Conectarlo a Faustus
 
@@ -136,7 +158,7 @@ hilos e índice de duplicados: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 ## Tests
 
 ```powershell
-.venv\Scripts\python -m pytest -q          # 80 tests, unos 20 s, sin red
+.venv\Scripts\python -m pytest -q          # 106 tests, unos 15-20 s, sin red
 .venv\Scripts\python -m pytest -q -m model # 1 test opcional con el modelo CLIP real (lo descarga si falta)
 cd frontend; npm run build                 # TypeScript estricto
 ```
@@ -159,7 +181,16 @@ protección HTTP, los intentos de salir de la carpeta de la interfaz y el
 formato de los errores; el manifiesto; y el adaptador MCP lanzado por
 stdio contra la aplicación en marcha (lista de herramientas, anotaciones,
 palabras clave, imagen de la hoja de contactos, `photos_show`, álbumes,
-errores y el mensaje cuando la aplicación está parada). El test del
+errores y el mensaje cuando la aplicación está parada). Además: el
+resolutor del backend compartido (los ajustes antiguos de Ollama solo se
+convierten en el ajuste manual de la capacidad `vision` cuando el usuario
+los ha guardado de verdad; los ajustes manuales se guardan sin devolver
+nunca el token de Faustus); las descripciones a través de
+`Link.chat(capability="vision")` contra un servidor simulado, resuelto o
+no; la pausa de buen ciudadano `wait_idle("vision")` en un lote de
+descripciones; el detector de idioma no inglés; y la separación entre
+`/api/search` y `/api/agent/photos_search` (solo la ruta de la interfaz
+traduce). El test del
 modelo indexa las escenas de demostración con CLIP real y comprueba que
 cuatro descripciones en inglés encuentran la escena correcta. El flujo de
 CI está preparado para pasar la batería en Ubuntu y Windows con Python

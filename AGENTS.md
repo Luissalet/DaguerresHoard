@@ -11,9 +11,16 @@ Reglas para cualquier agente de código que trabaje en este repositorio.
   `data-demo/` con `--demo`). Nunca rutas fuera del repo salvo que el
   usuario lo pida explícitamente (`--data-dir`).
 - La API solo escucha en `127.0.0.1`. No añadas CORS. No añadas
-  telemetría ni llamadas de red que el usuario no haya pedido
+  telemetría ni llamadas de red externa que el usuario no haya pedido
   explícitamente (la única excepción hoy es la descarga opcional de
-  GeoNames y de un modelo CLIP, y ambas se anuncian en la UI).
+  GeoNames y de un modelo CLIP, y ambas se anuncian en la UI). El sondeo
+  de `hoard_link/` a Faustus y a servidores en loopback (Ollama,
+  llama.cpp, u otro compatible con OpenAI) para las capacidades `vision` y `llm` es la
+  excepción esperada: nunca sale de `127.0.0.1` y es justo lo que pide
+  el backend de modelos compartido.
+- **Nunca edites `argus_hoard/hoard_link/`** (es una copia vendorizada,
+  ver `VENDORED.txt`). Compón sobre ella desde `backend.py`
+  (`Library.backend`); para actualizarla, sustituye la carpeta entera.
 - No uses `window.confirm` ni `alert` en el frontend: bloquean la
   pestaña si algo la controla por automatización. Usa una confirmación
   en dos pasos en línea (ver `SettingsPage.tsx`).
