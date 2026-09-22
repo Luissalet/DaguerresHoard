@@ -1,0 +1,66 @@
+# Exact set to `pip install -r requirements-lock.txt` into a fresh venv.
+# Every pinned version here has both a Linux wheel (this build environment,
+# Python 3.11) and a cp313 win_amd64 wheel (the Windows production target,
+# Python 3.13) -- verified with
+#   pip download --no-deps --only-binary=:all: --python-version 313 --platform win_amd64 <pkg>==<ver>
+#
+# Direct dependencies (see pyproject.toml) plus the transitive pins needed
+# to reproduce this exact, tested environment.
+
+# -- direct --------------------------------------------------------------
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+pydantic==2.10.4
+httpx==0.28.1
+pillow==10.4.0
+imagehash==4.3.1
+numpy==2.2.1
+mcp==1.9.4
+fastembed==0.7.1
+onnxruntime==1.20.1
+pillow-heif==0.21.0
+
+# -- transitive (pinned so the lock is reproducible) ----------------------
+PyWavelets==1.9.0
+PyYAML==6.0.3
+annotated-types==0.8.0
+anyio==4.15.1
+certifi==2026.7.22
+charset-normalizer==3.5.1
+click==8.5.0
+coloredlogs==15.0.1
+filelock==4.0.1
+flatbuffers==25.12.19
+fsspec==2026.9.0
+h11==0.16.0
+hf-xet==1.6.0
+httpcore==1.0.9
+httptools==0.8.0
+httpx-sse==0.4.3
+huggingface-hub==0.36.2
+humanfriendly==10.0
+idna==3.20
+loguru==0.7.3
+mmh3==5.0.1
+mpmath==1.3.0
+packaging==26.3
+protobuf==7.36.2
+py-rust-stemmers==0.1.8
+pydantic-core==2.27.2
+python-dotenv==1.2.3
+requests==2.34.2
+scipy==1.17.1
+sse-starlette==3.0.3
+starlette==0.41.3
+sympy==1.14.0
+tokenizers==0.23.2
+tqdm==4.70.1
+typing-extensions==4.16.0
+urllib3==2.8.0
+uvloop==0.22.1 ; sys_platform != "win32"
+watchfiles==1.3.0
+websockets==17.1
+
+# -- dev / test (not needed to run the app) -------------------------------
+pytest==8.3.4
+pytest-asyncio==0.25.1
