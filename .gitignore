@@ -6,6 +6,7 @@ __pycache__/
 /data-demo/
 node_modules/
 frontend/dist/
+frontend/*.tsbuildinfo
 *.log
 .env
 test-results/

@@ -504,6 +504,22 @@ class Library:
             result["year"] = by_year.get(str(year), {})
         return result
 
+    def places(self) -> dict:
+        rows = self.conn.execute(
+            "SELECT country, city, COUNT(*) c, MIN(id) sample_id FROM photos "
+            "WHERE missing = 0 AND city IS NOT NULL GROUP BY country, city ORDER BY country, c DESC"
+        ).fetchall()
+        by_country: dict[str, list[dict]] = {}
+        for r in rows:
+            by_country.setdefault(r["country"] or "?", []).append(
+                {
+                    "city": r["city"],
+                    "count": r["c"],
+                    "sample_thumbnail_url": f"/api/photos/{r['sample_id']}/thumbnail",
+                }
+            )
+        return {"countries": by_country}
+
     def library_status(self) -> dict:
         total = self.conn.execute("SELECT COUNT(*) c FROM photos WHERE missing = 0").fetchone()["c"]
         missing = self.conn.execute("SELECT COUNT(*) c FROM photos WHERE missing = 1").fetchone()["c"]

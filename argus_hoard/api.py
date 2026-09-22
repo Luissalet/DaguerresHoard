@@ -131,6 +131,10 @@ def create_app(data_dir: Path, static_dir: Path | None = None, port: int = 8814)
     def library_status():
         return lib.library_status()
 
+    @app.get("/api/places")
+    def places():
+        return lib.places()
+
     @app.get("/api/photos")
     def list_photos(
         limit: int = 60,

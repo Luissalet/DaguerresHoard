@@ -133,6 +133,34 @@ def test_index_and_agent_search_flow(client, tmp_path):
     assert "photos_album" in tools_called
 
 
+def test_places_endpoint_groups_by_country_and_city(client, tmp_path, monkeypatch):
+    from argus_hoard.geocode import CityMatch
+
+    photos_dir = tmp_path / "geophotos"
+    make_image(photos_dir / "a.jpg")
+    root_id = client.post("/api/roots", json={"path": str(photos_dir)}).json()["id"]
+
+    app = client.app
+    lib = app.state.library
+    monkeypatch.setattr(lib.geocoder, "lookup", lambda lat, lon: CityMatch(city="Madrid", region=None, country="Spain", distance_km=0))
+    from argus_hoard.metadata import PhotoMetadata
+
+    monkeypatch.setattr(
+        "argus_hoard.library.extract_metadata",
+        lambda path: PhotoMetadata(
+            width=10, height=10, taken_at="2020-01-01T00:00:00", date_source="exif", make=None, model=None,
+            lens=None, f_number=None, exposure_time=None, iso=None, focal_length=None, orientation=1,
+            gps_lat=40.4, gps_lon=-3.7,
+        ),
+    )
+    job_id = client.post("/api/scan", json={"root_id": root_id}).json()["job_id"]
+    _wait_job(client, job_id)
+
+    places = client.get("/api/places").json()
+    assert "Spain" in places["countries"]
+    assert places["countries"]["Spain"][0]["city"] == "Madrid"
+
+
 def test_agent_describe_not_found_returns_404(client):
     resp = client.post("/api/agent/photos_describe", json={"photo_id": "does-not-exist"})
     assert resp.status_code == 404
