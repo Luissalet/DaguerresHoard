@@ -44,6 +44,7 @@ export interface SearchResult {
   next_offset?: number | null;
   embedder?: string;
   note?: string;
+  note_codes?: string[];
   translated_query?: string;
   original_query?: string;
   translate_error?: string;

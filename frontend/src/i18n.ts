@@ -100,6 +100,8 @@ export interface Dict {
   added_to: (name: string) => string;
   dup_summary: (groups: number, bytes: string) => string;
   dup_group_reclaim: (bytes: string) => string;
+  dup_summary_near: (groups: number, bytes: string) => string;
+  dup_group_reclaim_near: (bytes: string) => string;
   open_folder: string;
   back_to_timeline: string;
   model_active: string;
@@ -151,6 +153,10 @@ export interface Dict {
   translate_search_label: string;
   searched_for: (english: string) => string;
   not_translated: string;
+  note_translate_query: string;
+  note_no_strong_match: string;
+  note_filters_exclude_all: string;
+  note_stale_photos: string;
   no_vision_model: string;
   no_llm_model: string;
   backend_forget_token: string;
@@ -264,6 +270,9 @@ export const dict: Record<Lang, Dict> = {
     dup_summary: (groups: number, bytes: string) =>
       `${groups} group${groups === 1 ? "" : "s"} · ${bytes} would be freed by keeping one copy of each`,
     dup_group_reclaim: (bytes: string) => `${bytes} in extra copies`,
+    dup_summary_near: (groups: number, bytes: string) =>
+      `${groups} group${groups === 1 ? "" : "s"} of look-alike photos · up to ${bytes} · they can be different photos, check each group before deleting`,
+    dup_group_reclaim_near: (bytes: string) => `up to ${bytes} if the others really are copies`,
     open_folder: "Open folder",
     back_to_timeline: "Timeline",
     model_active: "Active model",
@@ -317,6 +326,10 @@ export const dict: Record<Lang, Dict> = {
     translate_search_label: "Translate non-English searches to English automatically",
     searched_for: (english: string) => `Searched for: “${english}”`,
     not_translated: "Not translated: no language model is available (see Settings → Shared models).",
+    note_translate_query: "The image model understands English best: try writing the search in English.",
+    note_no_strong_match: "No strong match: even the best results are only a partial match.",
+    note_filters_exclude_all: "No photo passes these filters.",
+    note_stale_photos: "Some photos are still being analysed and are not in these results yet.",
     no_vision_model: "No vision model is loaded. Faustus can serve one, or load one in Ollama.",
     no_llm_model: "No language model is loaded. Faustus can serve one, or load one in Ollama.",
     backend_forget_token: "Forget token",
@@ -427,6 +440,9 @@ export const dict: Record<Lang, Dict> = {
     dup_summary: (groups: number, bytes: string) =>
       `${groups} grupo${groups === 1 ? "" : "s"} · se liberarían ${bytes} conservando una copia de cada uno`,
     dup_group_reclaim: (bytes: string) => `${bytes} en copias de más`,
+    dup_summary_near: (groups: number, bytes: string) =>
+      `${groups} grupo${groups === 1 ? "" : "s"} de fotos parecidas · hasta ${bytes} · pueden ser fotos distintas, revisa cada grupo antes de borrar`,
+    dup_group_reclaim_near: (bytes: string) => `hasta ${bytes} si las demás son de verdad copias`,
     open_folder: "Abrir carpeta",
     back_to_timeline: "Cronología",
     model_active: "Modelo activo",
@@ -480,6 +496,10 @@ export const dict: Record<Lang, Dict> = {
     translate_search_label: "Traducir automáticamente las búsquedas que no estén en inglés",
     searched_for: (english: string) => `Buscado como: «${english}»`,
     not_translated: "Sin traducir: no hay ningún modelo de lenguaje disponible (mira Ajustes → Modelos compartidos).",
+    note_translate_query: "El modelo de imagen entiende mejor el inglés: prueba a escribir la búsqueda en inglés.",
+    note_no_strong_match: "Ninguna coincidencia clara: incluso los mejores resultados se parecen solo en parte.",
+    note_filters_exclude_all: "Ninguna foto cumple estos filtros.",
+    note_stale_photos: "Algunas fotos aún se están analizando y todavía no aparecen en estos resultados.",
     no_vision_model: "No hay ningún modelo de visión cargado. Faustus puede servir uno, o puedes cargarlo en Ollama.",
     no_llm_model: "No hay ningún modelo de lenguaje cargado. Faustus puede servir uno, o puedes cargarlo en Ollama.",
     backend_forget_token: "Olvidar el token",

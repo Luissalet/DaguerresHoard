@@ -117,12 +117,17 @@ export default function SearchPage({ t, platformIsWindows, onOpenSettings }: Pro
           </button>
         </div>
       )}
-      {result?.note && result.embedder !== "fake-colorhist-v1" && (
+      {result && result.embedder !== "fake-colorhist-v1" &&
         // B2/A9/A10 (live report): a single fixed banner used to be shown
         // for every note, even "no strong match" or "translate this query"
-        // with the real model active -- the actual note text now shows.
-        <p className="muted small search-translated-note">{result.note}</p>
-      )}
+        // with the real model active. The re-walk then found the agent's
+        // English note shown verbatim in the Spanish UI: the UI now words
+        // each note itself, from its code.
+        noteLines(result, t).map((line) => (
+          <p key={line} className="muted small search-translated-note">
+            {line}
+          </p>
+        ))}
       {error && <p className="error-text">{error}</p>}
 
       {result === null && !loading && !error && (
@@ -156,4 +161,16 @@ export default function SearchPage({ t, platformIsWindows, onOpenSettings }: Pro
       )}
     </div>
   );
+}
+
+function noteLines(result: SearchResult, t: Dict): string[] {
+  if (!result.note_codes) return result.note ? [result.note] : [];
+  const lines: string[] = [];
+  for (const code of result.note_codes) {
+    if (code === "translate_query" && !result.translated_query) lines.push(t.note_translate_query);
+    else if (code === "no_strong_match") lines.push(t.note_no_strong_match);
+    else if (code === "filters_exclude_all") lines.push(t.note_filters_exclude_all);
+    else if (code === "stale_photos") lines.push(t.note_stale_photos);
+  }
+  return lines;
 }

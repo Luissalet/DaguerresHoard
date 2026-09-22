@@ -27,7 +27,10 @@ export default function PlacesPage({ t, platformIsWindows, onOpenSettings }: Pro
       .places()
       .then((r) => {
         setCountries(r.countries);
-        setApproximateCount(r.approximate_count ?? 0);
+        // the backend only adds `note` while the bundled 10-city table is
+        // in use; with the world data already downloaded, suggesting it
+        // again would be wrong
+        setApproximateCount(r.note ? (r.approximate_count ?? 0) : 0);
       })
       .catch((e) => setError(errorText(e)));
   }, []);
@@ -95,31 +98,33 @@ export default function PlacesPage({ t, platformIsWindows, onOpenSettings }: Pro
   }
 
   return (
-    <div className="places-columns">
+    <div>
       {approximateNotice}
-      {names.map((country) => {
-        const cities = countries[country];
-        const total = cities.reduce((a, c) => a + c.count, 0);
-        return (
-          <section key={country} className="country-block">
-            <h3>
-              {country} <span className="muted small">{t.photos_count(total)}</span>
-            </h3>
-            <div className="places-grid">
-              {cities.map((c) => (
-                <button className="place-card" key={c.city} onClick={() => setCity(c.city)}>
-                  <img src={c.sample_thumbnail_url} alt="" loading="lazy" />
-                  <div className="place-info">
-                    <MapPin size={13} />
-                    <strong>{c.city}</strong>
-                    <span className="muted small">{t.photos_count(c.count)}</span>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </section>
-        );
-      })}
+      <div className="places-columns">
+        {names.map((country) => {
+          const cities = countries[country];
+          const total = cities.reduce((a, c) => a + c.count, 0);
+          return (
+            <section key={country} className="country-block">
+              <h3>
+                {country} <span className="muted small">{t.photos_count(total)}</span>
+              </h3>
+              <div className="places-grid">
+                {cities.map((c) => (
+                  <button className="place-card" key={c.city} onClick={() => setCity(c.city)}>
+                    <img src={c.sample_thumbnail_url} alt="" loading="lazy" />
+                    <div className="place-info">
+                      <MapPin size={13} />
+                      <strong>{c.city}</strong>
+                      <span className="muted small">{t.photos_count(c.count)}</span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </section>
+          );
+        })}
+      </div>
     </div>
   );
 }

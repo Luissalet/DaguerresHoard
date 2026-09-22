@@ -121,6 +121,15 @@ export function fileName(path: string): string {
 // is identical within a group, so the folder that tells the copies apart
 // was visible only in the hover title.
 export function parentFolder(path: string): string {
-  const parts = path.split(/[\\/]/).filter(Boolean);
-  return parts.length > 1 ? parts[parts.length - 2] : "";
+  // Re-walk: a camera roll's "07" said nothing next to "Copia movil 2024";
+  // climb past year/month folders to the first named one ("Camera
+  // Roll/2024/07").
+  const parts = path.split(/[\\/]/).filter(Boolean).slice(0, -1);
+  const out: string[] = [];
+  while (parts.length) {
+    const seg = parts.pop() as string;
+    out.unshift(seg);
+    if (!/^\d+$/.test(seg)) break;
+  }
+  return out.join("/");
 }

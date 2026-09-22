@@ -54,7 +54,12 @@ export default function DuplicatesPage({ t, platformIsWindows }: Props) {
           </button>
         </div>
         {data && data.total_groups > 0 && (
-          <span className="muted">{t.dup_summary(data.total_groups, formatBytes(data.reclaimable_bytes_total))}</span>
+          <span className="muted">
+            {(kind === "near" ? t.dup_summary_near : t.dup_summary)(
+              data.total_groups,
+              formatBytes(data.reclaimable_bytes_total),
+            )}
+          </span>
         )}
       </div>
 
@@ -71,7 +76,8 @@ export default function DuplicatesPage({ t, platformIsWindows }: Props) {
         <section className="duplicate-group card" key={g.keeper_id}>
           <div className="duplicate-group-header">
             <span className="muted small">
-              {t.photos_count(g.photos.length)} · {t.dup_group_reclaim(formatBytes(g.reclaimable_bytes))}
+              {t.photos_count(g.photos.length)} ·{" "}
+              {(kind === "near" ? t.dup_group_reclaim_near : t.dup_group_reclaim)(formatBytes(g.reclaimable_bytes))}
             </span>
             <button className="btn btn-sm" onClick={() => copyPaths(g.photos, g.keeper_id, idx)}>
               {copiedGroup === idx ? <Check size={14} /> : <Copy size={14} />}
