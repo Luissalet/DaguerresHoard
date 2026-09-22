@@ -256,7 +256,7 @@ class Agent:
             self.check(info.get("height", 0) > info.get("width", 0), "it really is vertical")
         print("  (Faustus's own file tool would now copy that path; Argus itself never copies)")
 
-    async def uc6_fanfilm(self) -> None:
+    async def uc6_shortfilm(self) -> None:
         print("\n== UC6: 'Faustus, put the clapperboard and green-screen shots from the March shoot in \"Rodaje La Estacion\"' ==")
         picked: list[str] = []
         for q in ("film clapperboard", "green screen studio"):
@@ -337,7 +337,7 @@ async def main() -> int:
             agent = Agent(session, truth, args.root)
             steps = [("discover", agent.discover), ("uc1", agent.uc1_status), ("uc2", agent.uc2_dog),
                      ("uc3", agent.uc3_duplicates), ("uc4", agent.uc4_album), ("uc5", agent.uc5_portrait),
-                     ("uc6", agent.uc6_fanfilm), ("uc7", agent.uc7_on_this_day), ("errors", agent.errors)]
+                     ("uc6", agent.uc6_shortfilm), ("uc7", agent.uc7_on_this_day), ("errors", agent.errors)]
             for name, fn in steps:
                 if not only or name in only:
                     await fn()

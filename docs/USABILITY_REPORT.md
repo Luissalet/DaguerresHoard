@@ -198,8 +198,8 @@ may not notice), **cosmetic**.
 - **What happened**: every default `photos_search` and `photos_similar`
   call returned one JPEG `ImageContent` of 50-150 KB, because
   `contact_sheet` defaults to `true` (all 8 default search calls in each
-  run). On a Windows PC running Faustus with a text-only 27B model on
-  llama.cpp, the next model call failed with HTTP 500 "image input is
+  run). On a Windows PC running Faustus with a text-only 27B
+  model on llama.cpp, the next model call failed with HTTP 500 "image input is
   not supported" and the whole turn was lost. The server instructions and the skill make it worse: they tell
   every model to "look at the contact sheet before claiming", which a
   text-only model cannot do.

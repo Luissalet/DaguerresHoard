@@ -5,7 +5,12 @@ for the usability walkthroughs (`docs/USABILITY_REPORT.md`): each one was
 walked in the browser (Playwright, screenshots read by a person) and the
 agent ones over real MCP stdio (`scripts/agent_walkthrough.py`).
 
-**The persona behind all of them**: a developer on a Windows PC who uses Faustus every day with a text-only 27B model on llama.cpp, keeps about a decade of phone and camera photos in `Pictures`, sometimes shoots short films with friends, and switches the UI between Spanish and English. Has no patience for a tool that looks busy but gives wrong answers with confidence.
+**The persona behind all of them**: a developer on a Windows PC who uses
+Faustus every day with a text-only 27B model on llama.cpp, keeps about a
+decade of phone and camera photos in `Pictures`, sometimes shoots short
+films with friends, and switches the UI between Spanish and English. Has
+no patience for a tool that looks busy but gives wrong answers with
+confidence.
 
 Test data for all of them: `python scripts/make_uxtest_photos.py` builds a
 synthetic but realistically messy `Pictures` folder in `data-uxtest/`
