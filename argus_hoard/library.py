@@ -62,6 +62,17 @@ FAKE_EMBEDDER_NOTE = (
     "content search, and do not trust the ranking for anything else."
 )
 
+# Relevance band thresholds, calibrated in docs/USABILITY_REPORT.md against
+# 262 synthetic photos and 19 queries (see "Relevance band calibration").
+# `count` used to be every ranked photo (B2): a caller could not tell "the
+# best match" from "the whole library, unfiltered". `relevance` gives each
+# result an honest strong/medium/weak label instead.
+CLIP_STRONG = 0.27
+CLIP_MEDIUM = 0.245
+CLIP_MAX_GAP_FROM_BEST = 0.04
+FALLBACK_MIN_BEST = 0.02
+FALLBACK_MEDIUM_RATIO = 0.5
+
 
 class NotFoundError(Exception):
     pass
@@ -75,14 +86,34 @@ def _now() -> str:
     return dt.datetime.now(dt.timezone.utc).isoformat()
 
 
-def _clamp_limit(limit: Any, default: int, maximum: int = MAX_LIMIT) -> int:
+def _clamp_limit_info(limit: Any, default: int, maximum: int = MAX_LIMIT) -> tuple[int, bool, int]:
+    """Returns (clamped_value, was_clamped, requested_value): callers that
+    silently clamped a too-large limit used to give the model no way to
+    know its `limit=100` became 50 (B5) -- now they can say so."""
     try:
-        value = int(limit if limit is not None else default)
+        requested = int(limit if limit is not None else default)
     except (TypeError, ValueError):
         raise ValidationError(f"limit must be an integer between 1 and {maximum}") from None
-    if value < 1:
-        raise ValidationError(f"limit must be between 1 and {maximum}, got {value}")
-    return min(value, maximum)
+    if requested < 1:
+        raise ValidationError(f"limit must be between 1 and {maximum}, got {requested}")
+    clamped = requested > maximum
+    return (maximum if clamped else requested), clamped, requested
+
+
+def _clamp_limit(limit: Any, default: int, maximum: int = MAX_LIMIT) -> int:
+    value, _, _ = _clamp_limit_info(limit, default, maximum)
+    return value
+
+
+def _fold_album_name(name: str) -> str:
+    """Accent- and case-insensitive album key (A8, live report): "Rodaje
+    La Estación" (typed in the UI) and "Rodaje La Estacion" (from the agent) used
+    to become two albums, because SQLite's COLLATE NOCASE only folds case,
+    not accents."""
+    import unicodedata
+
+    decomposed = unicodedata.normalize("NFKD", name)
+    return "".join(ch for ch in decomposed if not unicodedata.combining(ch)).casefold()
 
 
 def _like(value: str) -> str:
@@ -162,11 +193,17 @@ class Library:
     def add_root(self, path: str, added_by: str = "user", excluded_globs: list[str] | None = None) -> dict:
         if not isinstance(path, str) or not path.strip():
             raise ValidationError("path is required: an absolute folder path such as C:\\Users\\me\\Pictures")
-        p = Path(path.strip()).expanduser()
+        # A7 (live report): Windows Explorer's "Copy as path" wraps the path
+        # in quotes; only the quotes were wrong, but the message called the
+        # (absolute) path not absolute.
+        cleaned = path.strip()
+        if len(cleaned) >= 2 and cleaned[0] == cleaned[-1] and cleaned[0] in ("'", '"'):
+            cleaned = cleaned[1:-1].strip()
+        p = Path(cleaned).expanduser()
         if not p.is_absolute():
-            raise ValidationError(f"path must be absolute (for example C:\\Users\\me\\Pictures), got: {path}")
+            raise ValidationError(f"path must be absolute (for example C:\\Users\\me\\Pictures), got: {cleaned}")
         if not p.is_dir():
-            raise ValidationError(f"not an existing folder: {path}")
+            raise ValidationError(f"not an existing folder: {cleaned}")
         p = Path(os.path.abspath(p))
         for managed in self._skip_dirs + [self.settings.data_dir / "argus.db"]:
             try:
@@ -632,33 +669,106 @@ class Library:
             (*params, self.embedder.name),
         ).fetchall()
 
-    def _agent_notes(self, payload: dict) -> dict:
-        payload["embedder"] = self.embedder.name
-        if isinstance(self.embedder, FakeEmbedder):
-            payload["note"] = FAKE_EMBEDDER_NOTE
-        else:
-            stale = self.conn.execute(
-                "SELECT COUNT(*) c FROM photos WHERE missing = 0 AND "
-                "(embed_row IS NULL OR embed_model IS NULL OR embed_model != ?)",
-                (self.embedder.name,),
-            ).fetchone()["c"]
-            if stale:
-                payload["note"] = (
-                    f"{stale} photos are not analysed with the current model yet (indexing may be "
-                    "running); they are missing from these results. Check photos_library for progress."
-                )
+    def _agent_notes(self, payload: dict, embedding_used: bool = True) -> dict:
+        """Appends notes (never overwrites one a caller already set) and,
+        for embedding-based results, the active embedder name plus its
+        caveats (fallback model, or photos not yet embedded)."""
+        notes = [payload.pop("note")] if "note" in payload else []
+        if embedding_used:
+            payload["embedder"] = self.embedder.name
+            if isinstance(self.embedder, FakeEmbedder):
+                notes.append(FAKE_EMBEDDER_NOTE)
+            else:
+                stale = self.conn.execute(
+                    "SELECT COUNT(*) c FROM photos WHERE missing = 0 AND "
+                    "(embed_row IS NULL OR embed_model IS NULL OR embed_model != ?)",
+                    (self.embedder.name,),
+                ).fetchone()["c"]
+                if stale:
+                    notes.append(
+                        f"{stale} photos are not analysed with the current model yet (indexing may be "
+                        "running); they are missing from these results. Check photos_library for progress."
+                    )
+        if notes:
+            payload["note"] = " ".join(notes)
         return payload
 
-    def search(self, query: str, filters: dict | None = None, limit: int = 12, contact_sheet: bool = True) -> dict:
-        if not isinstance(query, str) or not query.strip():
-            raise ValidationError("query is required: describe the photo in English, e.g. 'dog on a beach'")
-        query = query.strip()[:300]
-        limit = _clamp_limit(limit, 12)
-        rows = self._embedded_rows(filters or {})
-        if not rows:
-            return self._agent_notes({"query": query, "count": 0, "results": [], "has_more": False,
-                                      "contact_sheet_jpeg_base64": None})
+    def _relevance(self, score: float, best: float, color_query: bool = True) -> str:
+        """strong / medium / weak, calibrated per embedder (B2/B3): `count`
+        used to look like "N matches" when it was really "every ranked
+        photo", and the colour fallback could score noise as confidently as
+        a real match. See docs/USABILITY_REPORT.md "Relevance band
+        calibration" for the measured thresholds."""
+        if isinstance(self.embedder, FakeEmbedder):
+            # Never "strong": a colour histogram is not a content match.
+            if color_query and best >= FALLBACK_MIN_BEST and score >= FALLBACK_MEDIUM_RATIO * best:
+                return "medium"
+            return "weak"
+        if best - score > CLIP_MAX_GAP_FROM_BEST:
+            return "weak"
+        if score >= CLIP_STRONG:
+            return "strong"
+        if score >= CLIP_MEDIUM:
+            return "medium"
+        return "weak"
 
+    def search(
+        self,
+        query: str | None,
+        filters: dict | None = None,
+        limit: int = 12,
+        contact_sheet: bool = False,
+        offset: int = 0,
+        min_score: float | None = None,
+    ) -> dict:
+        filters = filters or {}
+        if not isinstance(query, str) or not query.strip():
+            if not filters:
+                raise ValidationError(
+                    "query is required unless filters are given: describe the photo in English "
+                    "(e.g. 'dog on a beach'), or pass filters like year, place or folder alone for "
+                    "a plain listing of every matching photo"
+                )
+            return self._filtered_listing(filters, limit, offset, contact_sheet)
+        query = query.strip()[:300]
+        limit, limit_clamped, requested_limit = _clamp_limit_info(limit, 12)
+        offset = max(0, int(offset or 0))
+        if min_score is not None:
+            try:
+                min_score = float(min_score)
+            except (TypeError, ValueError):
+                raise ValidationError(f"min_score must be a number, got {min_score!r}") from None
+        # A9: an agent forgetting to translate a Spanish/French/... query
+        # used to get no hint at all -- CLIP matches English far better.
+        notes: list[str] = []
+        if not isinstance(self.embedder, FakeEmbedder):
+            lang = detect_non_english(query)
+            if lang:
+                notes.append(
+                    f"query looks {lang}; CLIP matches English far better than other languages, "
+                    "translate it and retry"
+                )
+        rows = self._embedded_rows(filters)
+        if not rows:
+            payload: dict[str, Any] = {
+                "query": query, "returned": 0, "indexed_total": 0, "count": 0,
+                "results": [], "has_more": False, "contact_sheet_jpeg_base64": None,
+            }
+            total_any = self.conn.execute(
+                "SELECT COUNT(*) c FROM photos WHERE missing = 0 AND embed_row IS NOT NULL AND embed_model = ?",
+                (self.embedder.name,),
+            ).fetchone()["c"]
+            if filters and total_any:
+                notes.append("no photo passes these filters")
+            if notes:
+                payload["note"] = " ".join(notes)
+            return self._agent_notes(payload)
+
+        color_query = self.embedder.has_color_word(query) if isinstance(self.embedder, FakeEmbedder) else True
+        if isinstance(self.embedder, FakeEmbedder) and not color_query:
+            # B3 (live report): a query with no colour word used to get a
+            # random-but-deterministic vector that scored like a real match.
+            notes.append("this query has no colour word; the fallback ranking order is arbitrary")
         qvec = self.embedder.embed_text(query)
         row_by_embed = {r["embed_row"]: r for r in rows}
         embed_rows, cos = self.vectors.scores(qvec, row_by_embed.keys())
@@ -692,26 +802,79 @@ class Library:
                 final = 0.8 * cos_norm + 0.2 * bm_norm if r["id"] in bm25 else 0.8 * cos_norm
             scored.append((final, float(cosine), r))
         scored.sort(key=lambda t: (-t[0], t[2]["path"]))
-        top = scored[:limit]
+        if min_score is not None:
+            scored = [t for t in scored if t[1] >= min_score]
+        indexed_total = len(scored)
+        best = scored[0][1] if scored else 0.0
+        window = scored[offset : offset + limit]
 
         results = []
-        for n, (_, cosine, r) in enumerate(top, start=1):
-            item = {"n": n, **self._public(r, score=cosine)}
+        for n, (_, cosine, r) in enumerate(window, start=offset + 1):
+            item = {"n": n, **self._public(r, score=cosine), "relevance": self._relevance(cosine, best, color_query)}
             if r["id"] in bm25:
                 item["caption_match"] = True
             results.append(item)
-        payload: dict[str, Any] = {
+        returned = len(results)
+        has_more = offset + returned < indexed_total
+        payload = {
             "query": query,
-            "count": len(scored),
+            "returned": returned,
+            "indexed_total": indexed_total,
+            "count": indexed_total,  # kept for older callers; `returned`/`indexed_total` are the honest pair
             "results": results,
-            "has_more": len(scored) > limit,
+            "has_more": has_more,
         }
+        if has_more:
+            payload["next_offset"] = offset + returned
+        if limit_clamped:
+            payload["limit_clamped"] = True
+            payload["requested_limit"] = requested_limit
+        if indexed_total == 0 and min_score is not None:
+            notes.append(f"no result scores at or above min_score={min_score}; lower it or drop it")
+        elif results and not isinstance(self.embedder, FakeEmbedder) and self._relevance(best, best) != "strong":
+            notes.append("no strong match; the best result is only medium/weak -- say how sure you are")
+        if notes:
+            payload["note"] = " ".join(notes)
         payload["contact_sheet_jpeg_base64"] = (
-            self._contact_sheet_for([r for _, _, r in top]) if contact_sheet and top else None
+            self._contact_sheet_for([r for _, _, r in window]) if contact_sheet and window else None
         )
-        if contact_sheet and len(top) > SHEET_MAX_ITEMS:
+        if contact_sheet and len(window) > SHEET_MAX_ITEMS:
             payload["contact_sheet_covers"] = SHEET_MAX_ITEMS
         return self._agent_notes(payload)
+
+    def _filtered_listing(self, filters: dict, limit: int, offset: int, contact_sheet: bool) -> dict:
+        """search() with no query and only filters (B5): a plain,
+        chronological listing of every matching photo -- "every photo of
+        the trip" should not require inventing a query."""
+        limit, limit_clamped, requested_limit = _clamp_limit_info(limit, 12)
+        offset = max(0, int(offset or 0))
+        where, params = self._where(filters)
+        c = self.conn
+        total = c.execute(f"SELECT COUNT(*) c FROM photos WHERE {where}", params).fetchone()["c"]
+        rows = c.execute(
+            f"SELECT * FROM photos WHERE {where} ORDER BY taken_at DESC, path ASC LIMIT ? OFFSET ?",
+            (*params, limit, offset),
+        ).fetchall()
+        results = [{"n": offset + i + 1, **self._public(r)} for i, r in enumerate(rows)]
+        has_more = offset + len(results) < total
+        payload: dict[str, Any] = {
+            "query": None,
+            "mode": "filtered_listing",
+            "returned": len(results),
+            "indexed_total": total,
+            "count": total,
+            "results": results,
+            "has_more": has_more,
+            "note": "no photo passes these filters" if total == 0
+            else "no text query given: every matching photo, newest first",
+        }
+        if has_more:
+            payload["next_offset"] = offset + len(results)
+        if limit_clamped:
+            payload["limit_clamped"] = True
+            payload["requested_limit"] = requested_limit
+        payload["contact_sheet_jpeg_base64"] = self._contact_sheet_for(rows) if contact_sheet and rows else None
+        return self._agent_notes(payload, embedding_used=False)
 
     # -- UI-only: translate a non-English query before embedding it -------- #
     TRANSLATE_PROMPT = (
@@ -726,7 +889,7 @@ class Library:
     def set_translate_search(self, enabled: bool) -> None:
         dbmod.set_setting(self.conn, "translate_search", "true" if enabled else "false")
 
-    def search_translated(self, query: str, filters: dict | None = None, limit: int = 12, contact_sheet: bool = True) -> dict:
+    def search_translated(self, query: str, filters: dict | None = None, limit: int = 12, contact_sheet: bool = False) -> dict:
         """UI-only entry point: `search()` with an automatic English
         translation of a non-English query through the `llm` capability,
         when enabled. The MCP tool tells the agent to translate the query
@@ -758,18 +921,49 @@ class Library:
             payload["translate_error"] = translate_error
         return payload
 
-    def similar(self, photo_id: str | None = None, path: str | None = None, limit: int = 12, contact_sheet: bool = True) -> dict:
+    def similar(
+        self,
+        photo_id: str | None = None,
+        path: str | None = None,
+        limit: int = 12,
+        contact_sheet: bool = False,
+        offset: int = 0,
+        min_score: float | None = None,
+    ) -> dict:
         row = self._resolve_photo(photo_id, path)
-        limit = _clamp_limit(limit, 12)
+        limit, limit_clamped, requested_limit = _clamp_limit_info(limit, 12)
+        offset = max(0, int(offset or 0))
+        if min_score is not None:
+            try:
+                min_score = float(min_score)
+            except (TypeError, ValueError):
+                raise ValidationError(f"min_score must be a number, got {min_score!r}") from None
         if row["embed_row"] is None or row["embed_model"] != self.embedder.name:
             raise ValidationError("this photo has no embedding for the current model yet; wait for indexing to finish (see photos_library)")
         qvec = self.vectors.get(row["embed_row"])
         others = [r for r in self._embedded_rows({}) if r["id"] != row["id"]]
         row_by_embed = {r["embed_row"]: r for r in others}
-        hits = self.vectors.search(qvec, row_by_embed.keys(), limit=limit)
-        results = [{"n": n, **self._public(row_by_embed[er], score=s)} for n, (er, s) in enumerate(hits, start=1)]
-        payload = {"photo_id": row["id"], "count": len(results), "results": results,
-                   "has_more": len(others) > len(results)}
+        all_hits = self.vectors.search(qvec, row_by_embed.keys(), limit=len(row_by_embed) or 1)
+        if min_score is not None:
+            all_hits = [h for h in all_hits if h[1] >= min_score]
+        indexed_total = len(all_hits)
+        best = all_hits[0][1] if all_hits else 0.0
+        hits = all_hits[offset : offset + limit]
+        results = [
+            {"n": n, **self._public(row_by_embed[er], score=s), "relevance": self._relevance(s, best)}
+            for n, (er, s) in enumerate(hits, start=offset + 1)
+        ]
+        returned = len(results)
+        has_more = offset + returned < indexed_total
+        payload: dict[str, Any] = {
+            "photo_id": row["id"], "returned": returned, "indexed_total": indexed_total, "count": indexed_total,
+            "results": results, "has_more": has_more,
+        }
+        if has_more:
+            payload["next_offset"] = offset + returned
+        if limit_clamped:
+            payload["limit_clamped"] = True
+            payload["requested_limit"] = requested_limit
         payload["contact_sheet_jpeg_base64"] = (
             self._contact_sheet_for([row_by_embed[er] for er, _ in hits]) if contact_sheet and results else None
         )
@@ -1181,7 +1375,11 @@ class Library:
         if len(photo_ids) > 500:
             raise ValidationError("at most 500 photo_ids per call; call again to add more")
         c = self.conn
-        row = c.execute("SELECT * FROM albums WHERE name = ? COLLATE NOCASE", (name,)).fetchone()
+        folded = _fold_album_name(name)
+        row = next(
+            (r for r in c.execute("SELECT * FROM albums").fetchall() if _fold_album_name(r["name"]) == folded),
+            None,
+        )
         created = False
         if row:
             album_id = row["id"]

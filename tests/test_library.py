@@ -69,6 +69,20 @@ def test_incremental_rescan_skips_unchanged_files(library, tmp_path, monkeypatch
     assert calls == []  # nothing changed since the first scan: no re-hashing
 
 
+def test_add_root_strips_quotes_from_copy_as_path(library, tmp_path):
+    # A7 (live report): Windows Explorer's "Copy as path" wraps the path in
+    # quotes; the absolute path was rejected as "must be absolute".
+    photos_dir = tmp_path / "Pictures"
+    photos_dir.mkdir()
+    import os
+
+    root = library.add_root(f'"{photos_dir}"')
+    assert root["path"] == os.path.abspath(photos_dir)
+
+    root2 = library.add_root(f"'{photos_dir}'")
+    assert root2["id"] == root["id"]  # same folder, quoted differently
+
+
 def test_moved_file_keeps_its_id(library, tmp_path):
     photos_dir = tmp_path / "photos"
     p = make_image(photos_dir / "sub" / "a.jpg", color=(50, 60, 70))
@@ -104,3 +118,119 @@ def test_search_and_similar_use_fake_embedder(library, tmp_path):
     red_id = result["results"][0]["id"]
     similar = library.similar(photo_id=red_id, limit=5)
     assert all(r["id"] != red_id for r in similar["results"])
+
+
+def test_search_default_has_no_contact_sheet(library, tmp_path):
+    # B1 (live report): a text-only model's turn failed the moment a
+    # default search/similar call carried an image.
+    photos_dir = tmp_path / "photos"
+    make_image(photos_dir / "red.jpg", color=(220, 20, 20))
+    _index_sync(library, photos_dir)
+
+    result = library.search("a red square", limit=5)
+    assert result["contact_sheet_jpeg_base64"] is None
+    similar = library.similar(photo_id=result["results"][0]["id"], limit=5)
+    assert similar["contact_sheet_jpeg_base64"] is None
+
+
+def test_search_returned_and_indexed_total_replace_misleading_count(library, tmp_path):
+    # B2 (live report): `count` used to be "every ranked photo" (the whole
+    # library), which read as "N photos match".
+    photos_dir = tmp_path / "photos"
+    for i in range(3):
+        make_image(photos_dir / f"red{i}.jpg", color=(220, 20, 20))
+    make_image(photos_dir / "green.jpg", color=(20, 200, 20))
+    _index_sync(library, photos_dir)
+
+    result = library.search("a red square", limit=2)
+    assert result["indexed_total"] == 4  # every ranked photo, not a match count
+    assert result["returned"] == 2  # what this call actually returned
+    assert result["count"] == result["indexed_total"]  # kept as an alias, nothing removed
+    assert result["has_more"] is True
+    assert result["next_offset"] == 2
+    page2 = library.search("a red square", limit=2, offset=2)
+    assert page2["returned"] == 2
+    assert page2["has_more"] is False
+    seen_ids = {r["id"] for r in result["results"]} | {r["id"] for r in page2["results"]}
+    assert len(seen_ids) == 4  # offset pages through the full ranked list, no overlap/gap
+
+
+def test_search_limit_clamped_is_reported(library, tmp_path):
+    # B5 (live report): limit=100 was silently clamped to 50.
+    photos_dir = tmp_path / "photos"
+    make_image(photos_dir / "red.jpg", color=(220, 20, 20))
+    _index_sync(library, photos_dir)
+
+    result = library.search("a red square", limit=100)
+    assert result["limit_clamped"] is True
+    assert result["requested_limit"] == 100
+    assert result["returned"] <= 50
+
+
+def test_search_query_optional_with_filters_is_chronological_listing(library, tmp_path):
+    # B5 (live report): "every photo of the trip" forced the model to
+    # invent a query like "photo" even when only filters were meant.
+    photos_dir = tmp_path / "photos"
+    make_image(photos_dir / "a.jpg", color=(220, 20, 20))
+    make_image(photos_dir / "b.jpg", color=(20, 200, 20))
+    _index_sync(library, photos_dir)
+
+    result = library.search(None, filters={"orientation": "landscape"})
+    assert result["mode"] == "filtered_listing"
+    assert result["indexed_total"] == 2
+    assert all("relevance" not in r for r in result["results"])
+
+    from argus_hoard.library import ValidationError
+
+    try:
+        library.search("", filters=None)
+        raise AssertionError("expected ValidationError")
+    except ValidationError as exc:
+        assert "query is required" in str(exc)
+
+
+def test_search_empty_result_says_filters_excluded_everything(library, tmp_path):
+    # A10 (live report): an empty result did not say whether the filters
+    # excluded everything or nothing is indexed at all.
+    photos_dir = tmp_path / "photos"
+    make_image(photos_dir / "red.jpg", color=(220, 20, 20))
+    _index_sync(library, photos_dir)
+
+    result = library.search("a red square", filters={"camera": "no-such-camera-xyz"})
+    assert result["indexed_total"] == 0
+    assert "no photo passes these filters" in result["note"]
+
+
+def test_album_name_matches_accent_insensitively(library, tmp_path):
+    # A8 (live report): "Rodaje La Estación" and "Rodaje La Estacion" became two
+    # albums because COLLATE NOCASE does not fold accents.
+    photos_dir = tmp_path / "photos"
+    p1 = make_image(photos_dir / "a.jpg")
+    p2 = make_image(photos_dir / "b.jpg")
+    _index_sync(library, photos_dir)
+    ids = [r["id"] for r in library.list_photos()["results"]]
+
+    first = library.album("Rodaje La Estación", ids[:1])
+    assert first["created"] is True
+    second = library.album("Rodaje La Estacion", ids[1:])
+    assert second["created"] is False
+    assert second["id"] == first["id"]
+    assert second["name"] == "Rodaje La Estación"  # kept as first typed
+    assert len(library.list_albums()) == 1
+
+
+def test_search_fallback_relevance_never_strong(library, tmp_path):
+    # B3 (live report): a query with no colour word scored like a
+    # confident CLIP match with the colour-histogram fallback.
+    photos_dir = tmp_path / "photos"
+    make_image(photos_dir / "red.jpg", color=(220, 20, 20))
+    make_image(photos_dir / "green.jpg", color=(20, 200, 20))
+    _index_sync(library, photos_dir)
+
+    colorless = library.search("a cat wearing a hat", limit=5)
+    assert all(r["relevance"] == "weak" for r in colorless["results"])
+    assert "arbitrary" in colorless["note"]
+
+    colorful = library.search("a red square", limit=5)
+    assert all(r["relevance"] in ("weak", "medium") for r in colorful["results"])
+    assert "strong" not in {r["relevance"] for r in colorful["results"]}

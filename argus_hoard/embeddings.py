@@ -75,6 +75,15 @@ class FakeEmbedder:
         vec = np.concatenate([hue_hist, val_hist]).astype(np.float32)
         return vec
 
+    @staticmethod
+    def has_color_word(text: str) -> bool:
+        """Whether `text` contains one of the colour words the histogram
+        embedding actually understands. Used to calibrate relevance bands:
+        a query with no colour word gets a meaningless (hash-seeded) vector,
+        so it must never look as confident as a real colour match."""
+        words = re.findall(r"[a-zA-Z]+", (text or "").lower())
+        return any(w == name or w.rstrip("s") == name for w in words for name in _COLOR_WORDS)
+
     def embed_text(self, text: str) -> np.ndarray:
         vec = np.zeros(self.dim, dtype=np.float32)
         words = re.findall(r"[a-zA-Z]+", text.lower())

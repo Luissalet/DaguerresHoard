@@ -45,17 +45,21 @@ class ApiError(Exception):
 
 
 class SearchBody(BaseModel):
-    query: str
+    query: str | None = None
     filters: dict = Field(default_factory=dict)
     limit: int = 12
-    contact_sheet: bool = True
+    offset: int = 0
+    min_score: float | None = None
+    contact_sheet: bool = False
 
 
 class SimilarBody(BaseModel):
     photo_id: str | None = None
     path: str | None = None
     limit: int = 12
-    contact_sheet: bool = True
+    offset: int = 0
+    min_score: float | None = None
+    contact_sheet: bool = False
 
 
 class ShowBody(BaseModel):
@@ -329,7 +333,7 @@ def create_app(data_dir: Path, static_dir: Path | None = None, port: int = 8814)
 
     @app.post("/api/similar")
     def ui_similar(body: SimilarBody):
-        return run(lambda: lib.similar(body.photo_id, body.path, body.limit, False))
+        return run(lambda: lib.similar(body.photo_id, body.path, body.limit, False, body.offset))
 
     @app.post("/api/duplicates")
     def ui_duplicates(body: DuplicatesBody):
@@ -454,13 +458,19 @@ def create_app(data_dir: Path, static_dir: Path | None = None, port: int = 8814)
     # -- agent tools (mirror the MCP tools one to one, audited) -------------- #
     @app.post("/api/agent/photos_search")
     def agent_search(body: SearchBody):
-        return run(lambda: lib.search(body.query, body.filters, body.limit, body.contact_sheet),
-                   tool="photos_search", args=body.model_dump())
+        return run(
+            lambda: lib.search(body.query, body.filters, body.limit, body.contact_sheet, body.offset, body.min_score),
+            tool="photos_search", args=body.model_dump(),
+        )
 
     @app.post("/api/agent/photos_similar")
     def agent_similar(body: SimilarBody):
-        return run(lambda: lib.similar(body.photo_id, body.path, body.limit, body.contact_sheet),
-                   tool="photos_similar", args=body.model_dump())
+        return run(
+            lambda: lib.similar(
+                body.photo_id, body.path, body.limit, body.contact_sheet, body.offset, body.min_score
+            ),
+            tool="photos_similar", args=body.model_dump(),
+        )
 
     @app.post("/api/agent/photos_show")
     def agent_show(body: ShowBody):
@@ -530,7 +540,7 @@ def _args_summary(args: dict | None) -> str:
         return ""
     parts = []
     for k, v in args.items():
-        if v in (None, "", [], {}) or (k == "contact_sheet" and v is True):
+        if v in (None, "", [], {}) or (k == "contact_sheet" and v is False):
             continue
         if isinstance(v, list):
             text = f"[{len(v)} items]" if len(v) > 3 else ", ".join(str(x)[:12] for x in v)

@@ -105,18 +105,32 @@ async def test_mcp_adapter_over_stdio(running_app):
             search_tool = next(t for t in tools.tools if t.name == "photos_search")
             assert search_tool.inputSchema["properties"]["orientation"]["anyOf"][0]["enum"] == ["landscape", "portrait"]
 
+            # B1 (live report): a default search/similar call must never carry
+            # an image -- a text-only model's turn failed the moment one did.
             result = await session.call_tool("photos_search", {"query": "a red square", "limit": 5})
             assert result.isError is not True
             text_blocks = [c for c in result.content if c.type == "text"]
             image_blocks = [c for c in result.content if c.type == "image"]
-            assert len(text_blocks) == 1 and len(image_blocks) == 1
+            assert len(text_blocks) == 1 and len(image_blocks) == 0
             payload = json.loads(text_blocks[0].text)
             assert payload["results"][0]["n"] == 1
             assert payload["results"][0]["path"].endswith("red.jpg")
-            assert "contact_sheet_jpeg_base64" not in payload  # moved into the image block
-            assert image_blocks[0].mimeType == "image/jpeg"
-            assert len(base64.b64decode(image_blocks[0].data)) <= 200 * 1024
+            assert payload["results"][0]["relevance"] in ("strong", "medium", "weak")
+            assert "contact_sheet_jpeg_base64" not in payload
+            assert payload["returned"] == payload["indexed_total"] == len(payload["results"])
             photo_id = payload["results"][0]["id"]
+
+            # Only a call that explicitly asks for it (a multimodal turn) gets one.
+            with_sheet = await session.call_tool(
+                "photos_search", {"query": "a red square", "limit": 5, "contact_sheet": True}
+            )
+            sheet_images = [c for c in with_sheet.content if c.type == "image"]
+            assert len(sheet_images) == 1
+            assert sheet_images[0].mimeType == "image/jpeg"
+            assert len(base64.b64decode(sheet_images[0].data)) <= 200 * 1024
+
+            similar_default = await session.call_tool("photos_similar", {"photo_id": photo_id})
+            assert [c.type for c in similar_default.content] == ["text"]
 
             shown = await session.call_tool("photos_show", {"ids": [photo_id, "0" * 32]})
             assert shown.isError is not True
