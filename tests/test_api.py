@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import time
 
 import pytest
@@ -131,6 +132,45 @@ def test_index_and_agent_search_flow(client, tmp_path):
     assert "photos_search" in tools_called
     assert "photos_describe" in tools_called
     assert "photos_album" in tools_called
+
+    # A4 (live report): agent results carried a relative `thumbnail_url`
+    # (~60 characters) no agent can use; UI routes still need it.
+    assert "thumbnail_url" not in json.dumps(search_resp.json())
+    assert "thumbnail_url" not in json.dumps(describe_resp.json())
+    assert "thumbnail_url" not in json.dumps(album_resp.json())
+    ui_search_resp = client.post("/api/search", json={"query": "a red square", "limit": 5})
+    assert "thumbnail_url" in json.dumps(ui_search_resp.json())
+
+
+def test_agent_duplicates_are_summarised_for_a_small_context(client, tmp_path):
+    # A4 (live report): photos_duplicates(kind="near") at the default
+    # limit=10 returned ~8.6k tokens because every member of every group
+    # carried its full record (width, height, thumbnail_url, ...).
+    import shutil
+
+    photos_dir = tmp_path / "photos"
+    original = make_image(photos_dir / "a.jpg", color=(200, 20, 20))
+    shutil.copy(original, photos_dir / "b.jpg")
+    shutil.copy(original, photos_dir / "c.jpg")
+    root_id = client.post("/api/roots", json={"path": str(photos_dir)}).json()["id"]
+    job_id = client.post("/api/scan", json={"root_id": root_id}).json()["job_id"]
+    _wait_job(client, job_id)
+
+    agent_resp = client.post("/api/agent/photos_duplicates", json={"kind": "exact", "limit": 5})
+    assert agent_resp.status_code == 200
+    group = agent_resp.json()["groups"][0]
+    assert "keeper_path" in group and "photos" not in group
+    assert "photo_ids" not in group  # only on request
+    assert group["count"] == 3
+    assert len(group["other_paths"]) <= 3
+
+    with_ids = client.post(
+        "/api/agent/photos_duplicates", json={"kind": "exact", "limit": 5, "include_ids": True}
+    ).json()["groups"][0]
+    assert len(with_ids["photo_ids"]) == 3
+
+    ui_resp = client.post("/api/duplicates", json={"kind": "exact", "limit": 5}).json()["groups"][0]
+    assert "photos" in ui_resp and len(ui_resp["photos"]) == 3  # UI keeps full detail for rendering
 
 
 def test_places_endpoint_groups_by_country_and_city(client, tmp_path, monkeypatch):

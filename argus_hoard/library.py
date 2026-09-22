@@ -1241,7 +1241,9 @@ class Library:
     # ------------------------------------------------------------------ #
     # Duplicates / timeline / places / library status
     # ------------------------------------------------------------------ #
-    def duplicates(self, kind: str = "exact", limit: int = 10) -> dict:
+    def duplicates(
+        self, kind: str = "exact", limit: int = 10, summary: bool = False, include_ids: bool = False
+    ) -> dict:
         if kind not in ("exact", "near"):
             raise ValidationError(f"kind must be 'exact' or 'near', got {kind!r}")
         limit = _clamp_limit(limit, 10)
@@ -1264,14 +1266,35 @@ class Library:
         groups.sort(key=lambda g: (-reclaim(g), by_id[g.keeper_id]["path"]))
         out = []
         for g in groups[:limit]:
-            keeper_first = [g.keeper_id] + [p for p in g.photo_ids if p != g.keeper_id]
-            out.append({
-                "kind": g.kind,
-                "keeper_id": g.keeper_id,
-                "max_distance": g.max_distance,
-                "reclaimable_bytes": reclaim(g),
-                "photos": [self._public(by_id[pid]) for pid in keeper_first],
-            })
+            others = [p for p in g.photo_ids if p != g.keeper_id]
+            if summary:
+                # A4 (live report): the full per-photo dict for every member
+                # of every group made a 10-group result ~8.6k tokens. An
+                # agent needs the keeper and enough of the rest to explain
+                # itself, not every photo's width/height/thumbnail_url.
+                entry = {
+                    "kind": g.kind,
+                    "keeper_id": g.keeper_id,
+                    "keeper_path": by_id[g.keeper_id]["path"],
+                    "count": len(g.photo_ids),
+                    "max_distance": g.max_distance,
+                    "reclaimable_bytes": reclaim(g),
+                    "other_paths": [by_id[p]["path"] for p in others[:3]],
+                }
+                if len(others) > 3:
+                    entry["more_paths"] = len(others) - 3
+                if include_ids:
+                    entry["photo_ids"] = [g.keeper_id] + others
+                out.append(entry)
+            else:
+                keeper_first = [g.keeper_id] + others
+                out.append({
+                    "kind": g.kind,
+                    "keeper_id": g.keeper_id,
+                    "max_distance": g.max_distance,
+                    "reclaimable_bytes": reclaim(g),
+                    "photos": [self._public(by_id[pid]) for pid in keeper_first],
+                })
         return {
             "kind": kind,
             "count": len(out),

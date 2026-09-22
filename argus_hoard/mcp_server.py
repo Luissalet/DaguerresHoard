@@ -246,20 +246,24 @@ def photos_describe(photo_id: str, caption: bool = False) -> list:
 
 
 @mcp.tool(annotations=READ_ONLY)
-def photos_duplicates(kind: Literal["exact", "near"] = "exact", limit: int = 10) -> list:
+def photos_duplicates(kind: Literal["exact", "near"] = "exact", limit: int = 10, include_ids: bool = False) -> list:
     """Groups of duplicate photos with a suggested copy to keep. Never deletes anything.
 
     kind="exact": byte-identical copies. kind="near": the same picture
     resized, re-encoded or lightly edited. Groups come largest wasted space
     first: {total_groups, has_more, reclaimable_bytes_total, groups:[{
-    keeper_id, reclaimable_bytes, photos:[{id, path, width, height, size}]}]},
-    keeper listed first (largest resolution, then oldest, then shortest
-    path). limit: 1-50 groups, default 10. Deleting is for the owner to do
-    in their file manager; never claim you removed files.
+    keeper_id, keeper_path, count, max_distance, reclaimable_bytes,
+    other_paths (up to 3), more_paths?}]}, keeper picked by largest
+    resolution, then oldest, then earliest file time, away from a folder
+    that looks like a backup/copy/WhatsApp, then shortest path. Set
+    `include_ids=true` only if you need every photo's id (e.g. to build an
+    album from a group) -- each group then also carries `photo_ids`.
+    limit: 1-50 groups, default 10. Deleting is for the owner to do in
+    their file manager; never claim you removed files.
     Keywords: duplicate photos, repeated pictures, copies, free up space,
     fotos duplicadas, fotos repetidas, copias, liberar espacio
     """
-    return [_text(_call("photos_duplicates", {"kind": kind, "limit": limit}))]
+    return [_text(_call("photos_duplicates", {"kind": kind, "limit": limit, "include_ids": include_ids}))]
 
 
 @mcp.tool(annotations=READ_ONLY)

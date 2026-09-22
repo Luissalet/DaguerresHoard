@@ -75,6 +75,7 @@ class DescribeBody(BaseModel):
 class DuplicatesBody(BaseModel):
     kind: str = "exact"
     limit: int = 10
+    include_ids: bool = False
 
 
 class TimelineBody(BaseModel):
@@ -458,19 +459,19 @@ def create_app(data_dir: Path, static_dir: Path | None = None, port: int = 8814)
     # -- agent tools (mirror the MCP tools one to one, audited) -------------- #
     @app.post("/api/agent/photos_search")
     def agent_search(body: SearchBody):
-        return run(
+        return _strip_agent_urls(run(
             lambda: lib.search(body.query, body.filters, body.limit, body.contact_sheet, body.offset, body.min_score),
             tool="photos_search", args=body.model_dump(),
-        )
+        ))
 
     @app.post("/api/agent/photos_similar")
     def agent_similar(body: SimilarBody):
-        return run(
+        return _strip_agent_urls(run(
             lambda: lib.similar(
                 body.photo_id, body.path, body.limit, body.contact_sheet, body.offset, body.min_score
             ),
             tool="photos_similar", args=body.model_dump(),
-        )
+        ))
 
     @app.post("/api/agent/photos_show")
     def agent_show(body: ShowBody):
@@ -478,15 +479,20 @@ def create_app(data_dir: Path, static_dir: Path | None = None, port: int = 8814)
 
     @app.post("/api/agent/photos_describe")
     def agent_describe(body: DescribeBody):
-        return run(lambda: lib.describe(body.photo_id, body.caption), tool="photos_describe", args=body.model_dump())
+        return _strip_agent_urls(
+            run(lambda: lib.describe(body.photo_id, body.caption), tool="photos_describe", args=body.model_dump())
+        )
 
     @app.post("/api/agent/photos_duplicates")
     def agent_duplicates(body: DuplicatesBody):
-        return run(lambda: lib.duplicates(body.kind, body.limit), tool="photos_duplicates", args=body.model_dump())
+        return run(
+            lambda: lib.duplicates(body.kind, body.limit, summary=True, include_ids=body.include_ids),
+            tool="photos_duplicates", args=body.model_dump(),
+        )
 
     @app.post("/api/agent/photos_timeline")
     def agent_timeline(body: TimelineBody):
-        return run(lambda: lib.timeline(body.year), tool="photos_timeline", args=body.model_dump())
+        return _strip_agent_urls(run(lambda: lib.timeline(body.year), tool="photos_timeline", args=body.model_dump()))
 
     @app.post("/api/agent/photos_library")
     def agent_library():
@@ -504,8 +510,8 @@ def create_app(data_dir: Path, static_dir: Path | None = None, port: int = 8814)
 
     @app.post("/api/agent/photos_album")
     def agent_album(body: AlbumBody):
-        return run(lambda: lib.album(body.name, body.photo_ids, created_by="agent"),
-                   tool="photos_album", args=body.model_dump())
+        return _strip_agent_urls(run(lambda: lib.album(body.name, body.photo_ids, created_by="agent"),
+                   tool="photos_album", args=body.model_dump()))
 
     @app.api_route("/api/{rest:path}", methods=["GET", "POST", "PUT", "DELETE", "PATCH"])
     def api_not_found(rest: str):
@@ -532,6 +538,17 @@ def create_app(data_dir: Path, static_dir: Path | None = None, port: int = 8814)
             return HTMLResponse(NO_UI_HTML)
 
     return app
+
+
+def _strip_agent_urls(obj: Any) -> Any:
+    """A4 (live report): every agent result carried a relative
+    `thumbnail_url` (~60 characters an agent cannot fetch or use). UI
+    routes keep it (rendering needs it); agent routes never do."""
+    if isinstance(obj, dict):
+        return {k: _strip_agent_urls(v) for k, v in obj.items() if k != "thumbnail_url"}
+    if isinstance(obj, list):
+        return [_strip_agent_urls(v) for v in obj]
+    return obj
 
 
 def _args_summary(args: dict | None) -> str:

@@ -47,6 +47,14 @@ system proxy settings for these calls.
   words. The model should pass that on instead of trusting the ranking.
 - Lists are short by default and say when there is more (`has_more`,
   `total_groups`, `on_this_day_count`).
+- Agent results never carry `thumbnail_url` (a relative URL no agent can
+  fetch); the UI's own routes keep it for rendering.
+- `photos_search`/`photos_similar` return `returned` (this call) and
+  `indexed_total` (every ranked photo that passed the filters, not a match
+  count -- ranking is by similarity, never a filter) plus a per-result
+  `relevance` band (`strong`/`medium`/`weak`, calibrated per embedder);
+  trust `relevance` over the raw `score`. `contact_sheet` defaults to
+  `false` -- set it, or call `photos_show`, only when you can see images.
 
 | tool | read-only | idempotent | purpose |
 | --- | --- | --- | --- |
@@ -68,24 +76,34 @@ own database (the photo file is never touched). All annotations set
 
 | param | type | default | notes |
 | --- | --- | --- | --- |
-| `query` | string | required | describe the photo **in English** |
+| `query` | string | none | describe the photo **in English**; leave empty (with filters) for a plain chronological listing |
 | `taken_after` / `taken_before` | ISO date or datetime | none | inclusive; a plain date covers the whole day |
 | `year` | int | none | 1800-2200 |
 | `month` | int | none | 1-12 |
-| `place` | string | none | substring of city, region or country |
+| `place` | string | none | substring of city, parent municipality, region or country |
 | `folder` | string | none | substring of the path, either slash direction |
 | `camera` | string | none | substring of make or model |
 | `orientation` | `"landscape"` or `"portrait"` | none | |
 | `min_megapixels` | float | none | |
 | `has_gps` | bool | none | `false` finds photos without GPS |
-| `limit` | int | 12 | 1-50 |
-| `contact_sheet` | bool | true | attach the numbered contact sheet |
+| `limit` | int | 12 | 1-50 (a higher value is clamped; `limit_clamped`/`requested_limit` say so) |
+| `offset` | int | 0 | page past the first `limit` results |
+| `min_score` | float | none | drop results below this cosine score |
+| `contact_sheet` | bool | false | set `true`, or call `photos_show`, only if you can see images |
 
 Returns
-`{query, count, has_more, embedder, results: [{n, id, path, taken_at, place, size, width, height, thumbnail_url, score, caption_match?}]}`
-and one JPEG `ImageContent` (5 columns, at most 20 cells, at most 200 KB).
-When captions exist, ranking is hybrid: 0.8 x normalised cosine + 0.2 x
-normalised BM25 over the captions (`caption_match: true` marks those hits).
+`{query, returned, indexed_total, has_more, next_offset?, embedder, results: [{n, id, path, taken_at, place, size, width, height, score, relevance, caption_match?}], note?}`
+and, only when `contact_sheet=true`, one JPEG `ImageContent` (5 columns, at
+most 20 cells, at most 200 KB). `indexed_total` is every ranked photo that
+passed the filters, not a match count. `relevance` is `strong`/`medium`/
+`weak`, calibrated per embedder (the colour fallback never returns
+`strong`); a top-level `note` flags things like no strong match, a
+non-English query, or filters that excluded every photo. When `query` is
+empty and filters are given, the result is a plain chronological listing
+(`mode: "filtered_listing"`, no `score`/`relevance`) instead of a ranked
+search. When captions exist, ranking is hybrid: 0.8 x normalised cosine +
+0.2 x normalised BM25 over the captions (`caption_match: true` marks those
+hits).
 
 Bad input is an error the model can fix, e.g.
 `invalid_argument: unknown filter(s): city. Valid filters: taken_after, ...`
@@ -94,9 +112,11 @@ or `invalid_argument: month must be 1-12, got 13`.
 ## photos_similar
 
 `photo_id` (preferred) or `path` (absolute), `limit` (1-50, default 12),
-`contact_sheet` (default true). Returns `{photo_id, count, has_more,
-embedder, results: [...]}` with the photo itself excluded, plus a contact
-sheet.
+`offset` (default 0), `min_score` (none), `contact_sheet` (default
+**false** -- set it, or call `photos_show`, only if you can see images).
+Returns `{photo_id, returned, indexed_total, has_more, next_offset?,
+embedder, results: [{..., relevance}]}` with the photo itself excluded,
+plus a contact sheet only when requested.
 
 ## photos_show
 
@@ -109,7 +129,7 @@ EXIF rotation is applied.
 ## photos_describe
 
 `photo_id` (required), `caption` (default false). Returns `{id, path,
-taken_at, date_source, place, size, width, height, thumbnail_url, make,
+taken_at, date_source, place, size, width, height, make,
 model, lens, f_number, exposure_time, iso, focal_length, orientation,
 gps_lat, gps_lon, city, region, country, caption}`; fields without data
 are omitted. `date_source` is `exif` or `file_mtime` (no EXIF date). With
@@ -123,19 +143,23 @@ server, or the app's own configured Ollama override -- see the README's
 ## photos_duplicates
 
 `kind` (`"exact"` default, or `"near"`), `limit` (1-50 groups, default
-10). Returns `{kind, count, total_groups, has_more,
-reclaimable_bytes_total, groups: [{kind, keeper_id, max_distance,
-reclaimable_bytes, photos: [...]}]}`, groups with the most wasted space
-first and the keeper listed first. Exact = identical BLAKE2b content hash;
-near = perceptual hash (pHash) within Hamming distance 6, grouped with
-union-find (pure exact-copy groups are left to `kind="exact"`). Keeper:
-largest resolution, then oldest `taken_at`, then shortest path. Argus
-never deletes anything.
+10), `include_ids` (default false). Returns `{kind, count, total_groups,
+has_more, reclaimable_bytes_total, groups: [{kind, keeper_id, keeper_path,
+count, max_distance, reclaimable_bytes, other_paths (up to 3),
+more_paths?, photo_ids? (only with include_ids=true)}]}`, groups with the
+most wasted space first. Each group is summarised (not every member's
+full record) to fit a small context; set `include_ids=true` only when you
+need every photo's id (e.g. to build an album from a group). Exact =
+identical BLAKE2b content hash; near = perceptual hash (pHash) within
+Hamming distance 6, grouped with union-find (pure exact-copy groups are
+left to `kind="exact"`). Keeper: largest resolution, then oldest
+`taken_at`, then earliest file time, away from a folder that looks like a
+backup/copy/WhatsApp, then shortest path. Argus never deletes anything.
 
 ## photos_timeline
 
 `year` (optional). Without it: `{years: {"2024": 812}, months: {"2024":
-{"03": 40}}, on_this_day: [{id, taken_at, place, thumbnail_url}],
+{"03": 40}}, on_this_day: [{id, taken_at, place}],
 on_this_day_count}`. With it: `{year, total, months: {"2024": {...}},
 on_this_day, on_this_day_count}`. `on_this_day` lists at most 10 photos
 taken on today's month and day in earlier years.
@@ -158,7 +182,7 @@ to remove a folder: that is a human action in Settings.
 
 ## photos_album
 
-`name` (1-100 characters, matched case-insensitively), `photo_ids` (up to
+`name` (1-100 characters, matched case- and accent-insensitively), `photo_ids` (up to
 500). Creates the album or adds to it; nothing is ever removed. Returns
 `{id, name, created_by, created, added, unknown_ids, photo_count,
 has_more, photos: [first 10]}`.
