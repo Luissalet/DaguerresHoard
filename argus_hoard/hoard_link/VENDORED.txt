@@ -1,7 +1,7 @@
-Vendored from HoardLink (https://github.com/Luissalet/HoardLink)
-Version: 0.1.0
+Vendored from HoardLink (https://github.com/Luissalet/HoardLink), version 0.1.0
 
-Do not edit; replace the whole folder to update.
+Do not edit; replace the whole folder with a byte-identical copy of that
+version to update.
 
 Argus's Hoard talks to Hoard Link only through argus_hoard/backend.py,
 which wraps this package (maps the legacy Ollama URL/model settings into

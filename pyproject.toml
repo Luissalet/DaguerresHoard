@@ -2,8 +2,10 @@
 name = "argus-hoard"
 version = "0.1.0"
 description = "A private, local photo library that understands what is in your pictures."
+readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "MIT" }
+urls = { Repository = "https://github.com/Luissalet/ArgusHoard" }
 dependencies = [
     "fastapi==0.115.6",
     "uvicorn[standard]==0.34.0",
