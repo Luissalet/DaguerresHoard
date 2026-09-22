@@ -1,3 +1,8 @@
+import os
+import subprocess
+import sys
+from pathlib import Path
+
 import numpy as np
 from PIL import Image
 
@@ -42,3 +47,19 @@ def test_vector_store_persists_across_reopen(tmp_path):
     reopened = VectorStore(path, dim=4)
     assert reopened.count == 1
     assert reopened.get(row)[0] == 1.0
+
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+
+
+def test_fake_text_embedding_is_stable_across_processes():
+    code = (
+        "import sys; sys.path.insert(0, %r);"
+        "from argus_hoard.embeddings import FakeEmbedder;"
+        "print(FakeEmbedder().embed_text('dog on the beach')[:4].round(6).tolist())"
+    ) % str(REPO_ROOT)
+    outs = set()
+    for seed in ("1", "2"):
+        env = dict(os.environ, PYTHONHASHSEED=seed)
+        outs.add(subprocess.run([sys.executable, "-c", code], env=env, capture_output=True, text=True, check=True).stdout)
+    assert len(outs) == 1
