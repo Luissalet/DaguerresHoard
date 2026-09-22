@@ -631,6 +631,17 @@ class Library:
         payload["embedder"] = self.embedder.name
         if isinstance(self.embedder, FakeEmbedder):
             payload["note"] = FAKE_EMBEDDER_NOTE
+        else:
+            stale = self.conn.execute(
+                "SELECT COUNT(*) c FROM photos WHERE missing = 0 AND "
+                "(embed_row IS NULL OR embed_model IS NULL OR embed_model != ?)",
+                (self.embedder.name,),
+            ).fetchone()["c"]
+            if stale:
+                payload["note"] = (
+                    f"{stale} photos are not analysed with the current model yet (indexing may be "
+                    "running); they are missing from these results. Check photos_library for progress."
+                )
         return payload
 
     def search(self, query: str, filters: dict | None = None, limit: int = 12, contact_sheet: bool = True) -> dict:
@@ -894,7 +905,11 @@ class Library:
             with self._model_lock:
                 handle.progress(0.05, "downloading the CLIP model from Hugging Face (about 600 MB)")
                 clip = ClipEmbedder(self.settings.models_dir, local_only=False)
-                handle.progress(0.9, "model ready; re-embedding the library")
+            handle.progress(0.9, "model ready; waiting for any running scan, then re-embedding")
+            # Swap only between index runs: a run in progress keeps the
+            # embedder it started with, so its vectors are never labelled
+            # with the other model's name.
+            with self._index_lock:
                 self.embedder = clip
             self._run_index(None, handle)
 

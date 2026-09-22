@@ -45,13 +45,18 @@ export default function LibraryPage({ t, platformIsWindows, status, onOpenSettin
     [],
   );
 
-  // First page, and a refresh whenever the indexed count changes (a scan
-  // in progress adds photos) -- but never while the lightbox is open.
+  // First page, then refresh as a scan adds photos -- but only while the
+  // first page is not full yet or when the scan ends, so a long scan does
+  // not keep throwing the user back to the top. Never under the lightbox.
+  const indexing = status?.indexing ?? false;
+  const loadedCount = useRef(0);
+  loadedCount.current = photos.length;
   useEffect(() => {
     if (openIndex !== null) return;
+    if (indexing && loadedCount.current >= PAGE) return;
     loadMore(0, true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [photoCount, loadMore]);
+  }, [photoCount, indexing, loadMore]);
 
   useEffect(() => {
     const el = sentinelRef.current;

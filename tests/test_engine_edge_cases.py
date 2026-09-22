@@ -272,3 +272,29 @@ def test_every_supported_format_is_indexed_and_previewed(library, tmp_path):
     for r in rows:
         assert r["width"] == 320 and r["height"] == 240
         assert library.render_preview(r["id"], size=200)[:2] == b"\xff\xd8"  # browsers get a JPEG
+
+
+def test_search_says_when_photos_are_not_embedded_with_the_current_model(tmp_settings, tmp_path):
+    photos = tmp_path / "photos"
+    make_image(photos / "red.jpg", color=(220, 20, 20))
+    make_image(photos / "blue.jpg", color=(20, 20, 220))
+    lib = Library(tmp_settings, embedder=FakeEmbedder())
+    _index(lib, photos)
+
+    class SemanticStub:  # not a FakeEmbedder: behaves like a real model
+        name = "semantic-stub"
+        dim = FakeEmbedder.dim
+
+        def __init__(self):
+            self._inner = FakeEmbedder()
+
+        def embed_images(self, paths):
+            return self._inner.embed_images(paths)
+
+        def embed_text(self, text):
+            return self._inner.embed_text(text)
+
+    lib2 = Library(tmp_settings, embedder=SemanticStub())
+    res = lib2.search("red")
+    assert res["results"] == []
+    assert "2 photos are not analysed" in res["note"]
