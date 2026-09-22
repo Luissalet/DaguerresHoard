@@ -22,28 +22,20 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Create venv and install
+      - name: Create venv and install the lock
         shell: bash
         run: |
           python -m venv .venv
-          if [ "$RUNNER_OS" = "Windows" ]; then
-            ./.venv/Scripts/pip install --upgrade pip
-            ./.venv/Scripts/pip install -r requirements-lock.txt
-            ./.venv/Scripts/pip install --no-deps -e .
-          else
-            ./.venv/bin/pip install --upgrade pip
-            ./.venv/bin/pip install -r requirements-lock.txt
-            ./.venv/bin/pip install --no-deps -e .
-          fi
+          if [ "$RUNNER_OS" = "Windows" ]; then PY=./.venv/Scripts/python; else PY=./.venv/bin/python; fi
+          $PY -m pip install --upgrade pip
+          $PY -m pip install -r requirements-lock.txt
+          $PY -m pip check
 
       - name: Run tests
         shell: bash
         run: |
-          if [ "$RUNNER_OS" = "Windows" ]; then
-            ./.venv/Scripts/python -m pytest -q
-          else
-            ./.venv/bin/python -m pytest -q
-          fi
+          if [ "$RUNNER_OS" = "Windows" ]; then PY=./.venv/Scripts/python; else PY=./.venv/bin/python; fi
+          $PY -m pytest -q
 
   frontend:
     runs-on: ubuntu-latest
@@ -62,3 +54,33 @@ jobs:
         run: |
           npm ci
           npm run build
+
+  windows-launcher:
+    # Exercises scripts/start.ps1 and scripts/stop.ps1 end to end with
+    # Windows PowerShell 5.1: venv creation, lock install, UI build,
+    # background start, /api/health, and stop by port.
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Start with the launcher script
+        shell: powershell
+        run: .\scripts\start.ps1 -Demo -NoBrowser -Port 18899
+      - name: Health and UI answer
+        shell: powershell
+        run: |
+          $h = Invoke-RestMethod http://127.0.0.1:18899/api/health
+          if ($h.service -ne "argus-hoard") { throw "unexpected health: $h" }
+          $r = Invoke-WebRequest http://127.0.0.1:18899/ -UseBasicParsing
+          if ($r.StatusCode -ne 200) { throw "UI did not load" }
+      - name: Stop with the launcher script
+        shell: powershell
+        run: |
+          .\scripts\stop.ps1 -Port 18899
+          Start-Sleep -Seconds 2
+          try { Invoke-RestMethod http://127.0.0.1:18899/api/health -TimeoutSec 2; throw "still running" } catch { Write-Host "stopped" }
