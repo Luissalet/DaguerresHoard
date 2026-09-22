@@ -80,9 +80,9 @@ comparte con las demás aplicaciones locales del propietario: las
 **descripciones** de foto (capacidad `vision`) y la **traducción
 automática** de la búsqueda (capacidad `llm`). El orden de resolución es
 siempre el mismo: primero un ajuste manual guardado en Ajustes, luego un
-Faustus en marcha, luego un servidor local Ollama / llama.cpp / compatible con OpenAI
-que ya esté sirviendo un modelo adecuado -- así Argos nunca le pide a la
-GPU que cargue una segunda copia. Si nada se resuelve, ambas funciones lo
+Faustus en marcha, luego un servidor local Ollama / llama.cpp / compatible
+con OpenAI que ya esté sirviendo un modelo adecuado -- así Argos nunca le
+pide a la GPU que cargue una segunda copia. Si nada se resuelve, ambas funciones lo
 dicen claramente y se quedan desactivadas (sus botones aparecen
 deshabilitados con el motivo); el resto de Argos (indexado,
 búsqueda, duplicados, cronología, lugares, álbumes) funciona sin conexión
