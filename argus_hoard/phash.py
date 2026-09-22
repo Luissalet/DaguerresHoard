@@ -1,18 +1,17 @@
 """Perceptual hashing and near-duplicate grouping.
 
-Near-duplicate lookup buckets each 64-bit hash by its four 16-bit chunks.
-A pair within our default Hamming distance threshold (6) is only guaranteed
-to share a whole 16-bit chunk when the differing bits happen to concentrate
-outside at least one chunk -- with 4 chunks and up to 6 stray bits that is
-usually but not always true, so the chunk buckets are used purely as a
-candidate filter, and below ~5000 photos we additionally brute-force so the
-result is always exact regardless of distribution. Every candidate is then
-confirmed by a real Hamming-distance check, so the index only prunes and
-never produces a false negative.
+Near-duplicate lookup is a multi-index hash over four 16-bit chunks of the
+64-bit pHash. Pigeonhole: if two hashes differ in at most `t` bits, at
+least one of the four chunks differs in at most `t // 4` bits (for the
+default t = 6: at most 1 bit). So probing every chunk with its exact value
+*and* every value within `t // 4` flipped bits finds every true neighbour
+-- the index is exact, with no brute-force fallback -- and each candidate
+is then confirmed by a real Hamming-distance check.
 """
 from __future__ import annotations
 
 from collections import defaultdict
+from itertools import combinations
 
 import imagehash
 from PIL import Image, ImageOps
@@ -44,11 +43,21 @@ def chunks_of(value: int) -> list[int]:
     return [(value >> (CHUNK_BITS * i)) & mask for i in range(CHUNKS)]
 
 
+def _within_radius(chunk: int, radius: int):
+    """Every CHUNK_BITS-bit value within `radius` flipped bits of `chunk`."""
+    yield chunk
+    for r in range(1, radius + 1):
+        for bits in combinations(range(CHUNK_BITS), r):
+            v = chunk
+            for b in bits:
+                v ^= 1 << b
+            yield v
+
+
 class ChunkIndex:
     """Buckets 64-bit hashes by their four 16-bit chunks so a near-duplicate
     query only compares against plausible candidates instead of every photo.
-    Every candidate returned by `find` is confirmed by exact Hamming
-    distance, so the index only prunes -- it never causes a false negative."""
+    Exact for any threshold (see the module docstring)."""
 
     def __init__(self) -> None:
         self._buckets: list[dict[int, set[str]]] = [defaultdict(set) for _ in range(CHUNKS)]
@@ -60,14 +69,14 @@ class ChunkIndex:
             self._buckets[i][c].add(item_id)
 
     def find(self, value: int, threshold: int = DEFAULT_THRESHOLD, exclude: str | None = None) -> list[tuple[str, int]]:
+        radius = threshold // CHUNKS
         candidates: set[str] = set()
         for i, c in enumerate(chunks_of(value)):
-            candidates |= self._buckets[i].get(c, set())
-        # Small collections: also brute-force, since chunk buckets alone are
-        # only guaranteed exhaustive for distance < CHUNK count relationship;
-        # brute force keeps correctness airtight without real cost below ~5k.
-        if len(self._hashes) <= 5000:
-            candidates = set(self._hashes)
+            bucket = self._buckets[i]
+            for probe in _within_radius(c, radius):
+                hit = bucket.get(probe)
+                if hit:
+                    candidates |= hit
         results = []
         for cid in candidates:
             if cid == exclude:
@@ -75,7 +84,7 @@ class ChunkIndex:
             dist = hamming(value, self._hashes[cid])
             if dist <= threshold:
                 results.append((cid, dist))
-        return sorted(results, key=lambda t: t[1])
+        return sorted(results, key=lambda t: (t[1], t[0]))
 
     def __len__(self) -> int:
         return len(self._hashes)

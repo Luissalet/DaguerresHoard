@@ -6,9 +6,9 @@ folder" and "Copy list" on top of what this module computes.
 from __future__ import annotations
 
 from collections import defaultdict
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
-from .phash import ChunkIndex, UnionFind, DEFAULT_THRESHOLD
+from .phash import DEFAULT_THRESHOLD, ChunkIndex, UnionFind, hamming
 
 
 @dataclass
@@ -65,7 +65,6 @@ def near_duplicate_groups(rows: list[PhotoRow], threshold: int = DEFAULT_THRESHO
         index.add(r.id, r.phash)
     uf = UnionFind()
     by_id = {r.id: r for r in hashed}
-    max_dist: dict[str, int] = {}
     for r in hashed:
         for other_id, dist in index.find(r.phash, threshold=threshold, exclude=r.id):
             uf.union(r.id, other_id)
@@ -83,8 +82,6 @@ def near_duplicate_groups(rows: list[PhotoRow], threshold: int = DEFAULT_THRESHO
         ids = [r.id for r in member_rows]
         for i, a in enumerate(member_rows):
             for b in member_rows[i + 1 :]:
-                from .phash import hamming
-
                 worst = max(worst, hamming(a.phash, b.phash))
         groups.append(
             DuplicateGroup(kind="near", photo_ids=ids, keeper_id=_pick_keeper(member_rows), max_distance=worst)

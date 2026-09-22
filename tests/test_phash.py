@@ -47,3 +47,35 @@ def test_union_find_groups():
     group_sets = [set(v) for v in groups.values()]
     assert {"a", "b", "c"} in group_sets
     assert {"x", "y"} in group_sets
+
+
+def test_chunk_index_is_exact_without_brute_force_fallback():
+    """With 4x16-bit chunks, two hashes within distance 6 need not share a
+    whole chunk (2+2+1+1). The index must still find them on large sets."""
+    rnd = random.Random(42)
+    index = ChunkIndex()
+    hashes = {}
+    for i in range(8000):
+        h = rnd.getrandbits(64)
+        hashes[f"r{i}"] = h
+        index.add(f"r{i}", h)
+    queries = []
+    for i in range(200):
+        base = rnd.getrandbits(64)
+        # spread 6 flipped bits as 2+2+1+1 over the four chunks
+        flip: set[int] = set()
+        for chunk, n in zip(range(4), (2, 2, 1, 1)):
+            while len([b for b in flip if b // 16 == chunk]) < n:
+                flip.add(chunk * 16 + rnd.randrange(16))
+        other = base
+        for b in flip:
+            other ^= 1 << b
+        index.add(f"q{i}", other)
+        hashes[f"q{i}"] = other
+        queries.append((base, f"q{i}"))
+    assert len(index) > 5000
+    for base, expected in queries:
+        found = {cid for cid, _ in index.find(base, threshold=6)}
+        brute = {cid for cid, h in hashes.items() if hamming(base, h) <= 6}
+        assert found == brute
+        assert expected in found
