@@ -88,14 +88,24 @@ def _draw_scene(scene: str, rng: random.Random, portrait: bool = False) -> Image
             t = y / size[1]
             color = tuple(int(top[i] * (1 - t) + bottom[i] * t) for i in range(3))
             draw.line([(0, y), (size[0], y)], fill=color)
-        cx, cy = size[0] // 2, int(size[1] * 0.58)
-        draw.ellipse([cx - 100, cy - 100, cx + 100, cy + 100], fill=(255, 220, 140))
+        # every "photo" gets its own composition, so unrelated shots do
+        # not collide as perceptual near-duplicates
+        r = rng.randint(45, 110)
+        cx = rng.randint(r + 10, size[0] - r - 10)
+        cy = rng.randint(int(size[1] * 0.3), int(size[1] * 0.75))
+        draw.ellipse([cx - r, cy - r, cx + r, cy + r], fill=(255, 220, 140))
+        horizon = rng.randint(int(size[1] * 0.7), int(size[1] * 0.9))
+        draw.rectangle([0, horizon, size[0], size[1]], fill=(70, 40, 50))
     elif scene == "sea":
         for y in range(size[1]):
             t = y / size[1]
             color = (int(20 + 20 * t), int(80 + 60 * t), int(160 + 60 * t))
             draw.line([(0, y), (size[0], y)], fill=color)
-        draw.rectangle([0, int(size[1] * 0.67), size[0], size[1]], fill=(230, 220, 180))
+        horizon = rng.randint(int(size[1] * 0.45), int(size[1] * 0.8))
+        draw.rectangle([0, horizon, size[0], size[1]], fill=(230, 220, 180))
+        for _ in range(rng.randint(1, 4)):  # boats / rocks
+            x, y = rng.randint(0, size[0] - 60), rng.randint(int(size[1] * 0.25), max(int(size[1] * 0.26), horizon - 30))
+            draw.rectangle([x, y, x + rng.randint(20, 70), y + rng.randint(8, 24)], fill=(40, 40, 60))
     elif scene == "forest":
         draw.rectangle([0, 0, size[0], size[1]], fill=(30, 70, 40))
         for _ in range(30):
@@ -105,11 +115,16 @@ def _draw_scene(scene: str, rng: random.Random, portrait: bool = False) -> Image
             draw.polygon([(x, y), (x - 30, y + h), (x + 30, y + h)], fill=(20, 90 + rng.randint(-10, 20), 30))
     else:  # whiteboard
         draw.rectangle([0, 0, size[0], size[1]], fill=(250, 250, 245))
-        for i in range(6):
-            y = 60 + i * 60
-            draw.line([(40, y), (size[0] - 40, y)], fill=(60, 60, 60), width=3)
-        draw.text((50, 20), "ARGUS DEMO NOTES", fill=(30, 30, 30))
-        draw.rectangle([size[0] - 180, 90, size[0] - 60, 170], outline=(200, 40, 40), width=4)
+        colors = [(40, 60, 160), (200, 40, 40), (30, 120, 60), (40, 40, 40)]
+        for _ in range(rng.randint(4, 9)):  # handwriting-like strokes
+            x = rng.randint(30, size[0] // 2)
+            y = rng.randint(40, size[1] - 40)
+            draw.line([(x, y), (x + rng.randint(80, size[0] - x - 30), y + rng.randint(-8, 8))],
+                      fill=rng.choice(colors), width=rng.randint(3, 6))
+        bx, by = rng.randint(20, size[0] - 200), rng.randint(20, size[1] - 150)
+        draw.rectangle([bx, by, bx + rng.randint(80, 180), by + rng.randint(50, 130)],
+                       outline=rng.choice(colors), width=4)
+        draw.text((24, 12), "ARGUS DEMO NOTES", fill=(30, 30, 30))
     return img
 
 
@@ -141,7 +156,7 @@ def generate_demo_photos(dest_dir: Path, count: int = 80, seed: int = 7) -> list
     backup = dest_dir / "backup"
     backup.mkdir(exist_ok=True)
     for i in range(3):
-        src = created[i * 7]
+        src = created[(i * 7) % count]
         dup = backup / (src.stem + "_copy" + src.suffix)
         dup.write_bytes(src.read_bytes())
         created.append(dup)
@@ -150,11 +165,11 @@ def generate_demo_photos(dest_dir: Path, count: int = 80, seed: int = 7) -> list
     shared = dest_dir / "shared"
     shared.mkdir(exist_ok=True)
     for i in range(4):
-        src = created[i * 11 + 1]
+        src = created[(i * 11 + 1) % count]
         with Image.open(src) as im:
             resized = im.resize((im.width * 3 // 4, im.height * 3 // 4), Image.LANCZOS)
             near = shared / (src.stem + "_small" + src.suffix)
-            resized.save(near, format="JPEG", quality=72)
+            resized.save(near, format="JPEG", quality=72, exif=im.info.get("exif", b""))
             created.append(near)
 
     return created

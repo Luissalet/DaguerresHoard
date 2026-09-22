@@ -253,3 +253,22 @@ def test_stored_captions_feed_hybrid_search(library, tmp_path, monkeypatch):
         assert ids.index(captioned) < ids.index(by_name["grey_a.jpg"]), query
     hit = next(r for r in library.search("whiteboard")["results"] if r["id"] == captioned)
     assert hit["caption_match"] is True
+
+
+def test_every_supported_format_is_indexed_and_previewed(library, tmp_path):
+    from argus_hoard.formats import HEIF_AVAILABLE
+
+    photos = tmp_path / "photos"
+    formats = {"a.png": "PNG", "b.webp": "WEBP", "c.gif": "GIF", "d.tif": "TIFF", "e.bmp": "BMP", "f.jpeg": "JPEG"}
+    if HEIF_AVAILABLE:
+        formats["g.heic"] = "HEIF"
+    for name, fmt in formats.items():
+        make_image(photos / name, size=(320, 240), fmt=fmt)
+    root = library.add_root(str(photos))
+    job = _wait(library, library.start_scan(root["id"]))
+    assert job["stats"]["errors"] == 0, job["stats"]
+    rows = library.list_photos()["results"]
+    assert sorted(Path(r["path"]).name for r in rows) == sorted(formats)
+    for r in rows:
+        assert r["width"] == 320 and r["height"] == 240
+        assert library.render_preview(r["id"], size=200)[:2] == b"\xff\xd8"  # browsers get a JPEG
