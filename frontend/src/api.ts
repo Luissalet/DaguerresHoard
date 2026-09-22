@@ -57,9 +57,11 @@ function qs(params: Params): string {
 export const api = {
   libraryStatus: () => request<LibraryStatus>("/api/library"),
   places: () =>
-    request<{ countries: Record<string, { city: string; count: number; sample_thumbnail_url: string }[]> }>(
-      "/api/places",
-    ),
+    request<{
+      countries: Record<string, { city: string; count: number; sample_thumbnail_url: string }[]>;
+      approximate_count: number;
+      note?: string;
+    }>("/api/places"),
   listPhotos: (params: Params) => request<PhotoListResult>(`/api/photos?${qs(params)}`),
   getPhoto: (id: string) => request<PhotoDetail>(`/api/photos/${id}`),
   caption: (id: string) => post<PhotoDetail>(`/api/photos/${id}/caption`),

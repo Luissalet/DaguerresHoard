@@ -116,6 +116,24 @@ def _fold_album_name(name: str) -> str:
     return "".join(ch for ch in decomposed if not unicodedata.combining(ch)).casefold()
 
 
+def _format_place(city: str | None, region: str | None, country: str | None) -> str | None:
+    """B4/A11 (live report): a photo geocoded too far from any reference
+    point to name a city (see geocode.NEARBY_KM) still has a country -- the
+    old `if city:` check silently dropped it. `region` is the parent
+    municipality/admin area next to a neighbourhood ("Restelo, Lisbon,
+    Portugal"), when it differs from `city`."""
+    if city:
+        parts = [city]
+        if region and region != city:
+            parts.append(region)
+        if country:
+            parts.append(country)
+        return ", ".join(parts)
+    if country:
+        return f"{country} (approximate)"
+    return None
+
+
 def _like(value: str) -> str:
     """A LIKE pattern matching `value` as a literal substring (escape '!')."""
     escaped = value.replace("!", "!!").replace("%", "!%").replace("_", "!_")
@@ -524,9 +542,7 @@ class Library:
     # Public photo dict + filtering
     # ------------------------------------------------------------------ #
     def _public(self, row: sqlite3.Row, score: float | None = None) -> dict:
-        place = None
-        if row["city"]:
-            place = f"{row['city']}, {row['country']}" if row["country"] else row["city"]
+        place = _format_place(row["city"], row["region"], row["country"])
         d = {
             "id": row["id"],
             "path": row["path"],
@@ -1320,7 +1336,20 @@ class Library:
             by_country.setdefault(r["country"] or "?", []).append(
                 {"city": r["city"], "count": r["c"], "sample_thumbnail_url": f"/api/photos/{r['sample_id']}/thumbnail"}
             )
-        return {"countries": by_country}
+        # A11 (live report): beyond geocode.NEARBY_KM a photo gets a country
+        # but no city (see _format_place) -- surfaced here so the UI can
+        # suggest the world-cities download instead of silently dropping
+        # those photos from the Places page.
+        approximate_count = self.conn.execute(
+            "SELECT COUNT(*) c FROM photos WHERE missing = 0 AND city IS NULL AND country IS NOT NULL"
+        ).fetchone()["c"]
+        out: dict[str, Any] = {"countries": by_country, "approximate_count": approximate_count}
+        if approximate_count and self.geocoder.source == "bundled-fixture":
+            out["note"] = (
+                f"{approximate_count} photo(s) are too far from the built-in 10 cities to place precisely; "
+                "download the full world-cities dataset in Settings for accurate places."
+            )
+        return out
 
     def library_status(self, compact: bool = False) -> dict:
         c = self.conn

@@ -74,6 +74,7 @@ export interface Dict {
   selected: string;
   make_album_from_selection: string;
   places_empty: string;
+  places_approximate_note: (n: number) => string;
   theme_light: string;
   theme_dark: string;
   lang_switch: string;
@@ -228,6 +229,8 @@ export const dict: Record<Lang, Dict> = {
     selected: "selected",
     make_album_from_selection: "Add to album",
     places_empty: "No photos with GPS data yet.",
+    places_approximate_note: (n) =>
+      `${n} photo${n === 1 ? "" : "s"} ${n === 1 ? "is" : "are"} too far from the built-in 10 cities to place precisely. Download the full world dataset in Settings for accurate places.`,
     theme_light: "Light",
     theme_dark: "Dark",
     lang_switch: "ES",
@@ -383,6 +386,8 @@ export const dict: Record<Lang, Dict> = {
     selected: "seleccionadas",
     make_album_from_selection: "Añadir a álbum",
     places_empty: "Aún no hay fotos con datos GPS.",
+    places_approximate_note: (n) =>
+      `${n} foto${n === 1 ? "" : "s"} ${n === 1 ? "está" : "están"} demasiado lejos de las 10 ciudades integradas para ubicarla${n === 1 ? "" : "s"} con precisión. Descarga el conjunto de datos mundial en Ajustes para ubicaciones exactas.`,
     theme_light: "Claro",
     theme_dark: "Oscuro",
     lang_switch: "EN",

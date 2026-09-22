@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ArrowLeft, MapPin } from "lucide-react";
+import { AlertTriangle, ArrowLeft, MapPin } from "lucide-react";
 import { api, errorText } from "../api";
 import Lightbox from "../components/Lightbox";
 import PhotoGrid from "../components/PhotoGrid";
@@ -9,12 +9,14 @@ import type { Photo } from "../types";
 interface Props {
   t: Dict;
   platformIsWindows: boolean;
+  onOpenSettings: () => void;
 }
 
 type Countries = Record<string, { city: string; count: number; sample_thumbnail_url: string }[]>;
 
-export default function PlacesPage({ t, platformIsWindows }: Props) {
+export default function PlacesPage({ t, platformIsWindows, onOpenSettings }: Props) {
   const [countries, setCountries] = useState<Countries | null>(null);
+  const [approximateCount, setApproximateCount] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [city, setCity] = useState<string | null>(null);
   const [cityPhotos, setCityPhotos] = useState<Photo[]>([]);
@@ -23,7 +25,10 @@ export default function PlacesPage({ t, platformIsWindows }: Props) {
   useEffect(() => {
     api
       .places()
-      .then((r) => setCountries(r.countries))
+      .then((r) => {
+        setCountries(r.countries);
+        setApproximateCount(r.approximate_count ?? 0);
+      })
       .catch((e) => setError(errorText(e)));
   }, []);
 
@@ -65,17 +70,33 @@ export default function PlacesPage({ t, platformIsWindows }: Props) {
   }
 
   const names = Object.keys(countries).sort();
+  const approximateNotice = approximateCount > 0 && (
+    <div className="notice notice-warn">
+      <AlertTriangle size={18} />
+      <div>
+        <p>{t.places_approximate_note(approximateCount)}</p>
+      </div>
+      <button className="btn" onClick={onOpenSettings}>
+        {t.open_settings}
+      </button>
+    </div>
+  );
+
   if (names.length === 0) {
     return (
-      <div className="empty-state">
-        <MapPin size={40} />
-        <h3>{t.places_empty}</h3>
+      <div>
+        {approximateNotice}
+        <div className="empty-state">
+          <MapPin size={40} />
+          <h3>{t.places_empty}</h3>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="places-columns">
+      {approximateNotice}
       {names.map((country) => {
         const cities = countries[country];
         const total = cities.reduce((a, c) => a + c.count, 0);

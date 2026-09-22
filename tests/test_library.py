@@ -104,6 +104,46 @@ def test_moved_file_keeps_its_id(library, tmp_path):
     assert after[0]["path"] == str(new_path)
 
 
+def test_place_filter_matches_neighbourhood_via_parent_region(library, tmp_path, monkeypatch):
+    # B4 (live report): after the world-cities download, photos are
+    # labelled with the nearest neighbourhood and `place="Lisbon"` stopped
+    # finding them. `region` now carries the parent municipality.
+    from argus_hoard.geocode import CityMatch
+
+    photos_dir = tmp_path / "photos"
+    make_image(photos_dir / "restelo.jpg", gps=(38.702, -9.205))
+    make_image(photos_dir / "elsewhere.jpg", gps=(41.0, 2.0))
+
+    def fake_lookup(lat, lon):
+        if abs(lat - 38.702) < 0.01:
+            return CityMatch(city="Restelo", region="Lisbon", country="Portugal", distance_km=6.0)
+        return CityMatch(city="Barcelona", region=None, country="Spain", distance_km=0.0)
+
+    monkeypatch.setattr(library.geocoder, "lookup", fake_lookup)
+    _index_sync(library, photos_dir)
+
+    matches = library.list_photos(filters={"place": "Lisbon"})["results"]
+    assert len(matches) == 1
+    assert matches[0]["place"] == "Restelo, Lisbon, Portugal"
+
+
+def test_place_beyond_cutoff_keeps_country_without_a_wrong_city(library, tmp_path, monkeypatch):
+    # A11 (live report): a photo far from any reference point got a
+    # confidently wrong city; it should keep only the country.
+    from argus_hoard.geocode import CityMatch
+
+    photos_dir = tmp_path / "photos"
+    make_image(photos_dir / "far.jpg", gps=(41.9, 12.5))
+    monkeypatch.setattr(
+        library.geocoder, "lookup",
+        lambda lat, lon: CityMatch(city=None, region=None, country="Italy", distance_km=400.0, approximate=True),
+    )
+    _index_sync(library, photos_dir)
+
+    photo = library.list_photos()["results"][0]
+    assert photo["place"] == "Italy (approximate)"
+
+
 def test_search_and_similar_use_fake_embedder(library, tmp_path):
     photos_dir = tmp_path / "photos"
     make_image(photos_dir / "red.jpg", color=(220, 20, 20))

@@ -153,7 +153,9 @@ export default function App() {
           )}
           {page === "duplicates" && <DuplicatesPage t={t} platformIsWindows={platformIsWindows} />}
           {page === "timeline" && <TimelinePage t={t} platformIsWindows={platformIsWindows} />}
-          {page === "places" && <PlacesPage t={t} platformIsWindows={platformIsWindows} />}
+          {page === "places" && (
+            <PlacesPage t={t} platformIsWindows={platformIsWindows} onOpenSettings={() => setPage("settings")} />
+          )}
           {page === "albums" && <AlbumsPage t={t} platformIsWindows={platformIsWindows} />}
           {page === "settings" && <SettingsPage t={t} status={status} onChanged={refreshStatus} />}
           {page === "activity" && <ActivityPage t={t} />}
