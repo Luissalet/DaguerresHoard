@@ -136,7 +136,7 @@ hilos e índice de duplicados: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 ## Tests
 
 ```powershell
-.venv\Scripts\python -m pytest -q          # 79 tests, unos 20 s, sin red
+.venv\Scripts\python -m pytest -q          # 80 tests, unos 20 s, sin red
 .venv\Scripts\python -m pytest -q -m model # 1 test opcional con el modelo CLIP real (lo descarga si falta)
 cd frontend; npm run build                 # TypeScript estricto
 ```

@@ -134,7 +134,7 @@ index are described in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 ## Tests
 
 ```powershell
-.venv\Scripts\python -m pytest -q          # 79 tests, about 20 s, no network
+.venv\Scripts\python -m pytest -q          # 80 tests, about 20 s, no network
 .venv\Scripts\python -m pytest -q -m model # 1 opt-in test with the real CLIP model (downloads it if missing)
 cd frontend; npm run build                 # TypeScript strict
 ```
