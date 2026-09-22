@@ -6,6 +6,65 @@ agent over MCP, following the eight scenarios in
 nothing: none of the problems stopped the walkthrough. Every finding has
 the fix it needs; the next pass makes them.
 
+## Second pass: fixes
+
+Every blocker is fixed, each with a regression test. pytest went from
+116 to 132 (`pytest -q`); `npm run build`, the MCP protocol test
+(`tests/test_mcp_protocol.py`) and the manifest test
+(`tests/test_manifest.py`) stay green. Each fix was also exercised live:
+the app running on a free port (demo data), agent calls over real HTTP
+(`curl`), and the UI driven with Playwright (screenshots in
+`data-uxtest/shots/`, gitignored) with zero console errors.
+
+| Finding | Commit | What changed |
+| --- | --- | --- |
+| B1 | `4a5956d` | `contact_sheet` defaults to `false` everywhere (Library, HTTP bodies, MCP signatures); `photos_show`'s description and the FastMCP instructions now say "only if you can see images", for both kinds of model. |
+| B2 | `4a5956d` | `count` (misleading: every ranked photo) is joined by `returned` + `indexed_total`, kept as an alias so nothing existing breaks; a per-result `relevance` band (strong/medium/weak) replaces trusting the raw `score`. |
+| B3 | `4a5956d` | The colour fallback's relevance bands never reach "strong", and a query with no colour word is `weak` across the board with a note that the order is arbitrary. |
+| B4 | `4124d4e` | `ReverseGeocoder` also finds the nearest big place (capital/admin centre or population >= 15,000) and stores it as `region`, so `place="Lisbon"` matches a neighbourhood again. |
+| B5 | `4a5956d` | `offset`/`next_offset` page a search past 50 results; `query` is optional when filters are given (a plain chronological listing); a clamped `limit` says so. |
+| A2 | `78f3176` | Exact-duplicate keeper tie-break also prefers the earliest file mtime and a non-backup-looking folder before path length; "Copy paths" excludes the keeper; tiles show the parent folder. |
+| A4 | `2a02d6f` | Agent results never carry `thumbnail_url`; `photos_duplicates` groups are summarised by default, with `include_ids` for when an agent needs every id. |
+| A6 | `fe91943` | The open-album view gained a "Select photos" mode and a "Remove N photos" action with the two-step inline confirmation AGENTS.md requires. |
+| A7 | `4a5956d` | `add_root` strips surrounding quotes (Explorer's "Copy as path"). |
+| A8 | `4a5956d` | Album names match accent-insensitively (NFKD fold before the case-insensitive compare). |
+| A9 | `4a5956d` | An agent search whose query looks non-English gets a note to translate and retry. |
+| A10 | `4a5956d` | An empty result now says when the filters excluded everything, or when `min_score` did. |
+| A11 | `4124d4e` | Beyond `geocode.NEARBY_KM` (50 km) the bundled 10-city fixture reports no place rather than a wrong one; cities1000 keeps the country, flagged `approximate`; the Places page suggests the world-cities download when any exist. |
+
+### Left for a later pass, and why
+
+- **A1** (CLIP download is not the obvious first step). Needs a first-run
+  checklist component reused across Library and Search plus a redesigned
+  Settings layout (move the Image model card first, MB-based progress).
+  That is more surface area than the other fixes here touch safely in one
+  pass without a dedicated design review; the existing amber "Content
+  search is not available yet" banner and Settings badge still work.
+- **A3** (near-duplicate groups chain unrelated photos, "44.9 MB" reads as
+  exact). The fix (bound a group's diameter with complete linkage or a
+  keeper-centered star, skip mismatched aspect ratios unless one is a
+  rotation, confirm with CLIP cosine ~0.95+ when available) changes the
+  grouping algorithm itself and needs re-validation against real photos,
+  which this synthetic set cannot give ("my drawn images collide more
+  than real photos would" -- original report). Wording it as "up to N MB"
+  and showing each group's distance is a smaller, safe follow-up.
+- **A5** (exact copies appear side by side in search/albums). Needs a
+  `content_hash`-based collapse applied consistently to `search`,
+  `similar` and albums; deferred to keep this pass's diff reviewable, and
+  because A2's keeper fix already changes which copy a person sees.
+- **C1-C7** (cosmetic copy/UI). None block or mislead a decision the way
+  the blockers and A1-A11 do; left for a pass that also retakes the
+  screenshots this report describes, since C4/C5/C7 are visual layout
+  issues best judged from a fresh screenshot pass, not guessed at.
+
+Not re-verified in this pass: real Faustus with a text-only 27B model
+(B1 is fixed at the MCP/HTTP level, where it was reproduced), Windows-only
+paths and `.ps1` scripts, captions/query translation (no vision/LLM
+server), CLIP thresholds and near-duplicate false positives on real
+photos, and libraries above the synthetic set's 262 photos -- the same
+list the first pass left, since fixing the reproducible bugs did not
+require any of them.
+
 ## How it was tested
 
 - **Data**: `scripts/make_uxtest_photos.py` built a synthetic `Pictures`
