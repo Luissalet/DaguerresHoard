@@ -44,7 +44,7 @@ export default function Sidebar({ page, onNavigate, t, status }: Props) {
   return (
     <nav className="sidebar">
       <div className="sidebar-brand">
-        <Eye size={22} color="#2fd8dc" />
+        <img src="/app-icon.png" width={28} height={28} alt="" className="brand-icon" />
         <span className="label">{t.appName}</span>
       </div>
       <div className="sidebar-nav">

@@ -98,6 +98,11 @@ a {
   color: white;
 }
 
+.brand-icon {
+  border-radius: 7px;
+  flex-shrink: 0;
+}
+
 .sidebar-nav {
   display: flex;
   flex-direction: column;
