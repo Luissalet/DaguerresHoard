@@ -70,3 +70,29 @@ def test_batch_captions_immediately_when_never_busy(library, tmp_path, monkeypat
     assert job["status"] == "done", job
     assert stub.calls == 2
     assert job["stats"]["captioned"] == 2
+
+
+def test_batch_postpones_instead_of_barging_in_when_the_model_stays_busy(library, tmp_path, monkeypatch):
+    """If the shared model never goes idle, the batch stops with a readable
+    reason and captions nothing -- it never races the owner's conversation."""
+    make_image(tmp_path / "photos" / "a.jpg", color=(200, 30, 30))
+    make_image(tmp_path / "photos" / "b.jpg", color=(30, 200, 30))
+    root = library.add_root(str(tmp_path / "photos"))
+    _wait(library, library.start_scan(root["id"]))
+
+    stub = _StubCaptioner()
+    monkeypatch.setattr(library, "_captioner", lambda: stub)
+    monkeypatch.setattr(library, "CAPTION_MAX_WAIT_ROUNDS", 3)
+    polls = {"n": 0}
+
+    def always_busy(capability, max_wait_s=30.0):
+        polls["n"] += 1
+        return False
+
+    monkeypatch.setattr(library.backend.link.sync, "wait_idle", always_busy)
+    job = _wait(library, library.start_caption_batch())
+    assert job["status"] == "done", job
+    assert stub.calls == 0
+    assert polls["n"] == 3
+    assert job["stats"] == {"captioned": 0, "failed": 0, "postponed": 2}
+    assert job["message"].startswith("postponed: the shared vision model stayed busy")

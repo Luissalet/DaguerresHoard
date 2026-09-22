@@ -909,10 +909,15 @@ class Library:
         URL/model settings become that capability's explicit override."""
         return LinkCaptioner(lambda: self.backend.link)
 
+    # A batch waits up to 20 x 30 s (~10 min) per photo for the shared
+    # vision model to go idle before it postpones the rest.
+    CAPTION_WAIT_ROUND_S = 30.0
+    CAPTION_MAX_WAIT_ROUNDS = 20
+
     def start_caption_batch(self, limit: int = 500) -> str:
         limit = max(1, min(int(limit), 5000))
-        WAIT_ROUND_S = 30.0
-        MAX_WAIT_ROUNDS = 20  # ~10 minutes total before captioning anyway
+        WAIT_ROUND_S = self.CAPTION_WAIT_ROUND_S
+        MAX_WAIT_ROUNDS = self.CAPTION_MAX_WAIT_ROUNDS
 
         def run(handle: JobHandle) -> None:
             captioner = self._captioner()
@@ -926,7 +931,9 @@ class Library:
             done = failed = 0
             for i, r in enumerate(rows, start=1):
                 # Good citizen: a batch job yields to whatever the owner is
-                # doing with the shared model, instead of racing it.
+                # doing with the shared model instead of racing it, and
+                # postpones (stops, keeping what it captioned) if the model
+                # stays busy -- it never barges in on a long conversation.
                 for _ in range(MAX_WAIT_ROUNDS):
                     if self.backend.link.sync.wait_idle("vision", max_wait_s=WAIT_ROUND_S):
                         break
@@ -934,6 +941,14 @@ class Library:
                         (i - 1) / max(1, len(rows)),
                         f"the shared vision model is busy; waiting ({done}/{len(rows)} captioned so far)",
                     )
+                else:
+                    handle.set_stats({"captioned": done, "failed": failed, "postponed": len(rows) - i + 1})
+                    handle.progress(
+                        (i - 1) / max(1, len(rows)),
+                        f"postponed: the shared vision model stayed busy; captioned {done}/{len(rows)}, "
+                        "start the batch again later for the rest",
+                    )
+                    return
                 result = captioner.caption(Path(r["path"]))
                 if result.ok:
                     self._store_caption(r["id"], result.caption)
