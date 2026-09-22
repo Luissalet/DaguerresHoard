@@ -32,7 +32,7 @@ from .contact_sheet import ContactSheetItem, encode_jpeg_under, render_contact_s
 from .duplicates import PhotoRow, exact_duplicate_groups, near_duplicate_groups
 from .embeddings import ClipEmbedder, Embedder, FakeEmbedder, VectorStore
 from .formats import HEIF_AVAILABLE
-from .geocode import ReverseGeocoder, download_geonames
+from .geocode import GEOCODER_VERSION, ReverseGeocoder, download_geonames
 from .hashing import content_hash
 from .hoard_link import BackendError, Unavailable
 from .jobs import JobHandle, JobManager
@@ -191,6 +191,7 @@ class Library:
         self.backend = Backend(settings.data_dir, self.conn)
         self._index_lock = threading.Lock()
         self._model_lock = threading.Lock()
+        self._maybe_regeocode()
 
     @property
     def conn(self) -> sqlite3.Connection:
@@ -1224,19 +1225,50 @@ class Library:
             download_geonames(self.settings.geodata_dir)
             self.geocoder = ReverseGeocoder(self.settings.geodata_dir)
             handle.progress(0.6, "re-geocoding photos with GPS")
-            c = self.conn
-            rows = c.execute("SELECT id, gps_lat, gps_lon FROM photos WHERE gps_lat IS NOT NULL").fetchall()
-            for r in rows:
-                m = self.geocoder.lookup(r["gps_lat"], r["gps_lon"])
-                if m:
-                    c.execute(
-                        "UPDATE photos SET city = ?, region = ?, country = ? WHERE id = ?",
-                        (m.city, m.region, m.country, r["id"]),
-                    )
-            c.commit()
-            handle.set_stats({"regeocoded": len(rows)})
+            with self._index_lock:
+                handle.set_stats({"regeocoded": self._regeocode_all()})
 
         return self.jobs.start("geodata_download", run)
+
+    def _geocoder_stamp(self) -> str:
+        return f"{self.geocoder.source}:{GEOCODER_VERSION}"
+
+    def _regeocode_all(self) -> int:
+        """Relabel every photo with GPS using the current geocoder. A photo
+        the geocoder can no longer place loses its old label instead of
+        keeping a wrong one (A11: "Lisbon, Portugal" on a Cadiz beach)."""
+        c = self.conn
+        rows = c.execute("SELECT id, gps_lat, gps_lon FROM photos WHERE gps_lat IS NOT NULL AND gps_lon IS NOT NULL").fetchall()
+        for r in rows:
+            m = self.geocoder.lookup(r["gps_lat"], r["gps_lon"])
+            c.execute(
+                "UPDATE photos SET city = ?, region = ?, country = ? WHERE id = ?",
+                (m.city, m.region, m.country, r["id"]) if m else (None, None, None, r["id"]),
+            )
+        dbmod.set_setting(c, "geocoder_version", self._geocoder_stamp())
+        c.commit()
+        return len(rows)
+
+    def _maybe_regeocode(self) -> str | None:
+        """B4/A11 (re-walk): the fixed labels only reached photos indexed
+        after the fix -- a rescan skips unchanged files, so an existing
+        library kept "Restelo, Portugal" and `place="Lisbon"` still found 2
+        of 54 trip photos. When the geocoder's labelling changed since the
+        library was last labelled, relabel it once in the background."""
+        c = self.conn
+        if dbmod.get_setting(c, "geocoder_version") == self._geocoder_stamp():
+            return None
+        has_gps = c.execute("SELECT 1 FROM photos WHERE gps_lat IS NOT NULL LIMIT 1").fetchone()
+        if not has_gps:
+            dbmod.set_setting(c, "geocoder_version", self._geocoder_stamp())
+            return None
+
+        def run(handle: JobHandle) -> None:
+            handle.progress(0.1, "updating place names")
+            with self._index_lock:
+                handle.set_stats({"regeocoded": self._regeocode_all()})
+
+        return self.jobs.start("regeocode", run)
 
     # ------------------------------------------------------------------ #
     # Duplicates / timeline / places / library status
@@ -1351,21 +1383,30 @@ class Library:
         return result
 
     def places(self) -> dict:
+        # Re-walk (UC8): with the world-cities data, Places listed 22 Madrid
+        # neighbourhoods ("Ibiza", "Salamanca" read as the island and the
+        # other city) and no "Madrid". Group by the city a place belongs
+        # to; opening it filters with place=<that city>, which matches the
+        # neighbourhoods through `region`.
         rows = self.conn.execute(
-            "SELECT country, city, COUNT(*) c, MIN(id) sample_id FROM photos "
-            "WHERE missing = 0 AND city IS NOT NULL GROUP BY country, city ORDER BY country, c DESC"
+            "SELECT country, COALESCE(region, city) AS place, COUNT(*) c, MIN(id) sample_id FROM photos "
+            "WHERE missing = 0 AND city IS NOT NULL GROUP BY country, place ORDER BY country, c DESC"
         ).fetchall()
         by_country: dict[str, list[dict]] = {}
         for r in rows:
             by_country.setdefault(r["country"] or "?", []).append(
-                {"city": r["city"], "count": r["c"], "sample_thumbnail_url": f"/api/photos/{r['sample_id']}/thumbnail"}
+                {"city": r["place"], "count": r["c"], "sample_thumbnail_url": f"/api/photos/{r['sample_id']}/thumbnail"}
             )
         # A11 (live report): beyond geocode.NEARBY_KM a photo gets a country
         # but no city (see _format_place) -- surfaced here so the UI can
         # suggest the world-cities download instead of silently dropping
         # those photos from the Places page.
+        # Re-walk: the bundled table gives up entirely beyond the cutoff (no
+        # country either), so counting "country but no city" found none of
+        # the Cadiz photos and the download hint never showed. Count every
+        # photo that has GPS but no city.
         approximate_count = self.conn.execute(
-            "SELECT COUNT(*) c FROM photos WHERE missing = 0 AND city IS NULL AND country IS NOT NULL"
+            "SELECT COUNT(*) c FROM photos WHERE missing = 0 AND city IS NULL AND gps_lat IS NOT NULL"
         ).fetchone()["c"]
         out: dict[str, Any] = {"countries": by_country, "approximate_count": approximate_count}
         if approximate_count and self.geocoder.source == "bundled-fixture":

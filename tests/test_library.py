@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import shutil
+from pathlib import Path
 import time
 
 from tests.conftest import make_image
@@ -127,6 +128,52 @@ def test_place_filter_matches_neighbourhood_via_parent_region(library, tmp_path,
     assert matches[0]["place"] == "Restelo, Lisbon, Portugal"
 
 
+def test_places_groups_neighbourhoods_under_their_city(library, tmp_path, monkeypatch):
+    # Re-walk (UC8): with the world-cities data the Places page listed
+    # Madrid's districts ("Ibiza", "Salamanca") and never "Madrid".
+    from argus_hoard.geocode import CityMatch
+
+    photos_dir = tmp_path / "photos"
+    make_image(photos_dir / "retiro.jpg", gps=(40.413, -3.683))
+    make_image(photos_dir / "ibiza.jpg", gps=(40.419, -3.674))
+    make_image(photos_dir / "cadiz.jpg", gps=(36.527, -6.289))
+    labels = {
+        40.413: CityMatch(city="Retiro", region="Madrid", country="Spain", distance_km=0.1),
+        40.419: CityMatch(city="Ibiza", region="Madrid", country="Spain", distance_km=0.1),
+        36.527: CityMatch(city="Cadiz", region=None, country="Spain", distance_km=0.1),
+    }
+    monkeypatch.setattr(library.geocoder, "lookup", lambda lat, lon: labels[round(lat, 3)])
+    _index_sync(library, photos_dir)
+
+    spain = {c["city"]: c["count"] for c in library.places()["countries"]["Spain"]}
+    assert spain == {"Madrid": 2, "Cadiz": 1}
+    assert len(library.list_photos(filters={"place": "Madrid"})["results"]) == 2
+
+
+def test_bundled_cities_have_no_admin_region_as_parent():
+    # the bundled table's region column is an admin area (Ile-de-France),
+    # not the city a place belongs to; Paris is its own city
+    from argus_hoard.geocode import ReverseGeocoder
+
+    paris = ReverseGeocoder(None).lookup(48.8566, 2.3522)
+    assert (paris.city, paris.region, paris.country) == ("Paris", None, "France")
+
+
+def test_places_suggests_world_cities_for_photos_the_bundled_table_cannot_place(library, tmp_path):
+    # Re-walk (UC8): beyond the cutoff the bundled table returns nothing,
+    # not even a country, so the Cadiz beach photos vanished from Places
+    # without the hint to download the world-cities data.
+    photos_dir = tmp_path / "photos"
+    make_image(photos_dir / "cadiz.jpg", gps=(36.53, -6.30))
+    make_image(photos_dir / "lisbon.jpg", gps=(38.7223, -9.1393))
+    _index_sync(library, photos_dir)
+
+    places = library.places()
+    assert places["countries"] == {"Portugal": [places["countries"]["Portugal"][0]]}
+    assert places["approximate_count"] == 1
+    assert "world-cities" in places["note"]
+
+
 def test_place_beyond_cutoff_keeps_country_without_a_wrong_city(library, tmp_path, monkeypatch):
     # A11 (live report): a photo far from any reference point got a
     # confidently wrong city; it should keep only the country.
@@ -142,6 +189,45 @@ def test_place_beyond_cutoff_keeps_country_without_a_wrong_city(library, tmp_pat
 
     photo = library.list_photos()["results"][0]
     assert photo["place"] == "Italy (approximate)"
+
+
+def test_existing_library_is_relabelled_when_the_geocoder_changes(tmp_settings, tmp_path, monkeypatch):
+    # B4/A11 (re-walk): the fixed labels only reached photos indexed after
+    # the fix -- a rescan skips unchanged files -- so an upgraded library
+    # kept "Restelo, Portugal" and a Cadiz beach kept "Lisbon, Portugal".
+    from argus_hoard import db as dbmod
+    from argus_hoard.embeddings import FakeEmbedder
+    from argus_hoard.library import Library
+
+    lib = Library(tmp_settings, embedder=FakeEmbedder())
+    photos_dir = tmp_path / "photos"
+    make_image(photos_dir / "lisbon.jpg", gps=(38.7223, -9.1393))
+    make_image(photos_dir / "cadiz.jpg", gps=(36.53, -6.30))
+    _index_sync(lib, photos_dir)
+    # labels an older version wrote, and no stamp of the version that wrote them
+    lib.conn.execute("UPDATE photos SET city = 'Lisbon', region = NULL, country = 'Portugal'")
+    lib.conn.execute("DELETE FROM settings WHERE key = 'geocoder_version'")
+    lib.conn.commit()
+    lib.close()
+
+    lib2 = Library(tmp_settings, embedder=FakeEmbedder())
+    try:
+        jobs = [j for j in lib2.jobs.list(limit=5) if j["kind"] == "regeocode"]
+        assert jobs, "an upgraded library is relabelled once in the background"
+        _wait_job(lib2, jobs[0]["id"])
+        places = {Path(p["path"]).name: p["place"] for p in lib2.list_photos()["results"]}
+        assert places["lisbon.jpg"] == "Lisbon, Portugal"
+        assert places["cadiz.jpg"] is None  # too far from the bundled cities: no wrong label
+        assert dbmod.get_setting(lib2.conn, "geocoder_version")
+    finally:
+        lib2.close()
+
+    lib3 = Library(tmp_settings, embedder=FakeEmbedder())
+    try:
+        assert not [j for j in lib3.jobs.list(limit=5) if j["kind"] == "regeocode" and j["status"] == "running"]
+        assert len([j for j in lib3.jobs.list(limit=10) if j["kind"] == "regeocode"]) == 1  # only once
+    finally:
+        lib3.close()
 
 
 def test_search_and_similar_use_fake_embedder(library, tmp_path):
