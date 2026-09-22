@@ -1,0 +1,12 @@
+Vendored from HoardLink (https://github.com/Luissalet/HoardLink)
+Version: 0.1.0
+
+Do not edit; replace the whole folder to update.
+
+Argus's Hoard talks to Hoard Link only through argus_hoard/backend.py,
+which wraps this package (maps the legacy Ollama URL/model settings into
+an explicit "vision" override) without editing any vendored file. When
+re-vendoring a later hoard-link commit, drop in the new files here and
+re-run `pytest tests/test_backend.py` to confirm the wrapper still lines
+up with the public API (Link, LinkConfig, CapabilityConfig, Resolution,
+Unavailable, BackendError).

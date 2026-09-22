@@ -1,6 +1,7 @@
 import httpx
 
-from argus_hoard.captions import OllamaCaptioner
+from argus_hoard.captions import LinkCaptioner, OllamaCaptioner
+from argus_hoard.hoard_link import CapabilityConfig, Link, LinkConfig
 from tests.conftest import make_image
 
 
@@ -67,3 +68,60 @@ def test_connection_check_ok_when_model_present():
     client = httpx.Client(transport=httpx.MockTransport(handler))
     result = captioner.test_connection(client=client)
     assert result.ok
+
+
+def _link_with_explicit_vision(handler, model="qwen2.5vl:7b") -> Link:
+    config = LinkConfig(
+        capabilities={
+            "vision": CapabilityConfig(url="http://127.0.0.1:11434", model=model, api="ollama", provider="ollama")
+        }
+    )
+    client = httpx.AsyncClient(transport=httpx.MockTransport(handler))
+    return Link(config, client=client)
+
+
+def test_link_captioner_captions_through_the_vision_capability(tmp_path):
+    img = make_image(tmp_path / "photo.jpg", size=(3000, 2000))
+    seen = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        import json
+
+        body = json.loads(request.content)
+        seen["model"] = body["model"]
+        return httpx.Response(200, json={"message": {"content": "A red square on a beach."}})
+
+    link = _link_with_explicit_vision(handler)
+    try:
+        result = LinkCaptioner(link).caption(img)
+        assert result.ok
+        assert "red square" in result.caption
+        assert seen["model"] == "qwen2.5vl:7b"
+    finally:
+        link.sync.close()
+
+
+def test_link_captioner_reports_no_vision_model_when_unavailable(tmp_path):
+    img = make_image(tmp_path / "photo.jpg")
+    config = LinkConfig()  # nothing configured; loopback has nothing listening
+    client = httpx.AsyncClient(transport=httpx.MockTransport(lambda r: (_ for _ in ()).throw(
+        httpx.ConnectError("connection refused", request=r)
+    )))
+    link = Link(config, client=client)
+    try:
+        result = LinkCaptioner(link).caption(img)
+        assert not result.ok
+        assert "No vision model is loaded" in result.error
+    finally:
+        link.sync.close()
+
+
+def test_link_captioner_test_connection_reflects_resolution(tmp_path):
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json={"message": {"content": "x"}})
+
+    link = _link_with_explicit_vision(handler)
+    try:
+        assert LinkCaptioner(link).test_connection().ok
+    finally:
+        link.sync.close()

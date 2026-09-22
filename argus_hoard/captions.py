@@ -1,8 +1,20 @@
-"""Optional local captioning via an Ollama vision model.
+"""Optional local captioning of photos through a vision-capable model.
 
 Off by default. Never blocks indexing: a caption is only generated on
 explicit request (`photos_describe(caption=true)`) or a user-started batch
-job. If Ollama is unreachable we say so instead of failing silently.
+job. Two ways to reach a model:
+
+- `OllamaCaptioner`: a direct, private connection to one Ollama server
+  (this app's original implementation, kept for anyone still wiring things
+  up by hand and exercised directly by the tests below).
+- `LinkCaptioner`: the one `Library._captioner()` actually returns. It
+  captions through Hoard Link's `vision` capability, so it shares whatever
+  server Faustus or a loopback probe resolves (Ollama, llama.cpp, an
+  OpenAI-compatible server) instead of only ever speaking Ollama's
+  `/api/generate`. See `argus_hoard/backend.py` for how the legacy
+  Ollama URL/model settings become that capability's explicit override.
+
+If nothing resolves we say so instead of failing silently.
 """
 from __future__ import annotations
 
@@ -10,9 +22,13 @@ import base64
 import io
 from dataclasses import dataclass
 from pathlib import Path
+from typing import TYPE_CHECKING
 from urllib.parse import urlparse
 
 import httpx
+
+if TYPE_CHECKING:
+    from .hoard_link import Link
 
 DEFAULT_BASE_URL = "http://127.0.0.1:11434"
 DEFAULT_MODEL = "qwen2.5vl:7b"
@@ -29,7 +45,8 @@ class CaptionResult:
 MAX_SIDE = 1024  # vision models downscale anyway; do not ship a 16 MP original
 
 
-def _encode_for_model(image_path: Path) -> str:
+def _downscaled_jpeg_bytes(image_path: Path) -> bytes:
+    """A vision-model-friendly JPEG: EXIF-rotated, long side <= MAX_SIDE."""
     from PIL import Image, ImageOps
 
     with Image.open(image_path) as img:
@@ -41,7 +58,11 @@ def _encode_for_model(image_path: Path) -> str:
         img.thumbnail((MAX_SIDE, MAX_SIDE))
         buf = io.BytesIO()
         img.save(buf, format="JPEG", quality=85)
-    return base64.b64encode(buf.getvalue()).decode("ascii")
+    return buf.getvalue()
+
+
+def _encode_for_model(image_path: Path) -> str:
+    return base64.b64encode(_downscaled_jpeg_bytes(image_path)).decode("ascii")
 
 
 class OllamaCaptioner:
@@ -95,3 +116,57 @@ class OllamaCaptioner:
             return CaptionResult(ok=False, error=f"Ollama request failed: {exc}")
         except (OSError, ValueError) as exc:
             return CaptionResult(ok=False, error=f"could not read image: {exc}")
+
+
+NO_VISION_MODEL = (
+    "No vision model is loaded. Faustus can serve one, or load one in Ollama."
+)
+
+
+class LinkCaptioner:
+    """Captions through Hoard Link's `vision` capability.
+
+    This is what `Library._captioner()` returns. It shares whatever server
+    Faustus or a loopback probe resolves for `vision` -- Ollama, a
+    llama.cpp vision build or an OpenAI-compatible server -- via
+    `Link.chat(images=..., capability="vision")`, rather than a private
+    connection to one hard-coded Ollama address.
+    """
+
+    def __init__(self, link: "Link"):
+        self.link = link
+
+    def test_connection(self) -> CaptionResult:
+        from .hoard_link import BackendError, Unavailable  # noqa: F401 (documents the pair)
+
+        try:
+            res = self.link.sync.resolve("vision")
+        except Exception as exc:  # noqa: BLE001 - a probe must never crash Settings
+            return CaptionResult(ok=False, error=str(exc))
+        if not res.resolved:
+            return CaptionResult(ok=False, error=f"{NO_VISION_MODEL} ({res.reason})")
+        return CaptionResult(ok=True)
+
+    def caption(self, image_path: Path) -> CaptionResult:
+        from .hoard_link import BackendError, Unavailable
+
+        try:
+            image_bytes = _downscaled_jpeg_bytes(image_path)
+        except (OSError, ValueError) as exc:
+            return CaptionResult(ok=False, error=f"could not read image: {exc}")
+        try:
+            result = self.link.sync.chat(
+                [{"role": "user", "content": PROMPT}],
+                images=[image_bytes],
+                max_tokens=200,
+                temperature=0.2,
+                capability="vision",
+            )
+        except Unavailable as exc:
+            return CaptionResult(ok=False, error=f"{NO_VISION_MODEL} ({'; '.join(exc.reasons)})")
+        except BackendError as exc:
+            return CaptionResult(ok=False, error=str(exc))
+        text = (result.text or "").strip()
+        if not text:
+            return CaptionResult(ok=False, error="the vision model returned an empty caption")
+        return CaptionResult(ok=True, caption=text)

@@ -24,7 +24,8 @@ from pathlib import Path
 from typing import Any
 
 from . import db as dbmod
-from .captions import DEFAULT_BASE_URL, DEFAULT_MODEL, OllamaCaptioner
+from .backend import Backend
+from .captions import DEFAULT_BASE_URL, DEFAULT_MODEL, LinkCaptioner
 from .config import EMBED_DIM, Settings
 from .contact_sheet import MAX_ITEMS as SHEET_MAX_ITEMS
 from .contact_sheet import ContactSheetItem, encode_jpeg_under, render_contact_sheet
@@ -33,7 +34,9 @@ from .embeddings import ClipEmbedder, Embedder, FakeEmbedder, VectorStore
 from .formats import HEIF_AVAILABLE
 from .geocode import ReverseGeocoder, download_geonames
 from .hashing import content_hash
+from .hoard_link import BackendError, Unavailable
 from .jobs import JobHandle, JobManager
+from .lang import detect_non_english
 from .metadata import extract_metadata
 from .phash import compute_phash
 from .scanning import stat_signature, walk_images
@@ -136,6 +139,7 @@ class Library:
         self.vectors = VectorStore(settings.vectors_path, dim=EMBED_DIM)
         self.geocoder = ReverseGeocoder(settings.geodata_dir if (settings.geodata_dir / "cities1000.txt").exists() else None)
         self.jobs = JobManager(self._conns.get)
+        self.backend = Backend(settings.data_dir, self.conn)
         self._index_lock = threading.Lock()
         self._model_lock = threading.Lock()
 
@@ -144,6 +148,10 @@ class Library:
         return self._conns.get()
 
     def close(self) -> None:
+        try:
+            self.backend.link.sync.close()
+        except Exception:  # noqa: BLE001 - best effort; a daemon thread never blocks shutdown
+            pass
         self._conns.close_all()
 
     @property
@@ -708,6 +716,51 @@ class Library:
             payload["contact_sheet_covers"] = SHEET_MAX_ITEMS
         return self._agent_notes(payload)
 
+    # -- UI-only: translate a non-English query before embedding it -------- #
+    TRANSLATE_PROMPT = (
+        "Translate the following photo search query to a short, literal English "
+        "CLIP search phrase. Reply with only the translated phrase, no quotes, "
+        "no punctuation, no explanation.\n\nQuery: {text}"
+    )
+
+    def translate_search_enabled(self) -> bool:
+        return dbmod.get_setting(self.conn, "translate_search", "true") != "false"
+
+    def set_translate_search(self, enabled: bool) -> None:
+        dbmod.set_setting(self.conn, "translate_search", "true" if enabled else "false")
+
+    def search_translated(self, query: str, filters: dict | None = None, limit: int = 12, contact_sheet: bool = True) -> dict:
+        """UI-only entry point: `search()` with an automatic English
+        translation of a non-English query through the `llm` capability,
+        when enabled. The MCP tool tells the agent to translate the query
+        itself, so agent calls go straight to `search()` and are never
+        translated twice."""
+        original = query.strip() if isinstance(query, str) else query
+        translated: str | None = None
+        translate_error: str | None = None
+        if isinstance(original, str) and original and self.translate_search_enabled():
+            lang = detect_non_english(original)
+            if lang:
+                try:
+                    result = self.backend.link.sync.chat(
+                        [{"role": "user", "content": self.TRANSLATE_PROMPT.format(text=original)}],
+                        max_tokens=60,
+                        temperature=0.0,
+                        capability="llm",
+                    )
+                    candidate = (result.text or "").strip().strip('"').strip("'")
+                    if candidate:
+                        translated = candidate
+                except (Unavailable, BackendError) as exc:
+                    translate_error = str(exc)
+        payload = self.search(translated or query, filters, limit, contact_sheet)
+        if translated:
+            payload["original_query"] = original
+            payload["translated_query"] = translated
+        elif translate_error:
+            payload["translate_error"] = translate_error
+        return payload
+
     def similar(self, photo_id: str | None = None, path: str | None = None, limit: int = 12, contact_sheet: bool = True) -> dict:
         row = self._resolve_photo(photo_id, path)
         limit = _clamp_limit(limit, 12)
@@ -853,13 +906,16 @@ class Library:
         c.execute("INSERT INTO photos_fts(rowid, photo_id, caption) VALUES (?, ?, ?)", (rowid, photo_id, text))
         c.commit()
 
-    def _captioner(self) -> OllamaCaptioner:
-        base_url = dbmod.get_setting(self.conn, "ollama_base_url", DEFAULT_BASE_URL)
-        model = dbmod.get_setting(self.conn, "ollama_model", DEFAULT_MODEL)
-        return OllamaCaptioner(base_url=base_url, model=model)
+    def _captioner(self) -> LinkCaptioner:
+        """The seam tests monkeypatch. Captions through Hoard Link's `vision`
+        capability -- see argus_hoard/backend.py for how the legacy Ollama
+        URL/model settings become that capability's explicit override."""
+        return LinkCaptioner(self.backend.link)
 
     def start_caption_batch(self, limit: int = 500) -> str:
         limit = max(1, min(int(limit), 5000))
+        WAIT_ROUND_S = 30.0
+        MAX_WAIT_ROUNDS = 20  # ~10 minutes total before captioning anyway
 
         def run(handle: JobHandle) -> None:
             captioner = self._captioner()
@@ -872,6 +928,15 @@ class Library:
             ).fetchall()
             done = failed = 0
             for i, r in enumerate(rows, start=1):
+                # Good citizen: a batch job yields to whatever the owner is
+                # doing with the shared model, instead of racing it.
+                for _ in range(MAX_WAIT_ROUNDS):
+                    if self.backend.link.sync.wait_idle("vision", max_wait_s=WAIT_ROUND_S):
+                        break
+                    handle.progress(
+                        (i - 1) / max(1, len(rows)),
+                        f"the shared vision model is busy; waiting ({done}/{len(rows)} captioned so far)",
+                    )
                 result = captioner.caption(Path(r["path"]))
                 if result.ok:
                     self._store_caption(r["id"], result.caption)
@@ -882,6 +947,22 @@ class Library:
             handle.set_stats({"captioned": done, "failed": failed})
 
         return self.jobs.start("captions", run)
+
+    # ------------------------------------------------------------------ #
+    # Shared model backend (Hoard Link)
+    # ------------------------------------------------------------------ #
+    def backend_status(self) -> dict:
+        """GET /api/backend: Hoard Link's resolution for every capability,
+        plus the one thing it does not know about -- the CLIP image search
+        model, which is always local and never shared (it is not a chat/
+        embeddings-text model Hoard Link's capabilities cover)."""
+        status = self.backend.status()
+        status["image_search"] = {
+            "engine": "local CLIP (ONNX Runtime), not part of the shared backend",
+            "active": self.embedder.name,
+            "semantic": not isinstance(self.embedder, FakeEmbedder),
+        }
+        return status
 
     # ------------------------------------------------------------------ #
     # Model and geodata (explicit, user-triggered downloads)
