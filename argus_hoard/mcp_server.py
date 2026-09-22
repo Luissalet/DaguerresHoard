@@ -12,6 +12,7 @@ the tests. This file only translates between MCP tool calls and that HTTP
 surface, and turns base64 JPEG fields into real mcp.types.ImageContent.
 """
 import base64
+import json
 import os
 from typing import Literal
 from urllib.parse import urlparse
@@ -20,7 +21,7 @@ import httpx
 from mcp.server.fastmcp import FastMCP
 from mcp.server.fastmcp.exceptions import ToolError
 from mcp.server.fastmcp.utilities.types import Image
-from mcp.types import ToolAnnotations
+from mcp.types import TextContent, ToolAnnotations
 
 APP_NAME = "Argus's Hoard"
 DEFAULT_URL = "http://127.0.0.1:8814"
@@ -83,9 +84,16 @@ def _call(tool: str, payload: dict) -> dict:
     return resp.json()
 
 
+def _text(data: dict) -> TextContent:
+    """Compact JSON (no indentation, real UTF-8): about a third fewer tokens
+    than the default pretty-printed rendering, which matters to a local
+    model with a finite context."""
+    return TextContent(type="text", text=json.dumps(data, ensure_ascii=False, separators=(",", ":")))
+
+
 def _with_sheet(data: dict) -> list:
     b64 = data.pop("contact_sheet_jpeg_base64", None)
-    blocks: list = [data]
+    blocks: list = [_text(data)]
     if b64:
         blocks.append(Image(data=base64.b64decode(b64), format="jpeg"))
     return blocks
@@ -169,11 +177,11 @@ def photos_show(ids: list[str], size: int = 768) -> list:
     data = _call("photos_show", {"ids": ids, "size": size})
     images = data.pop("images", [])
     meta = {"shown": [{k: item.get(k) for k in ("id", "path", "taken_at")} for item in images], **data}
-    return [meta, *[Image(data=base64.b64decode(item["jpeg_base64"]), format="jpeg") for item in images]]
+    return [_text(meta), *[Image(data=base64.b64decode(item["jpeg_base64"]), format="jpeg") for item in images]]
 
 
 @mcp.tool(annotations=READ_ONLY)
-def photos_describe(photo_id: str, caption: bool = False) -> dict:
+def photos_describe(photo_id: str, caption: bool = False) -> list:
     """Everything Argus knows about one photo: date, place, camera, EXIF, path.
 
     Returns {id, path, taken_at, date_source ("exif" or "file_mtime"), place,
@@ -187,11 +195,11 @@ def photos_describe(photo_id: str, caption: bool = False) -> dict:
     camera, describe photo, datos de la foto, cuándo se hizo, dónde se hizo,
     qué cámara, describe la foto
     """
-    return _call("photos_describe", {"photo_id": photo_id, "caption": caption})
+    return [_text(_call("photos_describe", {"photo_id": photo_id, "caption": caption}))]
 
 
 @mcp.tool(annotations=READ_ONLY)
-def photos_duplicates(kind: Literal["exact", "near"] = "exact", limit: int = 10) -> dict:
+def photos_duplicates(kind: Literal["exact", "near"] = "exact", limit: int = 10) -> list:
     """Groups of duplicate photos with a suggested copy to keep. Never deletes anything.
 
     kind="exact": byte-identical copies. kind="near": the same picture
@@ -204,11 +212,11 @@ def photos_duplicates(kind: Literal["exact", "near"] = "exact", limit: int = 10)
     Keywords: duplicate photos, repeated pictures, copies, free up space,
     fotos duplicadas, fotos repetidas, copias, liberar espacio
     """
-    return _call("photos_duplicates", {"kind": kind, "limit": limit})
+    return [_text(_call("photos_duplicates", {"kind": kind, "limit": limit}))]
 
 
 @mcp.tool(annotations=READ_ONLY)
-def photos_timeline(year: int | None = None) -> dict:
+def photos_timeline(year: int | None = None) -> list:
     """How many photos were taken per year and month, and "on this day" in past years.
 
     Without `year`: {years:{"2024": 812, ...}, months:{"2024":{"03": 40,...}},
@@ -218,11 +226,11 @@ def photos_timeline(year: int | None = None) -> dict:
     Keywords: photo timeline, how many photos, per year, on this day,
     cronología de fotos, cuántas fotos, por año, un día como hoy, tal día como hoy
     """
-    return _call("photos_timeline", {"year": year})
+    return [_text(_call("photos_timeline", {"year": year}))]
 
 
 @mcp.tool(annotations=READ_ONLY)
-def photos_library() -> dict:
+def photos_library() -> list:
     """Status of the photo library: folders, photo count, model, running jobs.
 
     Call it first when unsure whether anything is indexed, when a search
@@ -233,11 +241,11 @@ def photos_library() -> dict:
     Keywords: photo library status, is it indexed, how many photos, scan
     progress, estado de la biblioteca de fotos, está indexado, progreso
     """
-    return _call("photos_library", {})
+    return [_text(_call("photos_library", {}))]
 
 
 @mcp.tool(annotations=ADDITIVE)
-def photos_add_folder(path: str) -> dict:
+def photos_add_folder(path: str) -> list:
     """Add a folder of photos to the library and start indexing it in the background.
 
     Only when the owner asks to include a folder and gives its absolute path
@@ -248,11 +256,11 @@ def photos_add_folder(path: str) -> dict:
     Keywords: index this folder, add photo folder, scan folder, indexar esta
     carpeta, añade esta carpeta, añadir carpeta de fotos, escanear carpeta
     """
-    return _call("photos_add_folder", {"path": path})
+    return [_text(_call("photos_add_folder", {"path": path}))]
 
 
 @mcp.tool(annotations=ADDITIVE)
-def photos_album(name: str, photo_ids: list[str]) -> dict:
+def photos_album(name: str, photo_ids: list[str]) -> list:
     """Create an album, or add photos to an existing album with that name (case-insensitive).
 
     Non-destructive: photos are referenced, never copied or moved, and this
@@ -262,7 +270,7 @@ def photos_album(name: str, photo_ids: list[str]) -> dict:
     Keywords: make an album, add to album, collection, crear álbum, añadir
     al álbum, hacer un álbum, colección
     """
-    return _call("photos_album", {"name": name, "photo_ids": photo_ids})
+    return [_text(_call("photos_album", {"name": name, "photo_ids": photo_ids}))]
 
 
 def main() -> None:

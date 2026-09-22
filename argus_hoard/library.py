@@ -55,7 +55,7 @@ FILTER_NAMES = (
 FAKE_EMBEDDER_NOTE = (
     "The semantic image model is not installed, so search only understands "
     "colour words (red, orange, yellow, green, blue, purple, pink, white, black). "
-    "Tell the owner they can download it in Argus Settings (about 350 MB) for "
+    "Tell the owner they can download it in Argus Settings (about 600 MB) for "
     "content search, and do not trust the ranking for anything else."
 )
 
@@ -881,7 +881,7 @@ class Library:
             "active": self.embedder.name,
             "clip_downloaded": state["image"] and state["text"],
             "cache_bytes": state["bytes"],
-            "download_size_hint_mb": 350,
+            "download_size_hint_mb": 600,
             "downloading": bool(self.jobs.running("model_download")),
         }
 
@@ -892,7 +892,7 @@ class Library:
 
         def run(handle: JobHandle) -> None:
             with self._model_lock:
-                handle.progress(0.05, "downloading the CLIP model from Hugging Face (about 350 MB)")
+                handle.progress(0.05, "downloading the CLIP model from Hugging Face (about 600 MB)")
                 clip = ClipEmbedder(self.settings.models_dir, local_only=False)
                 handle.progress(0.9, "model ready; re-embedding the library")
                 self.embedder = clip
@@ -981,7 +981,6 @@ class Library:
             (month_day, f"{today.year:04d}"),
         ).fetchall()
         result: dict[str, Any] = {
-            "years": {y: sum(m.values()) for y, m in by_year.items()} if year is None else {},
             "on_this_day": [
                 {"id": r["id"], "taken_at": r["taken_at"], "place": r["city"],
                  "thumbnail_url": f"/api/photos/{r['id']}/thumbnail"}
@@ -990,6 +989,7 @@ class Library:
             "on_this_day_count": len(otd_rows),
         }
         if year is None:
+            result["years"] = {y: sum(m.values()) for y, m in by_year.items()}
             result["months"] = by_year
         else:
             result["year"] = year

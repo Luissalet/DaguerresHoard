@@ -8,7 +8,7 @@ implementations exist:
   never hit the network. A "red" text query finds a red image because the
   text embedder maps colour-name keywords onto the same histogram axes.
 - `ClipEmbedder`: real CLIP (ViT-B/32) via `fastembed` + ONNX Runtime, no
-  PyTorch. Downloads ~350MB from Hugging Face on first use into
+  PyTorch. Downloads about 600 MB from Hugging Face on explicit request into
   `data/models`; the caller is responsible for surfacing that to the user.
 
 Both embed into the same `EMBED_DIM`-dimensional, L2-normalised space so
@@ -129,7 +129,7 @@ class ClipEmbedder:
     """Real CLIP embeddings via fastembed (ONNX Runtime, no PyTorch).
 
     `local_only=True` never touches the network (used at start-up, so an
-    incomplete cache cannot turn app launch into a 350 MB download);
+    incomplete cache cannot turn app launch into a 600 MB download);
     `local_only=False` is the explicit, user-triggered download."""
 
     name = "clip-vit-b32"
@@ -166,7 +166,9 @@ class ClipEmbedder:
             return state
         for f in cache_dir.rglob("*"):
             try:
-                if f.is_file():
+                # the Hugging Face cache links snapshot files to blobs:
+                # count each blob once, not once per link
+                if f.is_file() and not f.is_symlink():
                     state["bytes"] += f.stat().st_size
             except OSError:
                 continue
