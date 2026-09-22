@@ -121,6 +121,9 @@ export interface Dict {
   delete_album: string;
   confirm_delete_album: string;
   yes_delete: string;
+  select_photos: string;
+  remove_selected: (n: number) => string;
+  confirm_remove_from_album: (n: number) => string;
   heic_missing: string;
   job_errors: (n: number) => string;
   file_date: string;
@@ -282,6 +285,10 @@ export const dict: Record<Lang, Dict> = {
     delete_album: "Delete album",
     confirm_delete_album: "Delete this album? The photos stay where they are.",
     yes_delete: "Yes, delete",
+    select_photos: "Select photos",
+    remove_selected: (n) => `Remove ${n} photo${n === 1 ? "" : "s"}`,
+    confirm_remove_from_album: (n) =>
+      `Remove ${n} photo${n === 1 ? "" : "s"} from this album? The file${n === 1 ? "" : "s"} stay where ${n === 1 ? "it is" : "they are"}.`,
     heic_missing: "HEIC support is not installed, so .heic files are skipped.",
     job_errors: (n: number) => `${n} file${n === 1 ? "" : "s"} could not be read`,
     file_date: "file date, no EXIF",
@@ -441,6 +448,10 @@ export const dict: Record<Lang, Dict> = {
     delete_album: "Eliminar álbum",
     confirm_delete_album: "¿Eliminar este álbum? Las fotos se quedan donde están.",
     yes_delete: "Sí, eliminar",
+    select_photos: "Seleccionar fotos",
+    remove_selected: (n) => `Quitar ${n} foto${n === 1 ? "" : "s"}`,
+    confirm_remove_from_album: (n) =>
+      `¿Quitar ${n} foto${n === 1 ? "" : "s"} de este álbum? El${n === 1 ? " archivo se queda" : "os archivos se quedan"} donde está${n === 1 ? "" : "n"}.`,
     heic_missing: "El soporte HEIC no está instalado, así que los archivos .heic se omiten.",
     job_errors: (n: number) => `${n} archivo${n === 1 ? "" : "s"} no se ${n === 1 ? "ha" : "han"} podido leer`,
     file_date: "fecha del archivo, sin EXIF",
