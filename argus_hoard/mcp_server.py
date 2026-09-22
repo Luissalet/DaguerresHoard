@@ -12,8 +12,6 @@ tests/test_api.py. This file only translates between MCP tool calls and
 that HTTP surface, and turns a base64 contact-sheet field into a real
 mcp.types.ImageContent block.
 """
-from __future__ import annotations
-
 import base64
 import os
 import sys
