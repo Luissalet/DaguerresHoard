@@ -84,7 +84,7 @@ def test_plain_get_navigation_always_works(client):
 def test_add_root_rejects_relative_path(client):
     resp = client.post("/api/roots", json={"path": "relative/path"})
     assert resp.status_code == 400
-    assert resp.json()["detail"]["error"] == "invalid_argument"
+    assert resp.json()["error"] == "invalid_argument"
 
 
 def test_index_and_agent_search_flow(client, tmp_path):
@@ -162,15 +162,15 @@ def test_places_endpoint_groups_by_country_and_city(client, tmp_path, monkeypatc
 
 
 def test_agent_describe_not_found_returns_404(client):
-    resp = client.post("/api/agent/photos_describe", json={"photo_id": "does-not-exist"})
+    resp = client.post("/api/agent/photos_describe", json={"photo_id": "0" * 32})
     assert resp.status_code == 404
-    assert resp.json()["detail"]["error"] == "not_found"
+    assert resp.json()["error"] == "not_found"
 
 
 def test_agent_add_folder_rejects_relative_path(client):
     resp = client.post("/api/agent/photos_add_folder", json={"path": "not/absolute"})
     assert resp.status_code == 400
-    assert resp.json()["detail"]["error"] == "invalid_argument"
+    assert resp.json()["error"] == "invalid_argument"
 
 
 def test_no_ui_page_when_frontend_not_built(tmp_path, monkeypatch):
