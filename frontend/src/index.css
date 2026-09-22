@@ -1315,3 +1315,13 @@ table.activity-table td {
     display: none;
   }
 }
+
+.backend-row {
+  padding-bottom: 6px;
+}
+.backend-row p {
+  margin: 4px 0 0;
+}
+.backend-recheck {
+  margin: 4px 0 14px;
+}

@@ -100,6 +100,11 @@ export default function SearchPage({ t, platformIsWindows, onOpenSettings }: Pro
       {result?.translated_query && (
         <p className="muted small search-translated-note">{t.searched_for(result.translated_query)}</p>
       )}
+      {!result?.translated_query && result?.translate_error && (
+        <p className="muted small search-translated-note" title={result.translate_error}>
+          {t.not_translated}
+        </p>
+      )}
       {result?.note && (
         <div className="notice notice-warn">
           <AlertTriangle size={18} />

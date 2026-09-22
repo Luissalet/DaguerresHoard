@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   AlertTriangle,
   Bot,
@@ -13,6 +13,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { api, errorText, formatBytes } from "../api";
+import { loadBackend, missingReason, publishBackend, useBackend } from "../backendStatus";
 import type { Dict } from "../i18n";
 import type { BackendConfigInput, BackendStatus, LibraryStatus, ModelStatus, Root } from "../types";
 
@@ -23,7 +24,7 @@ interface Props {
 }
 
 function BackendPanel({ t }: { t: Dict }) {
-  const [backend, setBackend] = useState<BackendStatus | null>(null);
+  const backend = useBackend();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [flash, setFlash] = useState<string | null>(null);
@@ -33,56 +34,64 @@ function BackendPanel({ t }: { t: Dict }) {
   const [visionModel, setVisionModel] = useState("");
   const [llmUrl, setLlmUrl] = useState("");
   const [llmModel, setLlmModel] = useState("");
+  const [filled, setFilled] = useState(false);
 
-  const load = useCallback(() => {
-    api
-      .getBackend()
-      .then(setBackend)
-      .catch((e) => setError(errorText(e)));
+  // Show what is already saved (never the token), so an override can be
+  // edited or cleared by emptying its field.
+  useEffect(() => {
+    if (!backend || filled) return;
+    setFaustusUrl(backend.overrides.faustus_url);
+    setVisionUrl(backend.overrides.vision.url);
+    setVisionModel(backend.overrides.vision.model);
+    setLlmUrl(backend.overrides.llm.url);
+    setLlmModel(backend.overrides.llm.model);
+    setFilled(true);
+  }, [backend, filled]);
+
+  useEffect(() => {
+    loadBackend(true).catch((e) => setError(errorText(e)));
   }, []);
 
-  useEffect(load, [load]);
-
-  async function recheck() {
+  async function send(action: () => Promise<BackendStatus>, message?: string): Promise<boolean> {
     setBusy(true);
     setError(null);
     try {
-      setBackend(await api.recheckBackend());
+      publishBackend(await action());
+      if (message) {
+        setFlash(message);
+        setTimeout(() => setFlash(null), 2500);
+      }
+      return true;
     } catch (e) {
       setError(errorText(e));
+      return false;
     } finally {
       setBusy(false);
     }
   }
 
-  async function saveOverrides(e: React.FormEvent) {
+  function saveOverrides(e: React.FormEvent) {
     e.preventDefault();
-    setBusy(true);
-    setError(null);
-    try {
-      const body: BackendConfigInput = {};
-      if (faustusUrl) body.faustus_url = faustusUrl;
-      if (faustusToken) body.faustus_token = faustusToken;
-      if (visionUrl) body.vision_url = visionUrl;
-      if (visionModel) body.vision_model = visionModel;
-      if (llmUrl) body.llm_url = llmUrl;
-      if (llmModel) body.llm_model = llmModel;
-      setBackend(await api.setBackendConfig(body));
-      setFaustusToken("");
-      setFlash(t.saved);
-      setTimeout(() => setFlash(null), 2500);
-    } catch (e) {
-      setError(errorText(e));
-    } finally {
-      setBusy(false);
-    }
+    // Every field is sent: an empty one clears that override. The token is
+    // write-only, so it is only sent when something was typed.
+    const body: BackendConfigInput = {
+      faustus_url: faustusUrl,
+      vision_url: visionUrl,
+      vision_model: visionModel,
+      llm_url: llmUrl,
+      llm_model: llmModel,
+    };
+    if (faustusToken) body.faustus_token = faustusToken;
+    void send(() => api.setBackendConfig(body), t.saved).then((ok) => {
+      if (ok) setFaustusToken("");
+    });
   }
 
   if (!backend) return null;
 
-  const rows: { key: "vision" | "llm"; label: string; icon: React.ReactNode }[] = [
-    { key: "vision", label: t.backend_row_vision, icon: <Eye size={15} /> },
-    { key: "llm", label: t.backend_row_llm, icon: <Bot size={15} /> },
+  const rows: { key: "vision" | "llm"; label: string; empty: string; icon: React.ReactNode }[] = [
+    { key: "vision", label: t.backend_row_vision, empty: t.no_vision_model, icon: <Eye size={15} /> },
+    { key: "llm", label: t.backend_row_llm, empty: t.no_llm_model, icon: <Bot size={15} /> },
   ];
 
   return (
@@ -97,31 +106,39 @@ function BackendPanel({ t }: { t: Dict }) {
           <div>{error}</div>
         </div>
       )}
+      {backend.config_error && (
+        <div className="notice notice-warn">
+          <AlertTriangle size={18} />
+          <div>{backend.config_error}</div>
+        </div>
+      )}
       {flash && <div className="notice notice-ok">{flash}</div>}
       {rows.map((row) => {
         const res = backend[row.key];
+        const ok = res.state === "resolved";
         return (
-          <div className="meta-row" key={row.key}>
-            <span className="k">
-              {row.icon} {row.label}
-            </span>
-            <span className="v">
-              <span className={`badge ${res.state === "resolved" ? "badge-ok" : "badge-warn"}`}>
-                {res.state === "resolved" ? t.backend_resolved : t.backend_unavailable}
+          <div className="backend-row" key={row.key}>
+            <div className="meta-row">
+              <span className="k">
+                {row.icon} {row.label}
               </span>
-              {res.model ? ` · ${res.model}` : ""}
-            </span>
+              <span className="v">
+                <span className={`badge ${ok ? "badge-ok" : "badge-warn"}`}>
+                  {ok ? t.backend_resolved : t.backend_unavailable}
+                </span>
+                {res.model ? ` · ${res.model}` : ""}
+              </span>
+            </div>
+            {!ok && <p className="small">{row.empty}</p>}
+            <p className="muted small">{res.reason}</p>
           </div>
         );
       })}
-      {rows.map((row) => (
-        <p className="muted small" key={`${row.key}-reason`}>
-          {backend[row.key].reason}
-        </p>
-      ))}
-      <button className="btn btn-sm" disabled={busy} onClick={recheck}>
-        <RefreshCw size={13} /> {t.backend_recheck}
-      </button>
+      <div className="toolbar backend-recheck">
+        <button className="btn btn-sm" disabled={busy} onClick={() => send(() => api.recheckBackend())}>
+          <RefreshCw size={13} /> {t.backend_recheck}
+        </button>
+      </div>
 
       <form className="form-grid" onSubmit={saveOverrides}>
         <label className="field">
@@ -140,6 +157,7 @@ function BackendPanel({ t }: { t: Dict }) {
           <input
             className="input"
             type="password"
+            autoComplete="off"
             placeholder={t.backend_token_placeholder}
             value={faustusToken}
             onChange={(e) => setFaustusToken(e.target.value)}
@@ -147,13 +165,13 @@ function BackendPanel({ t }: { t: Dict }) {
         </label>
         <label className="field">
           <span>
-            {t.backend_row_vision} {t.backend_override_url}
+            {t.backend_row_vision} · {t.backend_override_url}
           </span>
           <input className="input" placeholder={backend.vision.url ?? ""} value={visionUrl} onChange={(e) => setVisionUrl(e.target.value)} />
         </label>
         <label className="field">
           <span>
-            {t.backend_row_vision} {t.backend_override_model}
+            {t.backend_row_vision} · {t.backend_override_model}
           </span>
           <input
             className="input"
@@ -164,19 +182,31 @@ function BackendPanel({ t }: { t: Dict }) {
         </label>
         <label className="field">
           <span>
-            {t.backend_row_llm} {t.backend_override_url}
+            {t.backend_row_llm} · {t.backend_override_url}
           </span>
           <input className="input" placeholder={backend.llm.url ?? ""} value={llmUrl} onChange={(e) => setLlmUrl(e.target.value)} />
         </label>
         <label className="field">
           <span>
-            {t.backend_row_llm} {t.backend_override_model}
+            {t.backend_row_llm} · {t.backend_override_model}
           </span>
           <input className="input" placeholder={backend.llm.model ?? ""} value={llmModel} onChange={(e) => setLlmModel(e.target.value)} />
         </label>
-        <button className="btn btn-primary" type="submit" disabled={busy}>
-          {t.backend_save_overrides}
-        </button>
+        <div className="toolbar">
+          <button className="btn btn-primary" type="submit" disabled={busy}>
+            {t.backend_save_overrides}
+          </button>
+          {backend.token_set && (
+            <button
+              className="btn"
+              type="button"
+              disabled={busy}
+              onClick={() => send(() => api.setBackendConfig({ faustus_token: "" }), t.saved)}
+            >
+              {t.backend_forget_token}
+            </button>
+          )}
+        </div>
       </form>
     </section>
   );
@@ -202,6 +232,9 @@ export default function SettingsPage({ t, status, onChanged }: Props) {
   const [ollamaMsg, setOllamaMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [flash, setFlash] = useState<string | null>(null);
   const [translateSearch, setTranslateSearch] = useState<boolean | null>(null);
+  const backend = useBackend();
+  const noVision = missingReason(backend?.vision, t.no_vision_model);
+  const noLlm = missingReason(backend?.llm, t.no_llm_model);
 
   useEffect(() => {
     if (status && !ollamaUrl && !ollamaModel) {
@@ -447,7 +480,13 @@ export default function SettingsPage({ t, status, onChanged }: Props) {
           <button
             className="btn btn-primary"
             disabled={busy}
-            onClick={() => act(() => api.setSettings({ ollama_base_url: ollamaUrl, ollama_model: ollamaModel }), t.saved)}
+            onClick={() =>
+              act(async () => {
+                await api.setSettings({ ollama_base_url: ollamaUrl, ollama_model: ollamaModel });
+                // These fields feed the vision capability; refresh its row.
+                await loadBackend(true);
+              }, t.saved)
+            }
           >
             {t.save}
           </button>
@@ -468,13 +507,20 @@ export default function SettingsPage({ t, status, onChanged }: Props) {
           {ollamaMsg && <span className={`badge ${ollamaMsg.ok ? "badge-ok" : "badge-fail"}`}>{ollamaMsg.text}</span>}
         </div>
         <p className="muted small">{t.captions_note}</p>
-        <button className="btn" disabled={busy || !!running} onClick={() => act(() => api.captionBatch(), t.job_started)}>
+        <button
+          className="btn"
+          disabled={busy || !!running || !!noVision}
+          title={noVision ?? undefined}
+          onClick={() => act(() => api.captionBatch(), t.job_started)}
+        >
           <MessageSquareText size={14} /> {t.captions_batch}
         </button>
+        {noVision && <p className="muted small">{t.no_vision_model}</p>}
         {translateSearch !== null && (
-          <label className="checkbox-row">
+          <label className="checkbox-row" title={noLlm ?? undefined}>
             <input
               type="checkbox"
+              disabled={!!noLlm}
               checked={translateSearch}
               onChange={(e) => {
                 const next = e.target.checked;
@@ -485,6 +531,7 @@ export default function SettingsPage({ t, status, onChanged }: Props) {
             {t.translate_search_label}
           </label>
         )}
+        {translateSearch !== null && noLlm && <p className="muted small">{t.no_llm_model}</p>}
       </section>
     </div>
   );

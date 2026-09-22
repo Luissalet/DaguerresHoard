@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Check, ChevronLeft, ChevronRight, ExternalLink, FolderPlus, Minus, Plus, Sparkles, X } from "lucide-react";
 import { api, errorText, fileName, formatBytes } from "../api";
+import { missingReason, useBackend } from "../backendStatus";
 import type { Dict } from "../i18n";
 import type { Album, Photo, PhotoDetail } from "../types";
 
@@ -28,6 +29,8 @@ export default function Lightbox({ photos, index, onClose, onIndexChange, t, pla
   const [fullFailed, setFullFailed] = useState(false);
   const [captioning, setCaptioning] = useState(false);
   const [captionError, setCaptionError] = useState<string | null>(null);
+  const backend = useBackend();
+  const noVision = missingReason(backend?.vision, t.no_vision_model);
   const [albums, setAlbums] = useState<Album[]>([]);
   const [albumName, setAlbumName] = useState("");
   const [albumMsg, setAlbumMsg] = useState<string | null>(null);
@@ -263,9 +266,17 @@ export default function Lightbox({ photos, index, onClose, onIndexChange, t, pla
           {d?.caption ? (
             <p className="caption-text">{d.caption}</p>
           ) : (
-            <button className="btn btn-block" onClick={generateCaption} disabled={captioning}>
-              <Sparkles size={14} /> {captioning ? t.generating : t.generate_caption}
-            </button>
+            <>
+              <button
+                className="btn btn-block"
+                onClick={generateCaption}
+                disabled={captioning || !!noVision}
+                title={noVision ?? undefined}
+              >
+                <Sparkles size={14} /> {captioning ? t.generating : t.generate_caption}
+              </button>
+              {noVision && <p className="muted small">{t.no_vision_model}</p>}
+            </>
           )}
           {captionError && <p className="error-text small">{captionError}</p>}
         </section>

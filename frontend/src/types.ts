@@ -159,6 +159,12 @@ export interface BackendStatus {
   video: ResolutionInfo;
   music: ResolutionInfo;
   token_set: boolean;
+  overrides: {
+    faustus_url: string;
+    vision: { url: string; model: string };
+    llm: { url: string; model: string };
+  };
+  config_error: string | null;
   used_capabilities: string[];
   image_search: { engine: string; active: string; semantic: boolean };
 }

@@ -145,6 +145,10 @@ export interface Dict {
   backend_save_overrides: string;
   translate_search_label: string;
   searched_for: (english: string) => string;
+  not_translated: string;
+  no_vision_model: string;
+  no_llm_model: string;
+  backend_forget_token: string;
 }
 
 export const dict: Record<Lang, Dict> = {
@@ -298,6 +302,10 @@ export const dict: Record<Lang, Dict> = {
     backend_save_overrides: "Save shared-backend settings",
     translate_search_label: "Translate non-English searches to English automatically",
     searched_for: (english: string) => `Searched for: “${english}”`,
+    not_translated: "Not translated: no language model is available (see Settings → Shared models).",
+    no_vision_model: "No vision model is loaded. Faustus can serve one, or load one in Ollama.",
+    no_llm_model: "No language model is loaded. Faustus can serve one, or load one in Ollama.",
+    backend_forget_token: "Forget token",
   },
   es: {
     appName: "El Tesoro de Argos",
@@ -449,6 +457,10 @@ export const dict: Record<Lang, Dict> = {
     backend_save_overrides: "Guardar ajustes del backend compartido",
     translate_search_label: "Traducir automáticamente las búsquedas que no estén en inglés",
     searched_for: (english: string) => `Buscado como: «${english}»`,
+    not_translated: "Sin traducir: no hay ningún modelo de lenguaje disponible (mira Ajustes → Modelos compartidos).",
+    no_vision_model: "No hay ningún modelo de visión cargado. Faustus puede servir uno, o puedes cargarlo en Ollama.",
+    no_llm_model: "No hay ningún modelo de lenguaje cargado. Faustus puede servir uno, o puedes cargarlo en Ollama.",
+    backend_forget_token: "Olvidar el token",
   },
 };
 
