@@ -97,7 +97,8 @@ if (-not (Test-Path $VenvPython)) {
 }
 
 # 2) dependencies (re-run whenever the lock file changes) ----------------
-$lockHash = (Get-FileHash -LiteralPath $LockFile -Algorithm SHA256).Hash
+# SHA-256 through .NET: Get-FileHash is missing when Windows PowerShell is started from PowerShell 7.
+$lockHash = [System.BitConverter]::ToString([System.Security.Cryptography.SHA256]::Create().ComputeHash([System.IO.File]::ReadAllBytes($LockFile))).Replace('-', '')
 $installed = if (Test-Path $LockStamp) { (Get-Content -LiteralPath $LockStamp -Raw).Trim() } else { "" }
 if ($installed -ne $lockHash) {
     Write-Host "Installing pinned dependencies (first run takes a few minutes)..."
