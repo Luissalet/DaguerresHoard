@@ -24,6 +24,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from . import __version__, db as dbmod
 from .config import DISPLAY_NAME, SERVICE_SLUG, Settings
 from .guard import GuardMiddleware
+from .hoard_link import family
 from .library import ID_RE, Library, NotFoundError, ValidationError
 
 NO_UI_HTML = f"""<!doctype html>
@@ -215,6 +216,7 @@ def create_app(data_dir: Path, static_dir: Path | None = None, port: int = 8814)
             "name": DISPLAY_NAME,
             "version": __version__,
             "status": "ok",
+            "hoard_link": family.health_block(),
             "photo_count": c.execute("SELECT COUNT(*) c FROM photos WHERE missing = 0").fetchone()["c"],
             "roots": c.execute("SELECT COUNT(*) c FROM roots").fetchone()["c"],
             "embedder": lib.embedder.name,
@@ -512,6 +514,14 @@ def create_app(data_dir: Path, static_dir: Path | None = None, port: int = 8814)
     def agent_album(body: AlbumBody):
         return _strip_agent_urls(run(lambda: lib.album(body.name, body.photo_ids, created_by="agent"),
                    tool="photos_album", args=body.model_dump()))
+
+    # The family contract (Hoard Link 0.4): the shared GET /api/agent/tools +
+    # POST /api/agent/call over the per-tool routes above (which stay as they
+    # are), a bearer token in data/mcp-token, and one agent.call event per
+    # call on the hub's bus. Descriptions come from mcp_server.py's docstrings
+    # so the two catalogues never disagree.
+    family.install_fastapi(app, "daguerre", str(settings.data_dir),
+                           mcp_source=str(Path(__file__).with_name("mcp_server.py")))
 
     @app.api_route("/api/{rest:path}", methods=["GET", "POST", "PUT", "DELETE", "PATCH"])
     def api_not_found(rest: str):
