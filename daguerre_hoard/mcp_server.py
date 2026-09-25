@@ -123,7 +123,9 @@ def photos_search(
     min_score: float | None = None,
     contact_sheet: bool = False,
 ) -> list:
-    """Find the owner's photos by what they show; write `query` in English.
+    """Find photos by what they show (query in English) or by date and place. Buscar fotos, fotos de.
+
+    Find the owner's photos by what they show; write `query` in English.
 
     Describe the photo ("dog on a beach", "whiteboard") and put time and
     place in the filters. Leave `query` out for "every photo of that trip":
@@ -170,7 +172,9 @@ def photos_similar(
     min_score: float | None = None,
     contact_sheet: bool = False,
 ) -> list:
-    """Find photos that look like a given photo (same scene, same trip, retakes).
+    """Photos that look like a given one: same scene, trip or retakes. Fotos parecidas, similares.
+
+    Find photos that look like a given photo (same scene, same trip, retakes).
 
     Pass `photo_id` (an id from another Daguerre result; preferred) or the
     photo's absolute `path`. Returns {returned, indexed_total, has_more,
@@ -196,7 +200,9 @@ def photos_similar(
 
 @mcp.tool(annotations=READ_ONLY)
 def photos_show(ids: list[str], size: int = 768) -> list:
-    """Only if you can see images (a multimodal turn): look at up to 4 photos
+    """Show up to 4 photos to a model that can see images (multimodal only). Enseñar fotos, ver foto.
+
+    Only if you can see images (a multimodal turn): look at up to 4 photos
     in detail (one image each, long side `size` px).
 
     A text-only model must never call this -- an image in its context fails
@@ -217,7 +223,9 @@ def photos_show(ids: list[str], size: int = 768) -> list:
 
 @mcp.tool(annotations=READ_ONLY)
 def photos_describe(photo_id: str, caption: bool = False) -> list:
-    """Everything Daguerre knows about one photo: date, place, camera, EXIF, path.
+    """Everything about one photo: date, place, camera, EXIF, path. Detalles de una foto.
+
+    Everything Daguerre knows about one photo: date, place, camera, EXIF, path.
 
     Returns {id, path, taken_at, date_source ("exif" or "file_mtime"), place,
     city, country, gps_lat, gps_lon, make, model, lens, f_number,
@@ -235,7 +243,9 @@ def photos_describe(photo_id: str, caption: bool = False) -> list:
 
 @mcp.tool(annotations=READ_ONLY)
 def photos_duplicates(kind: Literal["exact", "near"] = "exact", limit: int = 10, include_ids: bool = False) -> list:
-    """Groups of duplicate photos with a suggested copy to keep. Never deletes anything.
+    """Groups of duplicate photos with the copy to keep; never deletes. Fotos duplicadas, repetidas.
+
+    Groups of duplicate photos with a suggested copy to keep. Never deletes anything.
 
     kind="exact": byte-identical copies. kind="near": look-alikes (the same
     picture resized or re-encoded, a burst) -- a near group can also join
@@ -258,7 +268,9 @@ def photos_duplicates(kind: Literal["exact", "near"] = "exact", limit: int = 10,
 
 @mcp.tool(annotations=READ_ONLY)
 def photos_timeline(year: int | None = None) -> list:
-    """How many photos were taken per year and month, and "on this day" in past years.
+    """Photos per year and month, and on this day in past years. Fotos por año, tal día como hoy.
+
+    How many photos were taken per year and month, and "on this day" in past years.
 
     Without `year`: {years:{"2024": 812, ...}, months:{"2024":{"03": 40,...}},
     on_this_day:[{id, taken_at, place}] (max 10), on_this_day_count}. With
@@ -272,7 +284,9 @@ def photos_timeline(year: int | None = None) -> list:
 
 @mcp.tool(annotations=READ_ONLY)
 def photos_library() -> list:
-    """Status of the photo library: folders, photo count, model, running jobs.
+    """Photo library status: folders, count, model, running jobs. Estado de la fototeca.
+
+    Status of the photo library: folders, photo count, model, running jobs.
 
     Call it first when unsure whether anything is indexed, when a search
     comes back empty, or to follow a scan started by photos_add_folder.
@@ -287,7 +301,9 @@ def photos_library() -> list:
 
 @mcp.tool(annotations=ADDITIVE)
 def photos_add_folder(path: str) -> list:
-    """Add a folder of photos to the library and start indexing it in the background.
+    """Add a folder of photos and index it in the background (write). Añadir carpeta de fotos.
+
+    Add a folder of photos to the library and start indexing it in the background.
 
     Only when the owner asks to include a folder and gives its absolute path
     (e.g. C:\\Users\\name\\Pictures\\2024). Adding the same folder again just
@@ -302,7 +318,9 @@ def photos_add_folder(path: str) -> list:
 
 @mcp.tool(annotations=ADDITIVE)
 def photos_album(name: str, photo_ids: list[str]) -> list:
-    """Create an album, or add photos to an existing album with that name (case-insensitive).
+    """Create an album or add photos to one (write). Crear álbum, añadir al álbum.
+
+    Create an album, or add photos to an existing album with that name (case-insensitive).
 
     Non-destructive: photos are referenced, never copied or moved, and this
     tool cannot remove anything from an album. Pass photo ids from other
