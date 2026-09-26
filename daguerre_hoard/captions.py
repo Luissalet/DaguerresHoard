@@ -167,6 +167,7 @@ class LinkCaptioner:
                 max_tokens=200,
                 temperature=0.2,
                 capability="vision",
+                effort="off",
             )
         except Unavailable as exc:
             return CaptionResult(ok=False, error=f"{NO_VISION_MODEL} ({'; '.join(exc.reasons)})")

@@ -968,6 +968,7 @@ class Library:
                         max_tokens=60,
                         temperature=0.0,
                         capability="llm",
+                        effort="off",
                     )
                     candidate = (result.text or "").strip().strip('"').strip("'")
                     if candidate:
