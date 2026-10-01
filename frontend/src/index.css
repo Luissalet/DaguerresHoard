@@ -1,6 +1,28 @@
 @import "@fontsource-variable/plus-jakarta-sans";
 
+/* Dark by default through the shared Hoard tokens (hoard-theme.css);
+   the original light palette stays available via data-theme="light". */
 :root {
+  --accent: var(--hoard-accent);
+  --accent-dark: var(--hoard-accent-strong);
+  --accent-soft: var(--hoard-accent-soft);
+  --bg: var(--hoard-deep);
+  --bg-elevated: var(--hoard-surface);
+  --bg-sidebar: var(--hoard-surface);
+  --text: var(--hoard-text);
+  --text-muted: var(--hoard-text-muted);
+  --text-on-accent: var(--hoard-accent-ink);
+  --border: var(--hoard-border);
+  --danger: #e2685a;
+  --warn: var(--hoard-warning);
+  --warn-soft: rgba(212, 168, 67, 0.16);
+  --ok: #6bd39a;
+  --shadow: var(--hoard-shadow);
+  --radius: var(--hoard-radius-lg);
+  --sidebar-w: var(--hoard-sidebar-w);
+}
+
+:root[data-theme="light"] {
   --accent: #12a4a8;
   --accent-dark: #0d7c80;
   --accent-soft: #12a4a81a;
@@ -20,27 +42,6 @@
   --sidebar-w: 232px;
 }
 
-:root[data-theme="dark"] {
-  --bg: #0d1416;
-  --bg-elevated: #131e20;
-  --bg-sidebar: #0a1517;
-  --text: #e7eef0;
-  --text-muted: #8ea3a6;
-  --border: #223133;
-  --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.35);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg: #0d1416;
-    --bg-elevated: #131e20;
-    --bg-sidebar: #0a1517;
-    --text: #e7eef0;
-    --text-muted: #8ea3a6;
-    --border: #223133;
-    --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.35);
-  }
-}
 
 * {
   box-sizing: border-box;
@@ -1348,3 +1349,46 @@ table.activity-table td {
 .backend-recheck {
   margin: 4px 0 14px;
 }
+
+/* ---- Hoard family chrome (matches the shared look) ---- */
+body { font-family: "Plus Jakarta Sans Variable", var(--hoard-font-sans); }
+.sidebar { padding: 0 12px 12px; background: var(--hoard-surface); color: var(--hoard-text-muted); border-right: 1px solid var(--hoard-border); }
+.sidebar-brand { height: var(--hoard-header-h); margin: 0 -12px 12px; padding: 0 16px; border-bottom: 1px solid var(--hoard-border); font-family: var(--hoard-font-serif); font-weight: 700; font-size: 15px; color: var(--hoard-accent); flex-shrink: 0; }
+.brand-icon { width: 32px; height: 32px; border-radius: 8px; }
+.sidebar-item { height: 40px; padding: 0 12px; color: var(--hoard-text-muted); }
+.sidebar-item:hover { background: var(--hoard-elevated); color: var(--hoard-text); }
+.sidebar-item.active { background: var(--hoard-elevated); color: var(--hoard-text); }
+.sidebar-item.active svg { color: var(--hoard-accent); }
+.sidebar .icon-btn { border-color: var(--hoard-border); background: transparent; color: var(--hoard-text-muted); }
+.sidebar .icon-btn:hover { background: var(--hoard-elevated); color: var(--hoard-text); }
+.sidebar-status { border-color: var(--hoard-border); background: transparent; color: var(--hoard-text-muted); }
+.sidebar-status:hover { background: var(--hoard-elevated); }
+.topbar { height: var(--hoard-header-h); padding: 0 28px; background: var(--hoard-deep); }
+.topbar h1 { font-size: 15px; font-weight: 600; }
+.card { box-shadow: none; }
+.card:hover { border-color: var(--hoard-border-hover); }
+.btn { border-radius: var(--hoard-radius); min-height: 36px; }
+.btn:hover:not(:disabled) { background: var(--hoard-elevated); border-color: var(--hoard-border-hover); }
+.btn-primary { background: var(--hoard-accent); border-color: var(--hoard-accent); color: var(--hoard-accent-ink); }
+.btn-primary:hover:not(:disabled) { background: var(--hoard-accent-strong); border-color: var(--hoard-accent-strong); }
+.input { border-radius: var(--hoard-radius); background: var(--hoard-surface); }
+.input:focus { outline: none; border-color: var(--hoard-accent); }
+.input::placeholder { color: var(--hoard-text-dim); }
+.topbar .icon-btn:hover { background: var(--hoard-elevated); border-color: var(--hoard-border-hover); }
+
+/* Light option: back to the original dark-teal sidebar and light surfaces. */
+:root[data-theme="light"] .sidebar { background: var(--bg-sidebar); color: #d7e6e7; border-right-color: transparent; }
+:root[data-theme="light"] .sidebar-brand { color: white; border-bottom-color: rgba(255, 255, 255, 0.1); }
+:root[data-theme="light"] .sidebar-item { color: #b9cbcd; }
+:root[data-theme="light"] .sidebar-item:hover { background: rgba(255, 255, 255, 0.06); color: white; }
+:root[data-theme="light"] .sidebar-item.active { background: var(--accent); color: white; }
+:root[data-theme="light"] .sidebar .icon-btn { border-color: rgba(255, 255, 255, 0.14); background: rgba(255, 255, 255, 0.04); color: #d7e6e7; }
+:root[data-theme="light"] .sidebar .icon-btn:hover { background: rgba(255, 255, 255, 0.1); }
+:root[data-theme="light"] .sidebar-status { border-color: rgba(255, 255, 255, 0.12); background: rgba(255, 255, 255, 0.04); color: #b9cbcd; }
+:root[data-theme="light"] .sidebar-status:hover { background: rgba(255, 255, 255, 0.08); }
+:root[data-theme="light"] .topbar { background: transparent; }
+:root[data-theme="light"] .card { box-shadow: var(--shadow); }
+:root[data-theme="light"] .btn-primary { background: var(--accent); border-color: var(--accent); color: white; }
+:root[data-theme="light"] .btn-primary:hover:not(:disabled) { background: var(--accent-dark); border-color: var(--accent-dark); }
+:root[data-theme="light"] .btn:hover:not(:disabled) { background: var(--bg-elevated); border-color: var(--accent); }
+:root[data-theme="light"] .input { background: var(--bg-elevated); }

@@ -34,11 +34,7 @@ function writeStored(key: string, value: string) {
 function initialTheme(): Theme {
   const stored = readStored("daguerre-theme");
   if (stored === "light" || stored === "dark") return stored;
-  try {
-    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-  } catch {
-    return "light";
-  }
+  return "dark"; // dark by default; the toggle still switches to light
 }
 
 function initialLang(): Lang {
