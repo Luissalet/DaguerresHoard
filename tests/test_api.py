@@ -8,7 +8,7 @@ from fastapi.testclient import TestClient
 
 from daguerre_hoard.api import create_app
 from daguerre_hoard.embeddings import FakeEmbedder
-from tests.conftest import make_image
+from tests.conftest import make_image, agent_headers
 
 PORT = 18841
 
@@ -18,7 +18,7 @@ def client(tmp_path, monkeypatch):
     # Force the fake embedder so tests never try to download CLIP.
     monkeypatch.setattr("daguerre_hoard.library.select_embedder", lambda settings: FakeEmbedder())
     app = create_app(data_dir=tmp_path / "data", static_dir=None, port=PORT)
-    with TestClient(app, base_url=f"http://127.0.0.1:{PORT}") as c:
+    with TestClient(app, base_url=f"http://127.0.0.1:{PORT}", headers=agent_headers(app)) as c:
         yield c
 
 
@@ -44,7 +44,25 @@ def test_health(client):
 def test_guard_rejects_bad_host(client):
     resp = client.get("/api/health", headers={"host": "evil.example.com"})
     assert resp.status_code == 403
-    assert resp.json()["error"] == "forbidden_host"
+    assert resp.json() == {"error": "Only local access is allowed."}   # the shared guard's envelope
+
+
+def test_guard_checks_the_port_and_opens_lan_names_from_the_environment(tmp_path, monkeypatch):
+    monkeypatch.setenv("DAGUERRE_ALLOWED_HOSTS", "photos.lan, *.ts.net")
+    monkeypatch.setattr("daguerre_hoard.library.select_embedder", lambda settings: FakeEmbedder())
+    app = create_app(data_dir=tmp_path / "data", static_dir=None, port=PORT)
+    with TestClient(app, base_url=f"http://127.0.0.1:{PORT}") as c:
+        assert c.get("/api/health", headers={"host": "photos.lan"}).status_code == 200
+        assert c.get("/api/health", headers={"host": "nas.tailnet-1.ts.net"}).status_code == 200
+        assert c.get("/api/health", headers={"host": "127.0.0.1:9"}).status_code == 403     # another port
+        assert c.get("/api/health", headers={"host": "evil.example.com"}).status_code == 403
+
+
+def test_guard_refuses_being_embedded_in_a_frame_of_another_site(client):
+    frame = {"sec-fetch-site": "cross-site", "sec-fetch-mode": "navigate", "sec-fetch-dest": "iframe"}
+    assert client.get("/api/library", headers=frame).status_code == 403
+    nav = {"sec-fetch-site": "cross-site", "sec-fetch-mode": "navigate", "sec-fetch-dest": "document"}
+    assert client.get("/api/library", headers=nav).status_code == 200
 
 
 def test_guard_rejects_cross_site_write(client):
@@ -54,7 +72,7 @@ def test_guard_rejects_cross_site_write(client):
         headers={"sec-fetch-site": "cross-site"},
     )
     assert resp.status_code == 403
-    assert resp.json()["error"] == "forbidden_origin"
+    assert resp.json()["error"] == "Cross-site requests are not allowed."
 
 
 def test_guard_rejects_cross_origin_write(client):
@@ -76,10 +94,12 @@ def test_guard_allows_same_origin_write(client):
 
 
 def test_plain_get_navigation_always_works(client):
-    # A plain GET from "any browser tab" (no Origin, arbitrary Sec-Fetch-Site)
-    # must never be blocked -- only non-GET/HEAD/OPTIONS cross-origin writes.
-    resp = client.get("/api/health", headers={"sec-fetch-site": "cross-site"})
-    assert resp.status_code == 200
+    # A top-level navigation from "any browser tab" (cross-site, mode navigate) must never be blocked; a cross-site
+    # fetch() of the same URL is (the shared guard's stricter rule); requests without Fetch Metadata pass.
+    nav = {"sec-fetch-site": "cross-site", "sec-fetch-mode": "navigate", "sec-fetch-dest": "document"}
+    assert client.get("/api/health", headers=nav).status_code == 200
+    assert client.get("/api/health", headers={"sec-fetch-site": "cross-site", "sec-fetch-mode": "cors"}).status_code == 403
+    assert client.get("/api/health").status_code == 200
 
 
 def test_add_root_rejects_relative_path(client):
@@ -264,7 +284,7 @@ def test_agent_add_folder_rejects_relative_path(client):
 def test_no_ui_page_when_frontend_not_built(tmp_path, monkeypatch):
     monkeypatch.setattr("daguerre_hoard.library.select_embedder", lambda settings: FakeEmbedder())
     app = create_app(data_dir=tmp_path / "data2", static_dir=None, port=PORT)
-    with TestClient(app, base_url=f"http://127.0.0.1:{PORT}") as c:
+    with TestClient(app, base_url=f"http://127.0.0.1:{PORT}", headers=agent_headers(app)) as c:
         resp = c.get("/")
         assert resp.status_code == 200
         assert "npm run build" in resp.text

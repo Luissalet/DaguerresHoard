@@ -78,11 +78,11 @@ def running_app(tmp_path, monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_mcp_adapter_over_stdio(running_app):
+async def test_mcp_adapter_over_stdio(running_app, tmp_path):
     params = StdioServerParameters(
         command=sys.executable,
         args=[str(REPO_ROOT / "daguerre_hoard" / "mcp_server.py")],
-        env={"DAGUERRE_URL": running_app},
+        env={"DAGUERRE_URL": running_app, "DAGUERRE_DATA_DIR": str(tmp_path / "data")},  # where the app wrote mcp-token
         cwd=str(REPO_ROOT),
     )
     async with stdio_client(params) as (read, write):

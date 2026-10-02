@@ -89,3 +89,9 @@ def tmp_settings(tmp_path):
 def library(tmp_settings):
     lib = Library(tmp_settings, embedder=FakeEmbedder())
     return lib
+
+
+def agent_headers(app) -> dict[str, str]:
+    """The headers the MCP adapter sends: the app requires its bearer token on every /api/agent/<tool> route."""
+    token = (app.state.library.settings.data_dir / "mcp-token").read_text(encoding="utf-8").strip()
+    return {"Authorization": f"Bearer {token}"}

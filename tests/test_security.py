@@ -8,6 +8,7 @@ from fastapi.testclient import TestClient
 
 from daguerre_hoard.api import create_app
 from daguerre_hoard.embeddings import FakeEmbedder
+from tests.conftest import agent_headers
 
 PORT = 18842
 
@@ -21,7 +22,7 @@ def dist_client(tmp_path, monkeypatch):
     (dist / "favicon.svg").write_text("<svg/>", encoding="utf-8")
     (tmp_path / "site" / "secret.txt").write_text("TOP-SECRET", encoding="utf-8")
     app = create_app(data_dir=tmp_path / "data", static_dir=dist, port=PORT)
-    with TestClient(app, base_url=f"http://127.0.0.1:{PORT}") as c:
+    with TestClient(app, base_url=f"http://127.0.0.1:{PORT}", headers=agent_headers(app)) as c:
         yield c
 
 

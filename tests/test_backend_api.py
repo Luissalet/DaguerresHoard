@@ -9,6 +9,7 @@ from fastapi.testclient import TestClient
 from daguerre_hoard.api import create_app
 from daguerre_hoard.embeddings import FakeEmbedder
 from daguerre_hoard.hoard_link import ChatResult, Usage
+from tests.conftest import agent_headers
 
 PORT = 18842
 
@@ -17,7 +18,7 @@ PORT = 18842
 def app_and_client(tmp_path, monkeypatch):
     monkeypatch.setattr("daguerre_hoard.library.select_embedder", lambda settings: FakeEmbedder())
     app = create_app(data_dir=tmp_path / "data", static_dir=None, port=PORT)
-    with TestClient(app, base_url=f"http://127.0.0.1:{PORT}") as c:
+    with TestClient(app, base_url=f"http://127.0.0.1:{PORT}", headers=agent_headers(app)) as c:
         yield app, c
 
 

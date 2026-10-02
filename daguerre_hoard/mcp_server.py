@@ -14,6 +14,7 @@ surface, and turns base64 JPEG fields into real mcp.types.ImageContent.
 import base64
 import json
 import os
+from pathlib import Path
 from typing import Literal
 from urllib.parse import urlparse
 
@@ -40,6 +41,29 @@ def _resolve_url() -> str:
 
 
 APP_URL = _resolve_url()
+
+
+def _token_file() -> Path:
+    """``$DAGUERRE_TOKEN_FILE``, else ``<$DAGUERRE_DATA_DIR or the repo's data folder>/mcp-token`` (what the app writes)."""
+    explicit = os.environ.get("DAGUERRE_TOKEN_FILE", "").strip()
+    if explicit:
+        return Path(explicit)
+    data = os.environ.get("DAGUERRE_DATA_DIR", "").strip()
+    return (Path(data) if data else Path(__file__).resolve().parent.parent / "data") / "mcp-token"
+
+
+def _token() -> str:
+    """The bearer token the app requires on /api/agent/<tool>: ``$DAGUERRE_TOKEN`` or the token file, read on every
+    call (the app may have created it after this adapter started)."""
+    given = os.environ.get("DAGUERRE_TOKEN", "").strip()
+    if given:
+        return given
+    try:
+        return _token_file().read_text(encoding="utf-8-sig").strip()
+    except OSError:
+        return ""
+
+
 # trust_env=False: a system or corporate proxy (on Windows httpx reads the
 # registry proxy settings) must never see, or break, loopback traffic.
 _client = httpx.Client(base_url=APP_URL, timeout=httpx.Timeout(120.0, connect=5.0), trust_env=False)
@@ -69,7 +93,8 @@ mcp = FastMCP(
 
 def _call(tool: str, payload: dict) -> dict:
     try:
-        resp = _client.post(f"/api/agent/{tool}", json=payload)
+        token = _token()
+        resp = _client.post(f"/api/agent/{tool}", json=payload, headers={"Authorization": f"Bearer {token}"} if token else {})
     except httpx.TimeoutException as exc:
         raise ToolError(
             f"daguerre_timeout: {APP_NAME} did not answer {tool} in time (a large scan or model "
@@ -77,6 +102,11 @@ def _call(tool: str, payload: dict) -> dict:
         ) from exc
     except httpx.TransportError as exc:
         raise ToolError(UNAVAILABLE) from exc
+    if resp.status_code == 401:
+        raise ToolError(
+            f"daguerre_unauthorized: {APP_NAME} refused this adapter's token; it reads {_token_file()} "
+            "(set DAGUERRE_DATA_DIR / DAGUERRE_TOKEN_FILE if the app uses another data folder)."
+        )
     if resp.status_code >= 400:
         try:
             body = resp.json()

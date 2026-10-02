@@ -6,15 +6,12 @@ routes are written to the `agent_calls` audit table, so "What the
 assistant did" never shows the human's own clicks."""
 from __future__ import annotations
 
-import os
-import subprocess
-import sys
 import time
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
 
-from fastapi import FastAPI, Request
+from fastapi import Depends, FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
@@ -23,8 +20,8 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from . import __version__, db as dbmod
 from .config import DISPLAY_NAME, SERVICE_SLUG, Settings
-from .guard import GuardMiddleware
-from .hoard_link import family
+from .hoard_link import family, proc, tokens
+from .hoard_link.guard import install_guard
 from .library import ID_RE, Library, NotFoundError, ValidationError
 
 NO_UI_HTML = f"""<!doctype html>
@@ -163,8 +160,21 @@ def create_app(data_dir: Path, static_dir: Path | None = None, port: int = 8814)
     settings = Settings(data_dir=data_dir, port=port)
     lib = Library(settings)
 
+    # The per-tool routes run the assistant's tools: they need the same bearer token as POST /api/agent/call
+    # (data/mcp-token), which the MCP adapter sends.
+    token_file = settings.data_dir / "mcp-token"
+    tokens.read_or_create_token(token_file)
+
+    def require_agent_token(request: Request) -> None:
+        if not tokens.check_bearer(request.headers.get("authorization"), tokens.read_token(token_file) or ""):
+            raise ApiError(401, "unauthorized", "Missing or invalid MCP token (see data/mcp-token).")
+
+    agent_auth = [Depends(require_agent_token)]
+
     app = FastAPI(title=DISPLAY_NAME, docs_url=None, redoc_url=None, openapi_url=None)
-    app.add_middleware(GuardMiddleware, port=port)
+    # The shared request guard (loopback Host, Origin and Fetch Metadata rules; DAGUERRE_ALLOWED_HOSTS opens a LAN
+    # name or a tailnet). strict_ports keeps the old rule that the Host names this app's own port.
+    install_guard(app, port_getter=lambda: port, allowed_env="DAGUERRE_ALLOWED_HOSTS", strict_ports=True)
     app.state.library = lib
 
     # -- error shape: always {"error": code, "message": text} ------------- #
@@ -285,13 +295,12 @@ def create_app(data_dir: Path, static_dir: Path | None = None, port: int = 8814)
         _check_id(photo_id)
         row = run(lambda: lib._resolve_photo(photo_id, None))
         path = Path(row["path"])
-        if not sys.platform.startswith("win"):
-            raise ApiError(400, "unsupported_platform", "Open in Explorer only works on Windows.")
         if not path.exists():
             raise ApiError(404, "not_found", f"the file is not reachable right now: {path}")
-        # explorer parses its own command line: `/select,"<path>"` is the
-        # form that survives spaces and commas. Paths cannot contain quotes.
-        subprocess.Popen(f'explorer /select,"{os.path.normpath(path)}"')  # noqa: S602 - no shell, fixed exe
+        # The path is passed as one argument (never spliced into a command string), so a quote or a comma in a
+        # file name cannot change what is run; Explorer selects the file, other systems open its folder.
+        if not proc.reveal_in_file_manager(path):
+            raise ApiError(400, "unsupported_platform", "no file manager could be started on this system.")
         return {"ok": True}
 
     @app.get("/api/roots")
@@ -459,14 +468,14 @@ def create_app(data_dir: Path, static_dir: Path | None = None, port: int = 8814)
         return lib.recent_agent_calls(limit=limit)
 
     # -- agent tools (mirror the MCP tools one to one, audited) -------------- #
-    @app.post("/api/agent/photos_search")
+    @app.post("/api/agent/photos_search", dependencies=agent_auth)
     def agent_search(body: SearchBody):
         return _agent_ranked(run(
             lambda: lib.search(body.query, body.filters, body.limit, body.contact_sheet, body.offset, body.min_score),
             tool="photos_search", args=body.model_dump(),
         ))
 
-    @app.post("/api/agent/photos_similar")
+    @app.post("/api/agent/photos_similar", dependencies=agent_auth)
     def agent_similar(body: SimilarBody):
         return _agent_ranked(run(
             lambda: lib.similar(
@@ -475,32 +484,32 @@ def create_app(data_dir: Path, static_dir: Path | None = None, port: int = 8814)
             tool="photos_similar", args=body.model_dump(),
         ))
 
-    @app.post("/api/agent/photos_show")
+    @app.post("/api/agent/photos_show", dependencies=agent_auth)
     def agent_show(body: ShowBody):
         return run(lambda: lib.show(body.ids, body.size), tool="photos_show", args=body.model_dump())
 
-    @app.post("/api/agent/photos_describe")
+    @app.post("/api/agent/photos_describe", dependencies=agent_auth)
     def agent_describe(body: DescribeBody):
         return _strip_agent_urls(
             run(lambda: lib.describe(body.photo_id, body.caption), tool="photos_describe", args=body.model_dump())
         )
 
-    @app.post("/api/agent/photos_duplicates")
+    @app.post("/api/agent/photos_duplicates", dependencies=agent_auth)
     def agent_duplicates(body: DuplicatesBody):
         return run(
             lambda: lib.duplicates(body.kind, body.limit, summary=True, include_ids=body.include_ids),
             tool="photos_duplicates", args=body.model_dump(),
         )
 
-    @app.post("/api/agent/photos_timeline")
+    @app.post("/api/agent/photos_timeline", dependencies=agent_auth)
     def agent_timeline(body: TimelineBody):
         return _strip_agent_urls(run(lambda: lib.timeline(body.year), tool="photos_timeline", args=body.model_dump()))
 
-    @app.post("/api/agent/photos_library")
+    @app.post("/api/agent/photos_library", dependencies=agent_auth)
     def agent_library():
         return run(lambda: lib.library_status(compact=True), tool="photos_library", args={})
 
-    @app.post("/api/agent/photos_add_folder")
+    @app.post("/api/agent/photos_add_folder", dependencies=agent_auth)
     def agent_add_folder(body: AddFolderBody):
         def do():
             root = lib.add_root(body.path, added_by="agent")
@@ -510,7 +519,7 @@ def create_app(data_dir: Path, static_dir: Path | None = None, port: int = 8814)
 
         return run(do, tool="photos_add_folder", args=body.model_dump())
 
-    @app.post("/api/agent/photos_album")
+    @app.post("/api/agent/photos_album", dependencies=agent_auth)
     def agent_album(body: AlbumBody):
         return _strip_agent_urls(run(lambda: lib.album(body.name, body.photo_ids, created_by="agent"),
                    tool="photos_album", args=body.model_dump()))
