@@ -25,6 +25,7 @@ from typing import Any
 from . import db as dbmod
 from .captions import DEFAULT_BASE_URL, DEFAULT_MODEL
 from .hoard_link import CapabilityConfig, Link, LinkConfig
+from .hoard_link.atomic import write_json_atomic
 
 # The two capabilities Daguerre actually uses. Kept in one place so the
 # Settings "Models" panel and the override endpoint agree on what exists.
@@ -160,8 +161,8 @@ class Backend:
                     entry["model"] = model.strip()
                 else:
                     entry.pop("model", None)
-        self.data_dir.mkdir(parents=True, exist_ok=True)
-        self.config_path.write_text(json.dumps(raw, indent=2), encoding="utf-8")
+        # Atomic: a crash or a second writer can never leave a truncated backend.json (it holds the Faustus token).
+        write_json_atomic(self.config_path, raw, indent=2)
         self.reload()
 
     def token_set(self) -> bool:

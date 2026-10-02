@@ -26,6 +26,7 @@ import numpy as np
 from PIL import Image
 
 from .config import EMBED_DIM
+from .hoard_link.atomic import write_text_atomic
 
 _COLOR_WORDS = {
     "red": (0, 60), "orange": (20, 60), "yellow": (50, 60), "green": (100, 60),
@@ -234,9 +235,10 @@ class VectorStore:
         self._write_count()
 
     def _write_count(self) -> None:
-        tmp = self._count_path.with_suffix(".count.tmp")
-        tmp.write_text(str(self._count), encoding="utf-8")
-        tmp.replace(self._count_path)
+        # Atomic with the Windows lock retries: an antivirus or the indexer holding the file for a few milliseconds
+        # must not turn into a PermissionError in the middle of a scan. No fsync: the count is re-derived from
+        # the file size when it is stale.
+        write_text_atomic(self._count_path, str(self._count), fsync=False)
 
     def _grow(self, min_capacity: int) -> None:
         new_capacity = max(self._capacity * 2, min_capacity, 256)
