@@ -14,16 +14,16 @@
   Daguerre's own data folders.
 - `formats.py` -- registers `pillow-heif` when installed so HEIC/HEIF
   decode everywhere; without it those extensions are not listed at all.
-- `hashing.py` -- streamed BLAKE2b content hash.
-- `metadata.py` -- EXIF with Pillow: IFD0 (make, model, orientation), the
+- `hashing.py` -- streamed BLAKE2b content hash (the shared `imaging.content_hash`).
+- `metadata.py` -- the `PhotoMetadata` record over the shared `imaging.read_exif`: IFD0 (make, model, orientation), the
   Exif sub-IFD (DateTimeOriginal + OffsetTimeOriginal, exposure, ISO,
   focal length, lens) and the GPS IFD (DMS -> signed decimal). Tuple
   values, zeroed dates and 0,0 fixes are handled. `taken_at` falls back to
   the file time with `date_source = "file_mtime"`.
-- `thumbnails.py` -- EXIF-rotated WebP thumbnails, JPEG `draft()` decode,
-  512 px long side, q80, `data/thumbs/<id[:2]>/<id>.webp`.
-- `phash.py` -- 64-bit pHash and an exact multi-index near-duplicate
-  lookup (below), plus union-find.
+- `thumbnails.py` -- EXIF-rotated WebP thumbnails (shared `imaging.thumbnail`: JPEG `draft()` decode, transparency
+  kept), 512 px long side, q80, written atomically to `data/thumbs/<id[:2]>/<id>.webp`.
+- `phash.py` -- 64-bit pHash (the shared `imaging.phash`, bit-identical to the `imagehash` values already stored; the
+  `imagehash`/SciPy dependency is gone) and an exact multi-index near-duplicate lookup (below), plus union-find.
 - `duplicates.py` -- exact and near groups and the keeper rule.
 - `embeddings.py` -- the `Embedder` protocol; `FakeEmbedder` (colour
   histogram, deterministic across processes); `ClipEmbedder` (fastembed /
@@ -53,10 +53,9 @@
   progress and stats in the `jobs` table.
 - `library.py` -- the engine (no FastAPI import): indexing pipeline and
   every operation the UI and the agent use.
-- `api.py` -- FastAPI app: guard middleware, UI routes, audited
-  `/api/agent/<tool>` routes, flat `{error, message}` errors, static
+- `api.py` -- FastAPI app: the shared guard (`hoard_link.guard`, `DAGUERRE_ALLOWED_HOSTS` opens a LAN name or a tailnet),
+  UI routes, audited `/api/agent/<tool>` routes (they need the bearer token in `data/mcp-token`), flat `{error, message}` errors, static
   files confined to `frontend/dist`.
-- `guard.py` -- DNS-rebinding and cross-site write guard.
 - `mcp_server.py` -- standalone stdio adapter (stdlib + httpx + mcp).
 - `demo.py` -- synthetic demo library for `--demo`.
 

@@ -21,6 +21,10 @@ Reglas para cualquier agente de código que trabaje en este repositorio.
 - **Nunca edites `daguerre_hoard/hoard_link/`** (es una copia vendorizada,
   ver `VENDORED.txt`). Compón sobre ella desde `backend.py`
   (`Library.backend`); para actualizarla, sustituye la carpeta entera.
+- Lo que ya hace el repo compartido no se reescribe aquí: guard (`hoard_link.guard`), imágenes
+  (`hoard_link.docs.imaging`: miniaturas, EXIF, pHash idéntico al de `imagehash`), procesos (`hoard_link.proc`),
+  escrituras atómicas (`hoard_link.atomic`). `mcp_server.py` envía el token de `data/mcp-token` (`DAGUERRE_TOKEN`,
+  `DAGUERRE_TOKEN_FILE` o `DAGUERRE_DATA_DIR`) porque las rutas `/api/agent/<tool>` lo exigen.
 - No uses `window.confirm` ni `alert` en el frontend: bloquean la
   pestaña si algo la controla por automatización. Usa una confirmación
   en dos pasos en línea (ver `SettingsPage.tsx`).

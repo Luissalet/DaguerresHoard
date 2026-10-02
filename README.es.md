@@ -268,9 +268,12 @@ Python 3.11, 3.12 y 3.13, compila la interfaz con Node 22 y prueba
 
 ## Privacidad y seguridad
 
-- Solo escucha en `127.0.0.1`; rechaza las peticiones con otra cabecera
-  `Host` (DNS rebinding) y las escrituras desde otros sitios. Sin CORS y
-  sin telemetría.
+- Solo escucha en `127.0.0.1`; el guard compartido de Hoard Link rechaza
+  otra cabecera `Host` (DNS rebinding; `DAGUERRE_ALLOWED_HOSTS` abre un
+  nombre de la LAN o una tailnet), las peticiones de otros sitios que no
+  sean navegación de nivel superior y que la embeba un `iframe` ajeno; las
+  rutas `/api/agent/<tool>` del asistente solo responden al token de
+  `data/mcp-token`. Sin CORS y sin telemetría.
 - Las únicas peticiones a internet son las que lanzas en Ajustes: el
   modelo CLIP desde Hugging Face y los datos de GeoNames. Las
   descripciones y la traducción de búsquedas solo hablan con servidores de

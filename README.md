@@ -255,8 +255,10 @@ Python 3.11, 3.12 and 3.13, builds the UI with Node 22, and drives
 
 ## Privacy and security
 
-- Binds to `127.0.0.1` only; requests with another `Host` header (DNS
-  rebinding) and cross-site writes are rejected. No CORS, no telemetry.
+- Binds to `127.0.0.1` only; the shared Hoard Link guard rejects another `Host` header (DNS rebinding;
+  `DAGUERRE_ALLOWED_HOSTS` opens a LAN name or a tailnet), cross-site requests that are not top-level navigations
+  and framing from another site, and the assistant's `/api/agent/<tool>` routes answer only to the bearer token in
+  `data/mcp-token`. No CORS, no telemetry.
 - The only internet requests are the ones you start in Settings: the CLIP
   model from Hugging Face and the GeoNames dataset. Captions and query
   translation only talk to model servers on loopback (Faustus, Ollama,
