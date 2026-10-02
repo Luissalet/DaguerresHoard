@@ -12,7 +12,6 @@ dependencies = [
     "pydantic==2.10.4",
     "httpx==0.28.1",
     "pillow==10.4.0",
-    "imagehash==4.3.1",
     "numpy==2.2.1",
     "mcp==1.9.4",
     "fastembed==0.7.1",

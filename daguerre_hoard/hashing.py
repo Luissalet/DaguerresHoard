@@ -1,20 +1,7 @@
-"""Streamed content hashing, used for exact-duplicate detection and to follow
-a moved/renamed file (same hash, new path)."""
+"""Streamed content hashing, used for exact-duplicate detection and to follow a moved/renamed file (same hash, new
+path). The implementation is the shared one (BLAKE2b-256 in 1 MB pieces); the name stays for the callers of this app."""
 from __future__ import annotations
 
-import hashlib
-from pathlib import Path
+from .hoard_link.docs.imaging import content_hash
 
-CHUNK_SIZE = 1024 * 1024
-
-
-def content_hash(path: Path) -> str:
-    """BLAKE2b hex digest of the file, read in streamed chunks (no full load)."""
-    h = hashlib.blake2b(digest_size=32)
-    with open(path, "rb") as f:
-        while True:
-            chunk = f.read(CHUNK_SIZE)
-            if not chunk:
-                break
-            h.update(chunk)
-    return h.hexdigest()
+__all__ = ["content_hash"]

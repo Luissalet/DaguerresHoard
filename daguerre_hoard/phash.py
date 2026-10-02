@@ -10,11 +10,12 @@ is then confirmed by a real Hamming-distance check.
 """
 from __future__ import annotations
 
+import os
 from collections import defaultdict
 from itertools import combinations
 
-import imagehash
-from PIL import Image, ImageOps
+from .hoard_link.docs import imaging
+from .hoard_link.docs.imaging import hamming
 
 HASH_BITS = 64
 CHUNKS = 4
@@ -23,19 +24,12 @@ DEFAULT_THRESHOLD = 6
 
 
 def compute_phash(path_or_image) -> int:
-    """Perceptual hash (64-bit int) of an image path or an already-opened,
-    orientation-corrected PIL Image."""
-    if isinstance(path_or_image, Image.Image):
-        img = path_or_image
-    else:
-        with Image.open(path_or_image) as opened:
-            img = ImageOps.exif_transpose(opened).convert("RGB")
-            return int(str(imagehash.phash(img)), 16)
-    return int(str(imagehash.phash(img)), 16)
-
-
-def hamming(a: int, b: int) -> int:
-    return bin(a ^ b).count("1")
+    """Perceptual hash (64-bit int) of an image path or an already-opened PIL Image: the shared
+    ``imaging.phash``, bit-identical to ``imagehash.phash`` (stored hashes stay valid). A path is opened
+    orientation-corrected."""
+    if isinstance(path_or_image, (str, os.PathLike)):
+        return imaging.phash(imaging.open_oriented(path_or_image))
+    return imaging.phash(path_or_image)
 
 
 def chunks_of(value: int) -> list[int]:
