@@ -202,6 +202,18 @@ to remove a folder: that is a human action in Settings.
 `{id, name, created_by, created, added, unknown_ids, photo_count,
 has_more, photos: [first 10]}`.
 
+## craft_import_compositor
+
+`source_path` selects an existing local `.comp` directory. `preflight_only=true`
+returns a report without writing or launching the native engine. Supports a
+strict ungrouped raster subset (8-bit unprofiled RGB/RGBA PNG, Normal blend,
+opacity, visibility, names, native size and integer offsets); rejects groups,
+masks, adjustments, text, effects, shapes, guides and unsupported transforms.
+Check `status`: `ready`, `blocked`, `imported` or `failed`. Only `imported`
+provides editable `.pcraft`, PNG, native readback and JSON receipt. Original
+manifest/assets stay unchanged; UUID mappings and omitted source selection
+are recorded. Full limits and verification are in [CRAFT-ENGINES](CRAFT-ENGINES.md#import-a-compositor-package).
+
 ## Errors
 
 Tool failures raise `ToolError` with `<code>: <message>`, taken from the

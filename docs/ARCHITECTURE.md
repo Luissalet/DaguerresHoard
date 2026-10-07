@@ -52,6 +52,9 @@
 - `craft_engines.py` -- local PhotoCraft/LightCraft discovery, live MCP
   schema and tool proxy, isolated child processes, and real editable artifact
   workflows. Imported originals are copied below `data/` first.
+- `compositor.py` -- bounded read-only `.comp` package preflight and immutable
+  manifest/PNG snapshot; per-layer unsupported-property and conversion reports.
+  Native import/save/reopen is composed through `CraftEngines`.
 - `jobs.py` -- `JobManager` / `JobHandle`: a daemon thread per job,
   progress and stats in the `jobs` table.
 - `library.py` -- the engine (no FastAPI import): indexing pipeline and
@@ -147,7 +150,7 @@ LightCraft CLIs, each launched with isolated app data and file paths.
 
 - `/api/health` -- `{service: "daguerres-hoard", name, version, status,
   photo_count, roots, embedder}`.
-- `/api/agent/<tool>` -- the fifteen MCP tools, audited in `agent_calls`.
+- `/api/agent/<tool>` -- the registered MCP tools, audited in `agent_calls`.
 - `/api/craft/status` -- local executable discovery; `/api/craft/artifacts/{filename}`
   serves only generated ID-named raster outputs and `.pcraft` documents.
 - UI routes (not audited): `/api/photos`, `/api/photos/{id}`,

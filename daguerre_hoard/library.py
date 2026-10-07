@@ -1143,6 +1143,10 @@ class Library:
         """Create, save and export an editable PhotoCraft raster document."""
         return self.craft_engines.create_layered_document(name, width, height, background)
 
+    def craft_import_compositor(self, source_path: str, preflight_only: bool = False) -> dict:
+        """Validate/import an explicitly selected .comp package without source writes."""
+        return self.craft_engines.import_compositor(source_path, preflight_only)
+
     def craft_create_layered_photo(self, photo_id: str) -> dict:
         """Open a copy of an indexed photo as an editable PhotoCraft project."""
         row = self._resolve_photo(photo_id, None)

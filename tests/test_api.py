@@ -57,6 +57,25 @@ def test_craft_engine_discovery_and_artifact_routes_are_confined(client, tmp_pat
     assert client.get(f"/api/craft/artifacts/{artifact_id}.db").status_code == 404
 
 
+def test_compositor_preflight_http_and_agent_routes(client, tmp_path):
+    from tests.test_compositor import make_comp
+    source = tmp_path / "source.comp"
+    manifest = make_comp(source)
+    body = {"source_path": str(source), "preflight_only": True}
+    assert client.post("/api/craft/import-compositor", json=body).json()["status"] == "ready"
+    result = client.post("/api/agent/craft_import_compositor", json=body)
+    assert result.status_code == 200 and result.json()["status"] == "ready"
+    assert client.get("/api/agent-calls").json()[0]["tool"] == "craft_import_compositor"
+    manifest["layers"][0]["adjustment"] = {"kind": "Exposure"}
+    (source / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
+    assert client.post("/api/agent/craft_import_compositor", json={"source_path": str(source)}).json()["status"] == "blocked"
+    artifact_id = "b" * 32
+    receipt = tmp_path / "data" / "craft-workspace" / "exports" / f"{artifact_id}.json"
+    receipt.parent.mkdir(parents=True, exist_ok=True)
+    receipt.write_text('{"status":"imported"}', encoding="utf-8")
+    assert client.get(f"/api/craft/artifacts/{artifact_id}.json").json()["status"] == "imported"
+
+
 @pytest.mark.craft_integration
 def test_craft_http_routes_run_native_photo_workflows_without_mutating_root(client, tmp_path):
     import hashlib, os

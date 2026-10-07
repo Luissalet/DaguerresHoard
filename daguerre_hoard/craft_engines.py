@@ -7,6 +7,7 @@ read only and are copied into that workspace before an editing workflow.
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import json
 import os
 import re
@@ -257,6 +258,114 @@ class CraftEngines:
         except Exception as exc:
             raise CraftEngineError(f"PhotoCraft cannot read this image for a layered project: {exc}") from None
         return self.create_layered_document(source.stem[:100] or "Photo", width, height, "#000000", source)
+
+    def import_compositor(self, source_path: str, preflight_only: bool = False) -> dict[str, Any]:
+        """Import a validated raster subset without flattening unsupported content."""
+        from .compositor import preflight
+        if not isinstance(source_path, str) or not source_path.strip():
+            raise CraftEngineError("source_path must name an existing .comp directory")
+        report, manifest, snapshot = preflight(Path(source_path).expanduser())
+        report["preflight_only"] = preflight_only
+        if preflight_only or report["status"] == "blocked":
+            return report
+        exe = self.executable("photocraft")
+        if exe is None:
+            raise CraftEngineError("PhotoCraft CLI is required; configure it before importing")
+        artifact_id = uuid.uuid4().hex
+        intake = self.workspace / "compositor-input" / artifact_id / "original.comp"
+        intake.mkdir(parents=True)
+        for relative, data in snapshot.items():
+            destination = intake / relative
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            destination.write_bytes(data)
+        self.workspace.joinpath("exports").mkdir(exist_ok=True)
+        native_rel, preview_rel = f"exports/{artifact_id}.pcraft", f"exports/{artifact_id}.png"
+        native, preview = self.workspace / native_rel, self.workspace / preview_rel
+        readback_rel = f"compositor-input/{artifact_id}/readback.png"
+        readback = self.workspace / readback_rel
+        def command(ident, params=None):
+            return {"tool": "command_run", "arguments": {"id": ident, "params": params or {}}}
+        calls = [command("file.new", {"name": Path(source_path).stem, "width": manifest["width"], "height": manifest["height"],
+                                          "resolution": manifest.get("resolution", 72), "background": "transparent", "mode": "rgb", "depth": 8})]
+        for index, layer in enumerate(manifest["layers"]):
+            filename = layer.get("imageFile")
+            if filename:
+                relative = (intake / "images" / filename).relative_to(self.workspace).as_posix()
+                calls.extend([{"tool": "doc_open", "arguments": {"path": relative}}, command("select.all"), command("edit.copy"),
+                              {"tool": "doc_select", "arguments": {"index": 0}}, command("edit.pasteSpecial.pasteInPlace"),
+                              {"tool": "doc_close", "arguments": {"index": 1}}])
+            elif index > 0:
+                calls.append(command("layer.new.layer"))
+            calls.append(command("layer.setProps", {"name": layer["name"], "visible": layer["isVisible"], "opacity": layer.get("opacity", 1)}))
+            if filename:
+                x, y = layer["transform"]["origin"]
+                calls.append(command("layer.translate", {"dx": int(x), "dy": int(y)}))
+        calls.extend([{"tool": "doc_inspect", "arguments": {}}, {"tool": "doc_save", "arguments": {"path": native_rel}},
+                      {"tool": "doc_export", "arguments": {"path": preview_rel, "format": "png"}}])
+        def run_native(sequence):
+            result = asyncio.run(self._request("photocraft", sequence))
+            if len(result) != len(sequence) or any(c["is_error"] for c in result):
+                raise CraftEngineError("PhotoCraft import failed: " + json.dumps(result[-1] if result else {}))
+            return result
+        def payload(call):
+            return json.loads(next(c["text"] for c in call["content"] if c.get("type") == "text"))
+        report.update({"id": artifact_id, "source_copy": str(intake), "engine": "photocraft", "engine_executable": str(exe),
+                       "engine_sha256": hashlib.sha256(exe.read_bytes()).hexdigest()})
+        receipt = self.workspace / "exports" / f"{artifact_id}.json"
+        try:
+            with self._locks["photocraft"]:
+                results = run_native(calls)
+                state = payload(results[-3])
+                native_layers = list(reversed(state["layers"]))
+                # Remove the unused starter when the first source layer has pixels.
+                cleanup = []
+                if manifest["layers"][0].get("imageFile"):
+                    starter = native_layers.pop(0)
+                    cleanup.append(command("layer.delete", {"layer": starter["id"]}))
+                if len(native_layers) != len(manifest["layers"]):
+                    raise CraftEngineError("PhotoCraft layer count differs from the source; import was not published")
+                for layer_report, native_layer in zip(report["layers"], native_layers):
+                    layer_report["native_id"] = native_layer["id"]
+                readback_calls = [{"tool": "doc_open", "arguments": {"path": native_rel}}, *cleanup,
+                                  {"tool": "doc_save", "arguments": {"path": native_rel}},
+                                  {"tool": "doc_export", "arguments": {"path": preview_rel, "format": "png"}},
+                                  {"tool": "doc_close", "arguments": {}}, {"tool": "doc_open", "arguments": {"path": native_rel}},
+                                  {"tool": "doc_inspect", "arguments": {}},
+                                  {"tool": "doc_export", "arguments": {"path": readback_rel, "format": "png"}}]
+                reopened = run_native(readback_calls)
+                readback_state = payload(reopened[-2])
+                persisted = list(reversed(readback_state["layers"]))
+                if len(persisted) != len(manifest["layers"]) or readback_state["width"] != manifest["width"] or readback_state["height"] != manifest["height"]:
+                    raise CraftEngineError("Native readback has unexpected document dimensions or layer count")
+                for source_layer, target in zip(manifest["layers"], persisted):
+                    if target["name"] != source_layer["name"] or target["visible"] != source_layer["isVisible"] or abs(target["opacity"] - source_layer.get("opacity", 1)) > 0.000001 or target["blend"] != "Normal" or target["kind"] != "Pixel":
+                        raise CraftEngineError("Native readback differs from imported layer properties")
+                for layer_report, target in zip(report["layers"], persisted):
+                    if target["bounds"] != layer_report["expected_native_bounds"]:
+                        raise CraftEngineError("Native pixel bounds differ from the validated source placement")
+                    layer_report["native_id"] = target["id"]
+                if hashlib.sha256(preview.read_bytes()).digest() != hashlib.sha256(readback.read_bytes()).digest():
+                    raise CraftEngineError("PNG export changed after native save/reopen")
+            report.update({"status": "imported", "editable_layers": True, "native_path": str(native), "preview_path": str(preview),
+                           "preview_url": f"http://127.0.0.1:{self.port}/api/craft/artifacts/{artifact_id}.png",
+                           "native_url": f"http://127.0.0.1:{self.port}/api/craft/artifacts/{artifact_id}.pcraft",
+                           "readback_path": str(readback), "readback": readback_state,
+                           "native_sha256": hashlib.sha256(native.read_bytes()).hexdigest(),
+                           "preview_sha256": hashlib.sha256(preview.read_bytes()).hexdigest(),
+                           "readback_sha256": hashlib.sha256(readback.read_bytes()).hexdigest(),
+                           "receipt_path": str(receipt), "receipt_url": f"http://127.0.0.1:{self.port}/api/craft/artifacts/{artifact_id}.json",
+                           "native_calls": results + reopened})
+            for layer in report["layers"]:
+                for prop in layer["properties"]:
+                    if prop["status"] == "supported":
+                        prop["status"] = "mapped"
+                        prop["reason"] = "Native pixel workflow completed; see readback evidence and renderer limitation"
+        except Exception as exc:
+            native.unlink(missing_ok=True)
+            preview.unlink(missing_ok=True)
+            report.update({"status": "failed", "error": str(exc), "receipt_path": str(receipt)})
+        receipt.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+        return report
 
     def develop_photo(self, source: Path, exposure: float, output_format: str = "png", long_edge: int = 0) -> dict[str, Any]:
         if not -5.0 <= exposure <= 5.0:

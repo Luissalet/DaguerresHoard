@@ -1,0 +1,157 @@
+{
+  "candidate": "daguerre-compositor-20261007",
+  "base_head": "fd01dcd693ddbc2737b33eacd23242d007c407d7",
+  "publication": "Parent agent owns integration and publication; shared working tree untouched.",
+  "changed_files_sha256": {
+    "README.es.md": "70a7da2ed7d1ddfaf724e114099c6a6d34cd59bd61dd08fcd960383996a39984",
+    "README.md": "996ef3b7090920517f9c1ea969789106a33c8960c1108deb2c7f673233a48c6a",
+    "daguerre_hoard/api.py": "6044957a8ece60bfa3e21b60ae16d3f10479b3d660872dcc08f8609e1a49eee1",
+    "daguerre_hoard/craft_engines.py": "a03cf29c23d1c9e0a4adaa89a452ff176c38755cde618b58f0ad8597421641c6",
+    "daguerre_hoard/library.py": "c0e655574a7756804c99e5545ad7a8077add4acb65281ae46dca808c4d762e5b",
+    "daguerre_hoard/mcp_server.py": "672823fd93f9b401fa918bca902eb0962f70df1d3ff2cea64d7039c313105e7f",
+    "docs/ARCHITECTURE.md": "27c094b7d48f4d6cea39fcfdcb808a4128ff78721f3e23be6748415d6300ff70",
+    "docs/CRAFT-ENGINES.md": "7de2ecdd2c734563585af01963d0b80cd2d141bf9990053470105ecdf54aacdb",
+    "docs/MCP.md": "bd3f5335ca455f0951aa08e120e8b85c8c99becd4c653fee442dccfbff41e536",
+    "skills/find-photos/SKILL.md": "e66ae55d535b5dc2d2e777c4569d0d5549de88e810120c2933efb3d1c33bcabf",
+    "tests/test_agent_auth.py": "fff49db90c20906b39dbfeb9ce66aa5d44ee5db09fdff83487f86b1f4390d8ed",
+    "tests/test_api.py": "36c09d629e1f3c6b1032f92912f9328990355e644349bbeae2d5e53e73f375b0",
+    "tests/test_mcp_protocol.py": "23080434b0617ec2ad4b1836a0703d4058664cc157a07160f51c1ed7c594ebc7",
+    "daguerre_hoard/compositor.py": "a90057a0ccb7a0f617d8802fbb763be39a1decabdbb25efffc009c2dc7c40874",
+    "tests/test_compositor.py": "63a9a31d2c8604c8b06c176cedebd085acaf27152b0b26dc5283f1794404d461",
+    "docs/COMPOSITOR.es.md": "427aa6eebd5b90333c8adfb1f6a842cb9e96bd1f9196c9aa497914e68cd03429"
+  },
+  "source_spec_commit": "11d8d7a50992b24fd9a760a1c13b1c01b70aaf30",
+  "native_engine": {
+    "release": "PhotoCraft v0.2.0 Windows x64 portable",
+    "exe_sha256": "74dda9a33c9626af45bafc83d5ee4809b0f85dfee4576dedc4821b0850e7f9c1",
+    "observed_mcp_tools": 18
+  },
+  "validation": {
+    "full_pytest": "189 passed, 1 model deselected, 3 dependency deprecation warnings; 62.90 seconds",
+    "frontend_build": "npm run build passed",
+    "demo_smoke": "--demo --no-browser isolated data, health 200 and compiled frontend served; GUI not launched",
+    "real_mcp": "stdio craft_import_compositor -> authenticated API -> real native import/reopen/export passed",
+    "negative_cases": 18,
+    "representation_tests": "third package: transparent PNG margins trimmed explicitly, alpha128 at opacity0.5 gives RGB75,35,122; blank pixel layer retained",
+    "opaque_pixel_check": "RGBA240,20,10,255 at opacity0.5 over RGB20,40,160 gives RGB130,30,85",
+    "hidden_edit": "revealing imported hidden RGBA layer through native API changes pixel(1,4)"
+  },
+  "artifacts": [
+    {
+      "fixture": "transparent-and-blank",
+      "native_path": "data/compositor-evidence/transparent-and-blank/data/craft-workspace/exports/5969e5cae7e947ad900d28c97b7beeec.pcraft",
+      "preview_path": "data/compositor-evidence/transparent-and-blank/data/craft-workspace/exports/5969e5cae7e947ad900d28c97b7beeec.png",
+      "receipt_path": "data/compositor-evidence/transparent-and-blank/data/craft-workspace/exports/5969e5cae7e947ad900d28c97b7beeec.json",
+      "source_files_sha256": {
+        "manifest.json": "493dcb1561659f3fa37f5dd59bb7365ee14dce794f6e1ad01dd85e720324cf1e",
+        "images/00000000-0000-4000-8000-000000000001.png": "0d99701c280d05f993366937e7b2fa42f9b8da6648de09de6a81cb29b46de5da",
+        "images/00000000-0000-4000-8000-000000000002.png": "3ad845359d293024a51b7416d81addf470e469639c2828eef91d69e16382a064"
+      },
+      "native_sha256": "9e158b3afb5f60ceb43a9b1331167a611bbff6472621b67cea213f6d308af710",
+      "preview_sha256": "b2728054b0962209bd8e544b7dd4cdb679b386d57074f9bc3ee7d8a965d76528",
+      "readback_sha256": "b2728054b0962209bd8e544b7dd4cdb679b386d57074f9bc3ee7d8a965d76528",
+      "layer_count": 3,
+      "native_bounds": [
+        [
+          0,
+          0,
+          64,
+          48
+        ],
+        [
+          11,
+          12,
+          6,
+          5
+        ],
+        [
+          0,
+          0,
+          0,
+          0
+        ]
+      ]
+    },
+    {
+      "fixture": "variant-0",
+      "native_path": "data/compositor-evidence/variant-0/data/craft-workspace/exports/8a42d72cf104446b9aa512a0ff29bea1.pcraft",
+      "preview_path": "data/compositor-evidence/variant-0/data/craft-workspace/exports/8a42d72cf104446b9aa512a0ff29bea1.png",
+      "receipt_path": "data/compositor-evidence/variant-0/data/craft-workspace/exports/8a42d72cf104446b9aa512a0ff29bea1.json",
+      "source_files_sha256": {
+        "manifest.json": "dbc0eae097253969633ec0b88d737930fa82afad0ab5181d3af91b80e6e06fb0",
+        "images/00000000-0000-4000-8000-000000000001.png": "0d99701c280d05f993366937e7b2fa42f9b8da6648de09de6a81cb29b46de5da",
+        "images/00000000-0000-4000-8000-000000000002.png": "526bfb93562363f652101302968aec2b6c8d2e7cda2f92404b36c9d945bd300b",
+        "images/00000000-0000-4000-8000-000000000003.png": "734b79797f53568c74b867d77807f2e57dd981bb00e4ec923ef4c7a0630a2278"
+      },
+      "native_sha256": "0740e3bb848aad7ed853ca3b4e99b278999b58f3fc6866131f4e1ea7db672a76",
+      "preview_sha256": "29f9521337df31c69c035035c34cb3b797dd761a15d60c0db84bd9aa5dfd4471",
+      "readback_sha256": "29f9521337df31c69c035035c34cb3b797dd761a15d60c0db84bd9aa5dfd4471",
+      "layer_count": 3,
+      "native_bounds": [
+        [
+          0,
+          0,
+          64,
+          48
+        ],
+        [
+          7,
+          9,
+          20,
+          15
+        ],
+        [
+          -2,
+          3,
+          8,
+          6
+        ]
+      ]
+    },
+    {
+      "fixture": "variant-5",
+      "native_path": "data/compositor-evidence/variant-5/data/craft-workspace/exports/fe2871e57ec245748e341e59b1317c03.pcraft",
+      "preview_path": "data/compositor-evidence/variant-5/data/craft-workspace/exports/fe2871e57ec245748e341e59b1317c03.png",
+      "receipt_path": "data/compositor-evidence/variant-5/data/craft-workspace/exports/fe2871e57ec245748e341e59b1317c03.json",
+      "source_files_sha256": {
+        "manifest.json": "311a5cf170f251ae3c5dcd26343db6edf718e5ded6786d775deccd7ef7420356",
+        "images/00000000-0000-4000-8000-000000000001.png": "0d99701c280d05f993366937e7b2fa42f9b8da6648de09de6a81cb29b46de5da",
+        "images/00000000-0000-4000-8000-000000000002.png": "526bfb93562363f652101302968aec2b6c8d2e7cda2f92404b36c9d945bd300b",
+        "images/00000000-0000-4000-8000-000000000003.png": "734b79797f53568c74b867d77807f2e57dd981bb00e4ec923ef4c7a0630a2278"
+      },
+      "native_sha256": "35b020cf17ac511af510765960d8958f0adad7dd5feee733d7f43f2bd7e8fe41",
+      "preview_sha256": "ba202cbe640b4b1e0d9391ed804ae1b13a5ef8c1cfb645c38ef40f07f2257601",
+      "readback_sha256": "ba202cbe640b4b1e0d9391ed804ae1b13a5ef8c1cfb645c38ef40f07f2257601",
+      "layer_count": 3,
+      "native_bounds": [
+        [
+          0,
+          0,
+          64,
+          48
+        ],
+        [
+          12,
+          9,
+          20,
+          15
+        ],
+        [
+          -2,
+          3,
+          8,
+          6
+        ]
+      ]
+    }
+  ],
+  "limitations": [
+    "No full Compositor, PhotoCraft, GIMP or Krita parity claim.",
+    "Only schema1–11 ungrouped unprofiled8-bit RGB/RGBA PNG pixel subset, Normal blending, native size, integer offsets;128 layers/8192px sides/100M sourcepixels/512MiB encodedimages/4MiB manifest.",
+    "Groups, masks, live clipping, adjustments, text, shapes, effects, guides, other blends, ICC, resampling/rotation/flips/fractional offsets and unknown fields block before writes.",
+    "Native transparent margins and blank-layer rectangle differences are explicitly transformed; source active selection is omitted.",
+    "Original manifest and referenced PNG bytes retained; ancillary QuickLook/orphan assets not copied; source package stays read-only.",
+    "Compositor renderer comparison unavailable on Windows; visual parity unverified.",
+    "No .comp export or new UI import screen; native API/MCP are implemented."
+  ]
+}

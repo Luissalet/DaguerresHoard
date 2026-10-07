@@ -98,6 +98,11 @@ class CraftPhotoBody(BaseModel):
     photo_id: str
 
 
+class CraftCompositorBody(BaseModel):
+    source_path: str
+    preflight_only: bool = False
+
+
 class DuplicatesBody(BaseModel):
     kind: str = "exact"
     limit: int = 10
@@ -510,13 +515,17 @@ def create_app(data_dir: Path, static_dir: Path | None = None, port: int = 8814)
         _check_id(body.photo_id)
         return run(lambda: lib.craft_develop_photo(body.photo_id, body.exposure, body.output_format, body.long_edge))
 
+    @app.post("/api/craft/import-compositor")
+    def craft_import_compositor(body: CraftCompositorBody):
+        return run(lambda: lib.craft_import_compositor(body.source_path, body.preflight_only))
+
     @app.get("/api/craft/artifacts/{filename}")
     def craft_artifact(filename: str):
         # Artifact IDs are random 128-bit hex names; only generated raster
-        # previews/exports and PhotoCraft native documents are served.
+        # previews/exports, PhotoCraft native documents and JSON receipts are served.
         import re
 
-        match = re.fullmatch(r"([0-9a-f]{32})\.(pcraft|png|jpg|jpeg|tif|tiff|webp|avif)", filename)
+        match = re.fullmatch(r"([0-9a-f]{32})\.(pcraft|json|png|jpg|jpeg|tif|tiff|webp|avif)", filename)
         if not match:
             raise ApiError(404, "not_found", "Craft artifact not found")
         artifact_id, extension = match.groups()
@@ -537,6 +546,11 @@ def create_app(data_dir: Path, static_dir: Path | None = None, port: int = 8814)
     @app.post("/api/agent/craft_call", dependencies=agent_auth)
     def agent_craft_call(body: CraftCallBody):
         return run(lambda: lib.craft_call(body.engine, body.calls), tool="craft_call", args=body.model_dump())
+
+    @app.post("/api/agent/craft_import_compositor", dependencies=agent_auth)
+    def agent_craft_import_compositor(body: CraftCompositorBody):
+        return run(lambda: lib.craft_import_compositor(body.source_path, body.preflight_only),
+                   tool="craft_import_compositor", args=body.model_dump())
 
     @app.post("/api/agent/craft_create_layered_document", dependencies=agent_auth)
     def agent_craft_create_layered_document(body: CraftLayeredDocumentBody):

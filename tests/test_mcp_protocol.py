@@ -96,7 +96,7 @@ async def test_mcp_adapter_over_stdio(running_app, tmp_path):
                 "photos_search", "photos_similar", "photos_show", "photos_describe",
                 "photos_duplicates", "photos_timeline", "photos_library",
                 "photos_add_folder", "photos_album", "craft_engines",
-                "craft_tools", "craft_call", "craft_develop_photo", "craft_create_layered_document", "craft_create_layered_photo",
+                "craft_tools", "craft_call", "craft_develop_photo", "craft_create_layered_document", "craft_create_layered_photo", "craft_import_compositor",
             }
             for tool in tools.tools:
                 assert "Keywords:" in tool.description, tool.name
@@ -105,7 +105,7 @@ async def test_mcp_adapter_over_stdio(running_app, tmp_path):
             read_only = {t.name for t in tools.tools if t.annotations.readOnlyHint}
             assert read_only == names - {
                 "photos_add_folder", "photos_album", "craft_call",
-                "craft_develop_photo", "craft_create_layered_document", "craft_create_layered_photo",
+                "craft_develop_photo", "craft_create_layered_document", "craft_create_layered_photo", "craft_import_compositor",
             }
             if os.environ.get('DAGUERRE_CRAFT_BUNDLES'):
                 photo_tools = await session.call_tool('craft_tools', {'engine': 'photocraft'})
@@ -116,6 +116,15 @@ async def test_mcp_adapter_over_stdio(running_app, tmp_path):
                 assert created.isError is not True
                 artifact = json.loads(created.content[0].text)
                 assert Path(artifact['native_path']).is_file() and Path(artifact['preview_path']).is_file()
+                from tests.test_compositor import make_comp
+                package = tmp_path / 'mcp-import.comp'
+                make_comp(package)
+                imported = await session.call_tool('craft_import_compositor', {'source_path': str(package)})
+                assert imported.isError is not True
+                conversion = json.loads(imported.content[0].text)
+                assert conversion['status'] == 'imported', conversion
+                assert conversion['preview_sha256'] == conversion['readback_sha256']
+                assert len(conversion['readback']['layers']) == 3
 
             search_tool = next(t for t in tools.tools if t.name == "photos_search")
             assert search_tool.inputSchema["properties"]["orientation"]["anyOf"][0]["enum"] == ["landscape", "portrait"]

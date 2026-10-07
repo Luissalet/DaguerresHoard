@@ -2,6 +2,14 @@
 
 # Daguerre's Hoard
 
+La importación editable de paquetes `.comp` dispone de un subconjunto raster
+verificado: capas separadas en PhotoCraft `.pcraft`, nombres, visibilidad,
+opacidad y desplazamientos enteros, con informe por capa, hashes de los
+originales, reapertura nativa y vista PNG. El contenido no compatible detiene
+la importación antes de escribir. Grupos, máscaras, ajustes, texto, efectos,
+rotación y escalado siguen sin equivalencia verificada; no se afirma paridad
+con Compositor. Véase [la guía de importación en español](docs/COMPOSITOR.es.md).
+
 ### ¿Sigues teniendo la foto del perro en la playa del verano pasado?
 
 *Lleva el nombre de Louis Daguerre, cuyo daguerrotipo (1839) fue la primera fotografía práctica.*

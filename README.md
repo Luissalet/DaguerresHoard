@@ -59,6 +59,13 @@ real MCP stdio by a script that plays a small local model
 
 ## What is implemented
 
+- **Editable Compositor import:** `.comp` directories containing a verified
+  raster subset can become separate PhotoCraft `.pcraft` pixel layers through
+  `craft_import_compositor`. Includes a per-layer report, original-byte hashes,
+  native save/reopen checks and PNG previews. Unsupported content blocks import
+  before writing; groups, masks, adjustments and complex transforms remain gaps.
+  [Configuration, supported subset and limitations](docs/CRAFT-ENGINES.md#import-a-compositor-package).
+
 | Area | Available now | Boundary |
 | --- | --- | --- |
 | Indexing | Background, incremental scans: unchanged files cost one `stat`; changed files are re-read; moved or renamed files keep their id, vector, caption and albums. Parallel hashing and decoding, progress with files/s and ETA, one unreadable file is reported instead of stopping the scan. JPEG, PNG, WebP, GIF, BMP, TIFF, HEIC/HEIF | No file-system watcher: rescans are started by the user, the agent or a new folder |

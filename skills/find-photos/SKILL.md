@@ -5,8 +5,9 @@ description: Find, look at and organise the owner's local photos with Daguerre's
 
 # Finding photos with Daguerre
 
-Daguerre never modifies, moves or deletes a photo. Only `photos_add_folder`
-and `photos_album` change anything, and both only add.
+Daguerre never modifies, moves or deletes an original photo. `photos_add_folder`
+and `photos_album` add library information; Craft tools create editable copies,
+derivatives and receipts under Daguerre data.
 
 ## Order of work
 
@@ -42,6 +43,18 @@ and `photos_album` change anything, and both only add.
    say "up to", and ask the owner to check each group first.
 8. "When / how many": `photos_timeline()` or `photos_timeline(year=2024)`.
 9. "Make an album with these": `photos_album(name, photo_ids)`.
+
+## Editable package imports
+
+When the owner selects a Compositor `.comp` package, use
+`craft_import_compositor(source_path, preflight_only=true)` to see supported
+and blocking properties. The normal import with `preflight_only=false` also
+preflights automatically. Check `status` and report unsupported layers instead
+of rasterizing them. Only an `imported` result provides editable native layers;
+read the receipt's omissions and renderer limitation. This supports ungrouped
+8-bit RGB/RGBA PNG, Normal blending, opacity/visibility and integer offsets;
+groups, masks, text, adjustments and complex transforms are not imported.
+Source bytes remain unchanged; imported outputs and receipts live under data.
 
 ## Traps
 

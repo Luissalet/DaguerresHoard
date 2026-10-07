@@ -449,6 +449,24 @@ def craft_create_layered_document(name: str = "Daguerre canvas", width: int = 51
     }))]
 
 
+@mcp.tool(annotations=CRAFT_WRITE)
+def craft_import_compositor(source_path: str, preflight_only: bool = False) -> list:
+    """Import a Compositor .comp directory as editable PhotoCraft pixel layers.
+
+    source_path explicitly selects a local package. preflight_only returns a
+    per-layer report without writing or starting PhotoCraft. Unsupported content
+    returns status=blocked without import: groups, masks, adjustments, text,
+    effects, shapes, non-Normal blending, scaling, rotation and fractional offsets.
+    Supports schema 1–11, sRGB 8-bit RGB/RGBA PNG, 1–128 layers, canvas/image
+    sides 1–8192, integer offsets, opacity and visibility. Preserves source bytes,
+    saves .pcraft, reopens it, and exports PNG plus a JSON receipt under data.
+    Check status (imported/blocked/failed/ready) and issues before using artifacts.
+    Renderer equivalence with Compositor and full format parity are unverified.
+    Keywords: import Compositor, comp project, editable raster layers, conversion receipt, importar Compositor, proyecto comp, capas editables, informe de conversion
+    """
+    return [_text(_call("craft_import_compositor", {"source_path": source_path, "preflight_only": preflight_only}))]
+
+
 def main() -> None:
     mcp.run(transport="stdio")
 
