@@ -363,26 +363,6 @@ def photos_album(name: str, photo_ids: list[str]) -> list:
     return [_text(_call("photos_album", {"name": name, "photo_ids": photo_ids}))]
 
 
-@mcp.tool(annotations=ADDITIVE)
-def photos_export(ids: list[str], title: str = "Photo selection") -> list:
-    """Export an ordered local photo gallery, contact sheet and JSON source manifest (write).
-
-    Pass 1-20 ids from photos_search in the desired order. Repeated ids are
-    retained deliberately (a photo may appear twice). Writes previews under
-    Daguerre's data/exports; originals are read, never moved, copied or edited.
-    Returns absolute file paths, gallery_url, ordered photos with stable ids
-    and 1-based row/column, and complete/omitted for missing or unreadable files.
-    The HTML includes its preview images and works offline. The manifest
-    references original paths; it does not package full-resolution originals.
-    Identical photo bytes, exported metadata, ordered selection and title reuse
-    the same export. Returns text only,
-    so text-only models can use it without receiving image content.
-    Keywords: export photos, gallery, selection, photobook, contact sheet,
-    manifest, exportar fotos, galería local, selección, álbum, hoja de contacto
-    """
-    return [_text(_call("photos_export", {"ids": ids, "title": title}))]
-
-
 @mcp.tool(annotations=READ_ONLY)
 def craft_engines() -> list:
     """Show configured PhotoCraft and LightCraft executables and isolated workspaces.
