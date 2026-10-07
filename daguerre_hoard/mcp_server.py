@@ -70,6 +70,7 @@ _client = httpx.Client(base_url=APP_URL, timeout=httpx.Timeout(120.0, connect=5.
 
 READ_ONLY = ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
 ADDITIVE = ToolAnnotations(readOnlyHint=False, destructiveHint=False, idempotentHint=True, openWorldHint=False)
+CRAFT_WRITE = ToolAnnotations(readOnlyHint=False, destructiveHint=False, idempotentHint=False, openWorldHint=False)
 
 mcp = FastMCP(
     APP_NAME,
@@ -360,6 +361,112 @@ def photos_album(name: str, photo_ids: list[str]) -> list:
     al álbum, hacer un álbum, colección
     """
     return [_text(_call("photos_album", {"name": name, "photo_ids": photo_ids}))]
+
+
+@mcp.tool(annotations=ADDITIVE)
+def photos_export(ids: list[str], title: str = "Photo selection") -> list:
+    """Export an ordered local photo gallery, contact sheet and JSON source manifest (write).
+
+    Pass 1-20 ids from photos_search in the desired order. Repeated ids are
+    retained deliberately (a photo may appear twice). Writes previews under
+    Daguerre's data/exports; originals are read, never moved, copied or edited.
+    Returns absolute file paths, gallery_url, ordered photos with stable ids
+    and 1-based row/column, and complete/omitted for missing or unreadable files.
+    The HTML includes its preview images and works offline. The manifest
+    references original paths; it does not package full-resolution originals.
+    Identical photo bytes, exported metadata, ordered selection and title reuse
+    the same export. Returns text only,
+    so text-only models can use it without receiving image content.
+    Keywords: export photos, gallery, selection, photobook, contact sheet,
+    manifest, exportar fotos, galería local, selección, álbum, hoja de contacto
+    """
+    return [_text(_call("photos_export", {"ids": ids, "title": title}))]
+
+
+@mcp.tool(annotations=READ_ONLY)
+def craft_engines() -> list:
+    """Show configured PhotoCraft and LightCraft executables and isolated workspaces.
+
+    Returns availability, resolved CLI path, configuration file and output directory.
+    It never starts an editor. Configure `photocraft` and `lightcraft` in
+    `data/craft-engines.json`, use `DAGUERRE_CRAFT_BUNDLES`, or place portable
+    bundles in Daguerre's `data/craft-apps` directory.
+    Keywords: Craft apps, creative engines, PhotoCraft, LightCraft, motores creativos, aplicaciones de edición
+    """
+    return [_text(_call("craft_engines", {}))]
+
+
+@mcp.tool(annotations=READ_ONLY)
+def craft_tools(engine: Literal["photocraft", "lightcraft"]) -> list:
+    """List the full live MCP tool catalogue and JSON schemas from a Craft engine.
+
+    `engine` is `photocraft` or `lightcraft`. This starts that headless engine
+    briefly and returns its actual upstream tool names, descriptions and schemas;
+    it does not use a reduced feature catalogue. Use craft_call to invoke tools.
+    Keywords: PhotoCraft tools, LightCraft tools, MCP schema, list commands, herramientas, esquemas, listar comandos
+    """
+    return [_text(_call("craft_tools", {"engine": engine}))]
+
+
+@mcp.tool(annotations=CRAFT_WRITE)
+def craft_call(engine: Literal["photocraft", "lightcraft"], calls: list[dict]) -> list:
+    """Call one or more native MCP tools in one isolated Craft engine session.
+
+    Read the live schema with craft_tools first. Each call is
+    `{tool: "upstream_tool_name", arguments: {...}}`; batches preserve the
+    editor session across calls. Up to 32 calls are accepted. PhotoCraft read
+    and write roots and LightCraft file paths are confined to Daguerre data;
+    registered originals are not made writable. Results contain each native
+    MCP response and error. For common flows use craft_develop_photo or
+    craft_create_layered_document or craft_create_layered_photo. This exposes the upstream tool surface,
+    not a claim that every upstream feature has been parity tested here.
+    Keywords: edit image, native MCP, photo development, layers, editar imagen, MCP nativo, revelar foto, capas
+    """
+    return [_text(_call("craft_call", {"engine": engine, "calls": calls}))]
+
+
+@mcp.tool(annotations=CRAFT_WRITE)
+def craft_develop_photo(photo_id: str, exposure: float, output_format: Literal["png", "jpg", "tif", "webp", "avif"] = "png", long_edge: int = 0) -> list:
+    """Develop an indexed photo with LightCraft and export a derivative, preserving the original.
+
+    `photo_id` comes from Daguerre search; `exposure` is -5 to +5 EV.
+    LightCraft imports a Daguerre-owned copy into its local library, records
+    the editable develop state there, and writes an export under Daguerre data.
+    Returns native call results, derivative path and `original_modified:false`.
+    `long_edge=0` preserves full output size. The original photo is read only.
+    Keywords: adjust exposure, develop raw, edit exposure, photo copy, ajustar exposición, revelar RAW, editar foto
+    """
+    return [_text(_call("craft_develop_photo", {
+        "photo_id": photo_id, "exposure": exposure, "output_format": output_format, "long_edge": long_edge,
+    }))]
+
+
+@mcp.tool(annotations=CRAFT_WRITE)
+def craft_create_layered_photo(photo_id: str) -> list:
+    """Open a copy of an indexed photo in PhotoCraft and save an editable project.
+
+    Daguerre copies the photo into its confined workspace, opens it through
+    PhotoCraft's scoped doc_open tool, adds an editable overlay, saves `.pcraft`,
+    and exports a PNG preview. The indexed original remains untouched.
+    Keywords: open photo in editor, editable photo, PhotoCraft project, abrir foto, foto editable, proyecto PhotoCraft
+    """
+    return [_text(_call("craft_create_layered_photo", {"photo_id": photo_id}))]
+
+
+@mcp.tool(annotations=CRAFT_WRITE)
+def craft_create_layered_document(name: str = "Daguerre canvas", width: int = 512, height: int = 384, background: str = "#315c7e") -> list:
+    """Create an editable PhotoCraft layered document and export a PNG preview.
+
+    Saves a native `.pcraft` document with a background and editable overlay
+    layer, plus a PNG, under Daguerre data. Width and height are 16–8192;
+    background is a six-digit #RRGGBB color. Returns both artifact paths and
+    upstream tool results. This is a proven starter workflow, not full PSD
+    or PhotoCraft feature parity.
+    Keywords: layered image, raster document, editable layers, export PNG, imagen por capas, documento raster, capas editables
+    """
+    return [_text(_call("craft_create_layered_document", {
+        "name": name, "width": width, "height": height, "background": background,
+    }))]
 
 
 def main() -> None:

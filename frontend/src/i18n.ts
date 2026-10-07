@@ -96,6 +96,16 @@ export interface Dict {
   filter_from: string;
   filter_to: string;
   add_to_album: string;
+  craft_tools: string;
+  craft_photo_editable: string;
+  craft_develop: string;
+  craft_exposure: string;
+  craft_working: string;
+  craft_unavailable: string;
+  craft_open_project: string;
+  craft_view_export: string;
+  craft_original_safe: string;
+  craft_failed: string;
   album_input_placeholder: string;
   added_to: (name: string) => string;
   dup_summary: (groups: number, bytes: string) => string;
@@ -265,6 +275,16 @@ export const dict: Record<Lang, Dict> = {
     filter_from: "From",
     filter_to: "To",
     add_to_album: "Add to album",
+    craft_tools: "Local craft tools",
+    craft_photo_editable: "Open editable copy in PhotoCraft",
+    craft_develop: "Develop copy with LightCraft",
+    craft_exposure: "Exposure",
+    craft_working: "Working…",
+    craft_unavailable: "Configure this local engine in Daguerre settings first.",
+    craft_open_project: "Download editable project",
+    craft_view_export: "View exported image",
+    craft_original_safe: "The indexed original stays untouched. The result is saved under Daguerre data.",
+    craft_failed: "Craft operation failed",
     album_input_placeholder: "New or existing album",
     added_to: (name: string) => `Added to “${name}”`,
     dup_summary: (groups: number, bytes: string) =>
@@ -435,6 +455,16 @@ export const dict: Record<Lang, Dict> = {
     filter_from: "Desde",
     filter_to: "Hasta",
     add_to_album: "Añadir a álbum",
+    craft_tools: "Herramientas Craft locales",
+    craft_photo_editable: "Abrir copia editable en PhotoCraft",
+    craft_develop: "Revelar copia con LightCraft",
+    craft_exposure: "Exposición",
+    craft_working: "Procesando…",
+    craft_unavailable: "Configura primero este motor local en Daguerre.",
+    craft_open_project: "Descargar proyecto editable",
+    craft_view_export: "Ver imagen exportada",
+    craft_original_safe: "El original indexado permanece intacto. El resultado se guarda en los datos de Daguerre.",
+    craft_failed: "La operación Craft ha fallado",
     album_input_placeholder: "Álbum nuevo o existente",
     added_to: (name: string) => `Añadida a «${name}»`,
     dup_summary: (groups: number, bytes: string) =>

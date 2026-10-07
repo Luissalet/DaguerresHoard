@@ -48,6 +48,18 @@ const post = <T>(path: string, body: unknown = {}) =>
 
 export type Params = Record<string, string | number | boolean | undefined>;
 
+export interface CraftEngineStatus {
+  engines: Record<string, { available: boolean; executable: string | null; capability: string }>;
+}
+export interface CraftArtifact {
+  id: string;
+  engine: string;
+  output_url?: string;
+  preview_url?: string;
+  native_format?: string;
+  original_modified?: boolean;
+}
+
 function qs(params: Params): string {
   const q = new URLSearchParams();
   for (const [k, v] of Object.entries(params)) if (v !== undefined && v !== "") q.set(k, String(v));
@@ -55,6 +67,9 @@ function qs(params: Params): string {
 }
 
 export const api = {
+  craftStatus: () => request<CraftEngineStatus>("/api/craft/status"),
+  craftFromPhoto: (photo_id: string) => post<CraftArtifact>("/api/craft/from-photo", { photo_id }),
+  craftDevelop: (photo_id: string, exposure: number) => post<CraftArtifact>("/api/craft/develop", { photo_id, exposure, output_format: "png" }),
   libraryStatus: () => request<LibraryStatus>("/api/library"),
   places: () =>
     request<{

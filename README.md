@@ -69,7 +69,7 @@ real MCP stdio by a script that plays a small local model
 | Captions | Optional, from a local vision model found through the shared backend (see below), per photo or as a background batch, stored in a full-text index for hybrid search | Off by default; never generated during indexing |
 | Albums | Created by you or the agent from the lightbox or by tool call; the agent can only add | No nested albums |
 | Interface | React desktop-style UI: thumbnail grid with infinite scroll, lightbox with zoom and pan on a large (1600 px) preview of the original, EXIF panel, similar strip, English and Spanish, light and dark | Sidebar sections are not deep-linkable URLs |
-| Assistant integration | `faustus-plugin.json`, 9 MCP tools over stdio, every agent call audited in "Assistant activity" | The agent can add a folder but not remove one |
+| Assistant integration | `faustus-plugin.json`, 15 MCP tools over stdio, every agent call audited in "Assistant activity" | The agent can add a folder but not remove one |
 | Shared models | Captions and query translation share whatever model server Faustus or a local Ollama/llama.cpp/OpenAI-compatible server already has running (Settings -> Shared models shows what resolved and why, with a manual override) | Image search itself (CLIP) is always local, never shared: it is not a chat model the shared backend covers |
 
 ## Shared models
@@ -296,3 +296,10 @@ Design notes from the use-case walkthroughs: [docs/USE_CASES.md](docs/USE_CASES.
 ## License
 
 [MIT](LICENSE).
+
+## Local PhotoCraft and LightCraft engines
+
+Daguerre can discover and call the full upstream MCP surfaces of local
+PhotoCraft and LightCraft releases, and offers non-destructive exposure and
+editable layered-document workflows. See [the integration guide](docs/CRAFT-ENGINES.md)
+for configuration, file boundaries and current limits.

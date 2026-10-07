@@ -1,6 +1,6 @@
 # MCP tools
 
-Daguerre's Hoard exposes 9 tools over stdio (`daguerre_hoard/mcp_server.py`, a
+Daguerre's Hoard exposes 15 tools over stdio (`daguerre_hoard/mcp_server.py`, a
 standalone script: stdlib + `httpx` + `mcp`). Every tool calls the app's
 own `/api/agent/<tool>` endpoint and returns exactly what that endpoint
 returns, so an HTTP-only client gets the same data. The HTTP layer is
@@ -67,6 +67,15 @@ system proxy settings for these calls.
 | `photos_library` | yes | yes | folders, counts, model, running jobs |
 | `photos_add_folder` | no (adds) | yes | register a folder and index it |
 | `photos_album` | no (adds) | yes | create or extend an album |
+| `craft_engines` | yes | yes | configured PhotoCraft/LightCraft executable status |
+| `craft_tools` | yes | yes | live upstream MCP tools and schemas for one engine |
+| `craft_call` | no (isolated workspace) | yes | batch calls to the complete native MCP surface |
+| `craft_develop_photo` | no (derived image + develop library) | yes | non-destructive LightCraft exposure edit by Daguerre photo id |
+| `craft_create_layered_document` | no (native document + preview) | yes | editable PhotoCraft `.pcraft` plus PNG |
+| `craft_create_layered_photo` | no (native project + preview) | yes | open an indexed photo copy in PhotoCraft and keep its overlay editable |
+
+See [Local Craft engines](CRAFT-ENGINES.md) for portable discovery, file
+boundaries, artifact workflows and opt-in real-binary tests.
 
 \* `photos_describe(caption=true)` stores the generated caption in Daguerre's
 own database (the photo file is never touched). All annotations set

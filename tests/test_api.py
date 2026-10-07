@@ -4,6 +4,7 @@ import json
 import time
 
 import pytest
+from PIL import Image
 from fastapi.testclient import TestClient
 
 from daguerre_hoard.api import create_app
@@ -40,6 +41,41 @@ def test_health(client):
     assert body["name"] == "Daguerre's Hoard"
     assert body["status"] == "ok"
 
+
+def test_craft_engine_discovery_and_artifact_routes_are_confined(client, tmp_path):
+    status = client.get("/api/craft/status")
+    assert status.status_code == 200
+    assert set(status.json()["engines"]) == {"photocraft", "lightcraft"}
+    assert client.get("/api/craft/artifacts/../daguerre.db").status_code in (404, 400)
+
+    artifact_id = "a" * 32
+    path = tmp_path / "data" / "craft-workspace" / "exports" / f"{artifact_id}.png"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    Image.new("RGB", (8, 8), "red").save(path)
+    served = client.get(f"/api/craft/artifacts/{artifact_id}.png")
+    assert served.status_code == 200 and served.headers["content-type"] == "image/png"
+    assert client.get(f"/api/craft/artifacts/{artifact_id}.db").status_code == 404
+
+
+@pytest.mark.craft_integration
+def test_craft_http_routes_run_native_photo_workflows_without_mutating_root(client, tmp_path):
+    import hashlib, os
+    from pathlib import Path
+    if not os.environ.get('DAGUERRE_CRAFT_BUNDLES'): pytest.skip('set DAGUERRE_CRAFT_BUNDLES for real HTTP craft integration')
+    status = client.get('/api/craft/status').json()['engines']
+    assert status['photocraft']['available'] and status['lightcraft']['available']
+    original = make_image(tmp_path / 'craft-originals' / 'source.png', color=(49, 92, 126))
+    before = hashlib.sha256(original.read_bytes()).hexdigest()
+    root = client.post('/api/roots', json={'path': str(original.parent)}).json()
+    job = client.post('/api/scan', json={'root_id': root['id']}).json()['job_id']; _wait_job(client, job)
+    photo = client.post('/api/agent/photos_search', json={'query': 'synthetic'}).json()['results'][0]
+    layered = client.post('/api/craft/from-photo', json={'photo_id': photo['id']})
+    assert layered.status_code == 200, layered.text
+    assert Path(layered.json()['native_path']).is_file() and Path(layered.json()['preview_path']).is_file()
+    developed = client.post('/api/craft/develop', json={'photo_id': photo['id'], 'exposure': 0.7})
+    assert developed.status_code == 200, developed.text
+    assert Path(developed.json()['output_path']).is_file() and developed.json()['original_modified'] is False
+    assert hashlib.sha256(original.read_bytes()).hexdigest() == before
 
 def test_guard_rejects_bad_host(client):
     resp = client.get("/api/health", headers={"host": "evil.example.com"})

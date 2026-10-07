@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import base64
 import json
+import os
 import socket
 import sys
 import threading
@@ -94,14 +95,28 @@ async def test_mcp_adapter_over_stdio(running_app, tmp_path):
             assert names == {
                 "photos_search", "photos_similar", "photos_show", "photos_describe",
                 "photos_duplicates", "photos_timeline", "photos_library",
-                "photos_add_folder", "photos_album",
+                "photos_add_folder", "photos_album", "craft_engines",
+                "craft_tools", "craft_call", "craft_develop_photo", "craft_create_layered_document", "craft_create_layered_photo",
             }
             for tool in tools.tools:
                 assert "Keywords:" in tool.description, tool.name
                 assert tool.annotations is not None and tool.annotations.openWorldHint is False, tool.name
                 assert tool.annotations.destructiveHint is False, tool.name
             read_only = {t.name for t in tools.tools if t.annotations.readOnlyHint}
-            assert read_only == names - {"photos_add_folder", "photos_album"}
+            assert read_only == names - {
+                "photos_add_folder", "photos_album", "craft_call",
+                "craft_develop_photo", "craft_create_layered_document", "craft_create_layered_photo",
+            }
+            if os.environ.get('DAGUERRE_CRAFT_BUNDLES'):
+                photo_tools = await session.call_tool('craft_tools', {'engine': 'photocraft'})
+                light_tools = await session.call_tool('craft_tools', {'engine': 'lightcraft'})
+                assert len(json.loads(photo_tools.content[0].text)['tools']) == 18
+                assert len(json.loads(light_tools.content[0].text)['tools']) == 243
+                created = await session.call_tool('craft_create_layered_document', {'name': 'MCP Craft verification', 'width': 64, 'height': 48, 'background': '#315c7e'})
+                assert created.isError is not True
+                artifact = json.loads(created.content[0].text)
+                assert Path(artifact['native_path']).is_file() and Path(artifact['preview_path']).is_file()
+
             search_tool = next(t for t in tools.tools if t.name == "photos_search")
             assert search_tool.inputSchema["properties"]["orientation"]["anyOf"][0]["enum"] == ["landscape", "portrait"]
 

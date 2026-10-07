@@ -49,6 +49,9 @@
   edited; see `VENDORED.txt`).
 - `contact_sheet.py` -- numbered JPEG grid (at most 20 cells, 200 KB) and
   the shared "encode JPEG under N bytes" helper.
+- `craft_engines.py` -- local PhotoCraft/LightCraft discovery, live MCP
+  schema and tool proxy, isolated child processes, and real editable artifact
+  workflows. Imported originals are copied below `data/` first.
 - `jobs.py` -- `JobManager` / `JobHandle`: a daemon thread per job,
   progress and stats in the `jobs` table.
 - `library.py` -- the engine (no FastAPI import): indexing pipeline and
@@ -136,14 +139,17 @@ a per-cache-directory singleton, loaded once per process with
 `local_files_only` at start-up; downloading is an explicit user action
 (`/api/model/download`), after which the library is re-embedded.
 
-No `multiprocessing`, no subprocesses except `explorer /select,` on
-Windows for "Open in Explorer".
+No `multiprocessing`. Subprocesses are limited to `explorer /select,` on
+Windows for "Open in Explorer" and explicitly configured local PhotoCraft or
+LightCraft CLIs, each launched with isolated app data and file paths.
 
 ## HTTP surface
 
 - `/api/health` -- `{service: "daguerres-hoard", name, version, status,
   photo_count, roots, embedder}`.
-- `/api/agent/<tool>` -- the nine MCP tools, audited in `agent_calls`.
+- `/api/agent/<tool>` -- the fifteen MCP tools, audited in `agent_calls`.
+- `/api/craft/status` -- local executable discovery; `/api/craft/artifacts/{filename}`
+  serves only generated ID-named raster outputs and `.pcraft` documents.
 - UI routes (not audited): `/api/photos`, `/api/photos/{id}`,
   `/thumbnail`, `/preview` (large JPEG of the original, EXIF-rotated,
   also for HEIC/TIFF), `/open`, `/caption`, `/api/search` (auto-translates

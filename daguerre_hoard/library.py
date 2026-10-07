@@ -29,6 +29,7 @@ from .captions import DEFAULT_BASE_URL, DEFAULT_MODEL, LinkCaptioner
 from .config import EMBED_DIM, Settings
 from .contact_sheet import MAX_ITEMS as SHEET_MAX_ITEMS
 from .contact_sheet import ContactSheetItem, encode_jpeg_under, render_contact_sheet
+from .craft_engines import CraftEngines
 from .duplicates import PhotoRow, exact_duplicate_groups, near_duplicate_groups
 from .embeddings import ClipEmbedder, Embedder, FakeEmbedder, VectorStore
 from .formats import HEIF_AVAILABLE
@@ -196,6 +197,7 @@ class Library:
         self.geocoder = ReverseGeocoder(settings.geodata_dir if (settings.geodata_dir / "cities1000.txt").exists() else None)
         self.jobs = JobManager(self._conns.get)
         self.backend = Backend(settings.data_dir, self.conn)
+        self.craft_engines = CraftEngines(settings.data_dir, port=settings.port)
         self._index_lock = threading.Lock()
         self._model_lock = threading.Lock()
         self._maybe_regeocode()
@@ -1124,6 +1126,32 @@ class Library:
         if len(seen) > SHOW_MAX_IDS:
             out["ignored_ids"] = seen[SHOW_MAX_IDS:]
         return out
+
+    def craft_status(self) -> dict:
+        """Discover configured PhotoCraft and LightCraft local executables."""
+        return self.craft_engines.status()
+
+    def craft_tools(self, engine: str) -> dict:
+        """Return the selected engine's live MCP tool schemas."""
+        return self.craft_engines.tools(engine)
+
+    def craft_call(self, engine: str, calls: list[dict]) -> dict:
+        """Run a batch of native MCP calls inside Daguerre's isolated workspace."""
+        return self.craft_engines.call(engine, calls)
+
+    def craft_create_layered_document(self, name: str, width: int, height: int, background: str) -> dict:
+        """Create, save and export an editable PhotoCraft raster document."""
+        return self.craft_engines.create_layered_document(name, width, height, background)
+
+    def craft_create_layered_photo(self, photo_id: str) -> dict:
+        """Open a copy of an indexed photo as an editable PhotoCraft project."""
+        row = self._resolve_photo(photo_id, None)
+        return self.craft_engines.create_layered_photo(Path(row["path"]))
+
+    def craft_develop_photo(self, photo_id: str, exposure: float, output_format: str = "png", long_edge: int = 0) -> dict:
+        """Develop an indexed photo through LightCraft from a Daguerre-owned copy."""
+        row = self._resolve_photo(photo_id, None)
+        return self.craft_engines.develop_photo(Path(row["path"]), exposure, output_format, long_edge)
 
     def describe(self, photo_id: str, caption: bool = False) -> dict:
         row = self._resolve_photo(photo_id, None)

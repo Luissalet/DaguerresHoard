@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Check, ChevronLeft, ChevronRight, ExternalLink, FolderPlus, Minus, Plus, Sparkles, X } from "lucide-react";
-import { api, errorText, fileName, formatBytes } from "../api";
+import { api, errorText, fileName, formatBytes, type CraftArtifact, type CraftEngineStatus } from "../api";
 import { missingReason, useBackend } from "../backendStatus";
 import type { Dict } from "../i18n";
 import type { Album, Photo, PhotoDetail } from "../types";
@@ -34,11 +34,17 @@ export default function Lightbox({ photos, index, onClose, onIndexChange, t, pla
   const [albums, setAlbums] = useState<Album[]>([]);
   const [albumName, setAlbumName] = useState("");
   const [albumMsg, setAlbumMsg] = useState<string | null>(null);
+  const [craftStatus, setCraftStatus] = useState<CraftEngineStatus | null>(null);
+  const [craftBusy, setCraftBusy] = useState(false);
+  const [craftExposure, setCraftExposure] = useState(0.7);
+  const [craftResult, setCraftResult] = useState<CraftArtifact | null>(null);
+  const [craftError, setCraftError] = useState<string | null>(null);
   const drag = useRef<{ x: number; y: number; panX: number; panY: number } | null>(null);
   const areaRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     api.listAlbums().then(setAlbums).catch(() => {});
+    api.craftStatus().then(setCraftStatus).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -50,6 +56,8 @@ export default function Lightbox({ photos, index, onClose, onIndexChange, t, pla
     setFullFailed(false);
     setCaptionError(null);
     setAlbumMsg(null);
+    setCraftResult(null);
+    setCraftError(null);
     if (!photo) return;
     api.getPhoto(photo.id).then(setDetail).catch(() => {});
     api
@@ -138,6 +146,22 @@ export default function Lightbox({ photos, index, onClose, onIndexChange, t, pla
       api.listAlbums().then(setAlbums).catch(() => {});
     } catch (err) {
       setAlbumMsg(errorText(err));
+    }
+  }
+
+  async function runCraft(operation: "photo" | "develop") {
+    setCraftBusy(true);
+    setCraftError(null);
+    setCraftResult(null);
+    try {
+      const result = operation === "photo"
+        ? await api.craftFromPhoto(photo.id)
+        : await api.craftDevelop(photo.id, craftExposure);
+      setCraftResult(result);
+    } catch (err) {
+      setCraftError(errorText(err));
+    } finally {
+      setCraftBusy(false);
     }
   }
 
@@ -260,6 +284,40 @@ export default function Lightbox({ photos, index, onClose, onIndexChange, t, pla
             <ExternalLink size={14} /> {t.open_in_explorer}
           </button>
         )}
+
+        <section className="side-section craft-actions">
+          <div className="side-label">{t.craft_tools}</div>
+          <button
+            className="btn btn-block"
+            onClick={() => runCraft("photo")}
+            disabled={craftBusy || !craftStatus?.engines.photocraft?.available}
+            title={!craftStatus?.engines.photocraft?.available ? t.craft_unavailable : undefined}
+          >
+            {craftBusy ? t.craft_working : t.craft_photo_editable}
+          </button>
+          <label className="craft-exposure">
+            <span>{t.craft_exposure} · {craftExposure > 0 ? "+" : ""}{craftExposure.toFixed(1)} EV</span>
+            <input type="range" min="-3" max="3" step="0.1" value={craftExposure} onChange={(e) => setCraftExposure(Number(e.target.value))} />
+          </label>
+          <button
+            className="btn btn-block"
+            onClick={() => runCraft("develop")}
+            disabled={craftBusy || !craftStatus?.engines.lightcraft?.available}
+            title={!craftStatus?.engines.lightcraft?.available ? t.craft_unavailable : undefined}
+          >
+            {craftBusy ? t.craft_working : t.craft_develop}
+          </button>
+          <p className="muted small">{t.craft_original_safe}</p>
+          {craftError && <p className="error-text small">{t.craft_failed}: {craftError}</p>}
+          {craftResult && (
+            <div className="craft-result">
+              {craftResult.output_url && <img className="craft-result-preview" src={craftResult.output_url} alt={t.craft_view_export} />}
+              {craftResult.preview_url && <img className="craft-result-preview" src={craftResult.preview_url} alt={t.craft_view_export} />}
+              {craftResult.native_format && <a className="link-btn" href={`/api/craft/artifacts/${craftResult.id}${craftResult.native_format}`} download>{t.craft_open_project}</a>}
+              {(craftResult.output_url || craftResult.preview_url) && <a className="link-btn" href={craftResult.output_url ?? craftResult.preview_url} target="_blank" rel="noreferrer">{t.craft_view_export}</a>}
+            </div>
+          )}
+        </section>
 
         <section className="side-section">
           <div className="side-label">{t.caption}</div>

@@ -71,7 +71,7 @@ está en [docs/USABILITY_REPORT.md](docs/USABILITY_REPORT.md)):
 | Descripciones | Opcionales, con un modelo de visión local que encuentra el backend compartido (ver más abajo), por foto o en lote en segundo plano, guardado en un índice de texto completo para la búsqueda híbrida | Desactivado por defecto; nunca se genera durante el indexado |
 | Álbumes | Los creas tú o el agente, desde el visor o con una herramienta; el agente solo puede añadir | Sin álbumes anidados |
 | Interfaz | Interfaz React de escritorio: cuadrícula de miniaturas con carga continua, visor con zoom y desplazamiento sobre una vista previa grande (1600 px) del original, panel EXIF, fotos parecidas, inglés y español, tema claro y oscuro | Las secciones de la barra lateral no tienen URL propia |
-| Integración con el asistente | `faustus-plugin.json`, 9 herramientas MCP por stdio y cada llamada del agente registrada en «Actividad del asistente» | El agente puede añadir una carpeta, pero no quitarla |
+| Integración con el asistente | `faustus-plugin.json`, 15 herramientas MCP por stdio y cada llamada del agente registrada en «Actividad del asistente» | El agente puede añadir una carpeta, pero no quitarla |
 | Modelos compartidos | Las descripciones y la traducción de búsquedas usan el modelo que ya tenga en marcha Faustus, o un Ollama/llama.cpp/servidor local compatible con OpenAI (Ajustes -> Modelos compartidos muestra qué se resolvió y por qué, con un ajuste manual) | La búsqueda de imágenes (CLIP) siempre es local: no es un modelo de chat que cubra el backend compartido |
 
 ## Modelos compartidos
@@ -317,3 +317,11 @@ Notas de diseño de los recorridos por los casos de uso:
 ## Licencia
 
 [MIT](LICENSE).
+
+## Motores locales PhotoCraft y LightCraft
+
+Daguerre descubre y expone los catálogos MCP completos de PhotoCraft y
+LightCraft instalados localmente, con flujos no destructivos para revelar
+fotos y crear documentos raster editables por capas. Consulta la
+[guía de integración](docs/CRAFT-ENGINES.es.md) para configurar rutas,
+conocer los límites y ejecutar pruebas reales aisladas.

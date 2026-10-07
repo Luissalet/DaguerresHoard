@@ -20,6 +20,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from . import __version__, db as dbmod
 from .config import DISPLAY_NAME, SERVICE_SLUG, Settings
+from .craft_engines import CraftEngineError
 from .hoard_link import family, proc, tokens
 from .hoard_link.guard import install_guard
 from .library import ID_RE, Library, NotFoundError, ValidationError
@@ -68,6 +69,33 @@ class ShowBody(BaseModel):
 class DescribeBody(BaseModel):
     photo_id: str
     caption: bool = False
+
+
+class CraftEngineBody(BaseModel):
+    engine: str
+
+
+class CraftCallBody(BaseModel):
+    engine: str
+    calls: list[dict[str, Any]]
+
+
+class CraftLayeredDocumentBody(BaseModel):
+    name: str = "Daguerre canvas"
+    width: int = 512
+    height: int = 384
+    background: str = "#315c7e"
+
+
+class CraftDevelopBody(BaseModel):
+    photo_id: str
+    exposure: float
+    output_format: str = "png"
+    long_edge: int = 0
+
+
+class CraftPhotoBody(BaseModel):
+    photo_id: str
 
 
 class DuplicatesBody(BaseModel):
@@ -203,7 +231,7 @@ def create_app(data_dir: Path, static_dir: Path | None = None, port: int = 8814)
         start = time.perf_counter()
         try:
             result = fn()
-        except (ValidationError, NotFoundError) as exc:
+        except (ValidationError, NotFoundError, CraftEngineError) as exc:
             if tool:
                 lib.log_agent_call(tool, _args_summary(args), False, (time.perf_counter() - start) * 1000, str(exc))
             if isinstance(exc, NotFoundError):
@@ -468,6 +496,65 @@ def create_app(data_dir: Path, static_dir: Path | None = None, port: int = 8814)
         return lib.recent_agent_calls(limit=limit)
 
     # -- agent tools (mirror the MCP tools one to one, audited) -------------- #
+    @app.get("/api/craft/status")
+    def craft_status():
+        return lib.craft_status()
+
+    @app.post("/api/craft/from-photo")
+    def craft_from_photo(body: CraftPhotoBody):
+        _check_id(body.photo_id)
+        return run(lambda: lib.craft_create_layered_photo(body.photo_id))
+
+    @app.post("/api/craft/develop")
+    def craft_develop(body: CraftDevelopBody):
+        _check_id(body.photo_id)
+        return run(lambda: lib.craft_develop_photo(body.photo_id, body.exposure, body.output_format, body.long_edge))
+
+    @app.get("/api/craft/artifacts/{filename}")
+    def craft_artifact(filename: str):
+        # Artifact IDs are random 128-bit hex names; only generated raster
+        # previews/exports and PhotoCraft native documents are served.
+        import re
+
+        match = re.fullmatch(r"([0-9a-f]{32})\.(pcraft|png|jpg|jpeg|tif|tiff|webp|avif)", filename)
+        if not match:
+            raise ApiError(404, "not_found", "Craft artifact not found")
+        artifact_id, extension = match.groups()
+        roots = [settings.data_dir / "craft-workspace" / "exports", settings.data_dir / "craft-outputs"]
+        path = next((root / filename for root in roots if (root / filename).is_file()), None)
+        if path is None:
+            raise ApiError(404, "not_found", "Craft artifact not found")
+        return FileResponse(path, filename=filename if extension == "pcraft" else None)
+
+    @app.post("/api/agent/craft_engines", dependencies=agent_auth)
+    def agent_craft_engines():
+        return run(lib.craft_status, tool="craft_engines", args={})
+
+    @app.post("/api/agent/craft_tools", dependencies=agent_auth)
+    def agent_craft_tools(body: CraftEngineBody):
+        return run(lambda: lib.craft_tools(body.engine), tool="craft_tools", args=body.model_dump())
+
+    @app.post("/api/agent/craft_call", dependencies=agent_auth)
+    def agent_craft_call(body: CraftCallBody):
+        return run(lambda: lib.craft_call(body.engine, body.calls), tool="craft_call", args=body.model_dump())
+
+    @app.post("/api/agent/craft_create_layered_document", dependencies=agent_auth)
+    def agent_craft_create_layered_document(body: CraftLayeredDocumentBody):
+        return run(lambda: lib.craft_create_layered_document(body.name, body.width, body.height, body.background),
+                   tool="craft_create_layered_document", args=body.model_dump())
+
+    @app.post("/api/agent/craft_create_layered_photo", dependencies=agent_auth)
+    def agent_craft_create_layered_photo(body: CraftPhotoBody):
+        _check_id(body.photo_id)
+        return run(lambda: lib.craft_create_layered_photo(body.photo_id),
+                   tool="craft_create_layered_photo", args=body.model_dump())
+
+    @app.post("/api/agent/craft_develop_photo", dependencies=agent_auth)
+    def agent_craft_develop_photo(body: CraftDevelopBody):
+        _check_id(body.photo_id)
+        return run(lambda: lib.craft_develop_photo(body.photo_id, body.exposure, body.output_format, body.long_edge),
+                   tool="craft_develop_photo", args=body.model_dump())
+
     @app.post("/api/agent/photos_search", dependencies=agent_auth)
     def agent_search(body: SearchBody):
         return _agent_ranked(run(
