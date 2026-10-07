@@ -76,7 +76,7 @@ real MCP stdio by a script that plays a small local model
 | Captions | Optional, from a local vision model found through the shared backend (see below), per photo or as a background batch, stored in a full-text index for hybrid search | Off by default; never generated during indexing |
 | Albums | Created by you or the agent from the lightbox or by tool call; the agent can only add | No nested albums |
 | Interface | React desktop-style UI: thumbnail grid with infinite scroll, lightbox with zoom and pan on a large (1600 px) preview of the original, EXIF panel, similar strip, English and Spanish, light and dark | Sidebar sections are not deep-linkable URLs |
-| Assistant integration | `faustus-plugin.json`, 15 MCP tools over stdio, every agent call audited in "Assistant activity" | The agent can add a folder but not remove one |
+| Assistant integration | `faustus-plugin.json`, 17 MCP tools over stdio, every agent call audited in "Assistant activity" | The agent can add a folder but not remove one |
 | Shared models | Captions and query translation share whatever model server Faustus or a local Ollama/llama.cpp/OpenAI-compatible server already has running (Settings -> Shared models shows what resolved and why, with a manual override) | Image search itself (CLIP) is always local, never shared: it is not a chat model the shared backend covers |
 
 ## Shared models
@@ -115,6 +115,18 @@ launches the MCP adapter itself.
 | `photos_library` | Folders, counts, active model, running jobs | yes |
 | `photos_add_folder` | Register a folder and index it | adds only |
 | `photos_album` | Create or extend an album | adds only |
+| `photos_export` | Ordered gallery HTML, contact-sheet JPEG and source manifest | writes derived files |
+
+`photos_export(ids=[...], title="Summer selection")` turns up to 20 chosen photos
+into a portable HTML gallery with its previews embedded, a numbered contact sheet
+and `manifest.json`. Selection order and deliberate repeats are preserved;
+every preview/cell maps to a stable photo ID, original path and content hash.
+The files live under `data/exports/`; originals are read without modification.
+The same title, ordered selection, photo bytes and exported metadata reuse the
+same export. Missing/unreadable photos are listed
+in `omitted`, with `complete=false`. The tool returns text and file paths, so a
+text-only model can prepare the collection too. This is a preview gallery;
+full-resolution originals and a flipbook reader are not packaged.
 
 It works with any MCP client over stdio:
 

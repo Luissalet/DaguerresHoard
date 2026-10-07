@@ -1,7 +1,8 @@
 # MCP tools
 
-Daguerre's Hoard exposes 15 tools over stdio (`daguerre_hoard/mcp_server.py`, a
-standalone script: stdlib + `httpx` + `mcp`). Every tool calls the app's
+Daguerre's Hoard exposes 17 photo-library and local Craft-engine tools over stdio
+(`daguerre_hoard/mcp_server.py`, a standalone script: stdlib + `httpx` + `mcp`).
+Every tool calls the app's
 own `/api/agent/<tool>` endpoint and returns exactly what that endpoint
 returns, so an HTTP-only client gets the same data. The HTTP layer is
 covered by `tests/test_api.py` and `tests/test_security.py`; the real MCP
@@ -67,6 +68,7 @@ system proxy settings for these calls.
 | `photos_library` | yes | yes | folders, counts, model, running jobs |
 | `photos_add_folder` | no (adds) | yes | register a folder and index it |
 | `photos_album` | no (adds) | yes | create or extend an album |
+| `photos_export` | no (derived files) | yes | ordered portable gallery, contact sheet and manifest |
 | `craft_engines` | yes | yes | configured PhotoCraft/LightCraft executable status |
 | `craft_tools` | yes | yes | live upstream MCP tools and schemas for one engine |
 | `craft_call` | no (isolated workspace) | yes | batch calls to the complete native MCP surface |
@@ -201,6 +203,26 @@ to remove a folder: that is a human action in Settings.
 500). Creates the album or adds to it; nothing is ever removed. Returns
 `{id, name, created_by, created, added, unknown_ids, photo_count,
 has_more, photos: [first 10]}`.
+
+## photos_export
+
+`ids` (1-20 photo IDs, in desired order), `title` (1-160 characters, default
+`"Photo selection"`). Keeps deliberate repeated IDs. Writes only under
+`data/exports/<content-id>/`: `gallery.html` with embedded 512-pixel JPEG previews,
+`contact-sheet.jpg` (at most 200 KB), and `manifest.json` with ordered source IDs,
+paths, current content hashes, dimensions, preview dimensions, dates and captions.
+All cells have matching 1-based `n`, `row` and `column`; `requested_n` preserves
+the original position if a missing entry was omitted. Indexed metadata that
+predates changed original bytes is flagged as `indexed_metadata_stale`.
+
+Returns `{id, title, requested, returned, complete, omitted, photos, files,
+gallery_url}`. `files` contains absolute paths; the gallery works offline when
+copied alone. Full-resolution originals are referenced in the manifest, not
+copied. Unavailable/unreadable/changed-during-read files are reported in `omitted`;
+an entirely unreadable selection is `invalid_argument`. Identical title, ordered
+selection, photo bytes and exported metadata reuse the same export; changing
+order, pixels or captions creates another export.
+The MCP response has text only. The export creates no album and changes no root.
 
 ## craft_import_compositor
 

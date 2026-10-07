@@ -1,13 +1,14 @@
 ---
 name: find-photos
-description: Find, look at and organise the owner's local photos with Daguerre's Hoard. Use when the owner asks for a photo by content, place or date, wants to see photos, asks about duplicates or how many photos they took, or wants an album.
+description: Find, look at, organise and export the owner's local photos with Daguerre's Hoard. Use when the owner asks for a photo by content, place or date, wants to see photos, asks about duplicates or how many photos they took, wants an album, or wants a portable gallery of selected photos.
 ---
 
 # Finding photos with Daguerre
 
 Daguerre never modifies, moves or deletes an original photo. `photos_add_folder`
-and `photos_album` add library information; Craft tools create editable copies,
-derivatives and receipts under Daguerre data.
+and `photos_album` add library information; `photos_export` writes derived
+previews and a manifest, and Craft tools create editable copies, derivatives
+and receipts under Daguerre data.
 
 ## Order of work
 
@@ -43,6 +44,11 @@ derivatives and receipts under Daguerre data.
    say "up to", and ask the owner to check each group first.
 8. "When / how many": `photos_timeline()` or `photos_timeline(year=2024)`.
 9. "Make an album with these": `photos_album(name, photo_ids)`.
+10. "Prepare/export this selection": `photos_export(ids=[...], title=...)`,
+    with 1-20 IDs in the requested order. Repeats are deliberate. It returns a
+    standalone preview gallery, contact sheet and source manifest, with no image
+    payload in the chat. Check `complete` and `omitted` before saying all photos
+    were exported. Original files are referenced, not packaged at full resolution.
 
 ## Editable package imports
 

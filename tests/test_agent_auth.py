@@ -25,7 +25,7 @@ def anonymous(app):
 
 def test_tool_routes_are_refused_without_the_token(anonymous):
     tools = [t["name"] for t in anonymous.get("/api/agent/tools").json()["tools"]]
-    assert len(tools) == 16
+    assert len(tools) == 17
     for name in tools:
         r = anonymous.post(f"/api/agent/{name}", json={})
         assert r.status_code == 401, name

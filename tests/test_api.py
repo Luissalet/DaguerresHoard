@@ -57,6 +57,22 @@ def test_craft_engine_discovery_and_artifact_routes_are_confined(client, tmp_pat
     assert client.get(f"/api/craft/artifacts/{artifact_id}.db").status_code == 404
 
 
+def test_agent_export_serves_real_artifacts_and_is_audited(client, tmp_path):
+    path = make_image(tmp_path / "export-originals" / "red.jpg")
+    root = client.post("/api/roots", json={"path": str(path.parent)}).json()
+    _wait_job(client, client.post("/api/scan", json={"root_id": root["id"]}).json()["job_id"])
+    photo = client.post("/api/agent/photos_search", json={"query": "red"}).json()["results"][0]
+    out = client.post("/api/agent/photos_export", json={"ids": [photo["id"]], "title": "Local collection"})
+    assert out.status_code == 200, out.text
+    export = out.json()
+    gallery = client.get(f"/api/exports/{export['id']}/gallery.html")
+    assert gallery.status_code == 200 and "data:image/jpeg;base64" in gallery.text
+    manifest = client.get(f"/api/exports/{export['id']}/manifest.json").json()
+    assert manifest["photos"][0]["path"] == str(path.resolve())
+    assert "photos_export" in {x["tool"] for x in client.get("/api/agent-calls").json()}
+    assert client.get(f"/api/exports/{export['id']}/daguerre.db").status_code == 404
+
+
 def test_compositor_preflight_http_and_agent_routes(client, tmp_path):
     from tests.test_compositor import make_comp
     source = tmp_path / "source.comp"

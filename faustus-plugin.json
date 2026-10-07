@@ -11,7 +11,8 @@
     "albums",
     "contact sheets",
     "local PhotoCraft and LightCraft editing",
-    "editable layered raster projects"
+    "editable layered raster projects",
+    "ordered local gallery export"
   ],
   "placeholders": [
     "DAGUERRE_DIR",

@@ -49,6 +49,11 @@
   edited; see `VENDORED.txt`).
 - `contact_sheet.py` -- numbered JPEG grid (at most 20 cells, 200 KB) and
   the shared "encode JPEG under N bytes" helper.
+- `selection_export.py` -- ordered preview exports under `data/exports/<content-id>`:
+  a self-contained gallery HTML, contact-sheet JPEG and JSON source manifest.
+  Reuses the preview renderer and contact-sheet renderer, preserves repeats,
+  reads current original bytes for the fingerprint, and reports omitted files.
+  Identical exports reuse their directory; thumbnails and originals are not edited.
 - `craft_engines.py` -- local PhotoCraft/LightCraft discovery, live MCP
   schema and tool proxy, isolated child processes, and real editable artifact
   workflows. Imported originals are copied below `data/` first.
@@ -151,6 +156,8 @@ LightCraft CLIs, each launched with isolated app data and file paths.
 - `/api/health` -- `{service: "daguerres-hoard", name, version, status,
   photo_count, roots, embedder}`.
 - `/api/agent/<tool>` -- the registered MCP tools, audited in `agent_calls`.
+- `/api/exports/{id}/{filename}` -- locally serves the gallery, source manifest
+  and contact-sheet files of an export (only these three filenames).
 - `/api/craft/status` -- local executable discovery; `/api/craft/artifacts/{filename}`
   serves only generated ID-named raster outputs and `.pcraft` documents.
 - UI routes (not audited): `/api/photos`, `/api/photos/{id}`,

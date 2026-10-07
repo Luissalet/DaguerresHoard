@@ -1127,6 +1127,12 @@ class Library:
             out["ignored_ids"] = seen[SHOW_MAX_IDS:]
         return out
 
+    def export_photos(self, ids: list[str], title: str = "Photo selection") -> dict:
+        """Export an ordered collection of previews and a source manifest under data/."""
+        from .selection_export import create
+
+        return create(self, ids, title)
+
     def craft_status(self) -> dict:
         """Discover configured PhotoCraft and LightCraft local executables."""
         return self.craft_engines.status()

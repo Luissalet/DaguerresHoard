@@ -95,7 +95,7 @@ async def test_mcp_adapter_over_stdio(running_app, tmp_path):
             assert names == {
                 "photos_search", "photos_similar", "photos_show", "photos_describe",
                 "photos_duplicates", "photos_timeline", "photos_library",
-                "photos_add_folder", "photos_album", "craft_engines",
+                "photos_add_folder", "photos_album", "photos_export", "craft_engines",
                 "craft_tools", "craft_call", "craft_develop_photo", "craft_create_layered_document", "craft_create_layered_photo", "craft_import_compositor",
             }
             for tool in tools.tools:
@@ -104,7 +104,7 @@ async def test_mcp_adapter_over_stdio(running_app, tmp_path):
                 assert tool.annotations.destructiveHint is False, tool.name
             read_only = {t.name for t in tools.tools if t.annotations.readOnlyHint}
             assert read_only == names - {
-                "photos_add_folder", "photos_album", "craft_call",
+                "photos_add_folder", "photos_album", "photos_export", "craft_call",
                 "craft_develop_photo", "craft_create_layered_document", "craft_create_layered_photo", "craft_import_compositor",
             }
             if os.environ.get('DAGUERRE_CRAFT_BUNDLES'):
@@ -164,6 +164,17 @@ async def test_mcp_adapter_over_stdio(running_app, tmp_path):
 
             album = await session.call_tool("photos_album", {"name": "Reds", "photo_ids": [photo_id]})
             assert json.loads(album.content[0].text)["added"] == 1
+
+            exported = await session.call_tool("photos_export", {"ids": [photo_id, photo_id], "title": "Ordered pair"})
+            assert exported.isError is not True and [c.type for c in exported.content] == ["text"]
+            export = json.loads(exported.content[0].text)
+            manifest = json.loads(Path(export["files"]["manifest"]).read_text(encoding="utf-8"))
+            assert [p["id"] for p in manifest["photos"]] == [photo_id, photo_id]
+            assert export["complete"] and export["returned"] == 2
+            assert httpx.get(export["gallery_url"], timeout=2).status_code == 200
+
+            repeated = await session.call_tool("photos_export", {"ids": [photo_id, photo_id], "title": "Ordered pair"})
+            assert json.loads(repeated.content[0].text)["id"] == export["id"]
 
             timeline = await session.call_tool("photos_timeline", {})
             assert "years" in json.loads(timeline.content[0].text)

@@ -16,6 +16,7 @@ class ContactSheetItem:
     thumb_path: Path
     index: int
     caption: str = ""
+    image_bytes: bytes | None = None
 
 
 # Bold sans fonts that exist on a stock Windows / Linux / macOS install;
@@ -54,7 +55,8 @@ def render_contact_sheet(items: list[ContactSheetItem], cols: int = 5, cell: int
         col, row = i % cols, i // cols
         x0, y0 = col * cell, row * (cell + label_h)
         try:
-            with Image.open(item.thumb_path) as thumb:
+            source = io.BytesIO(item.image_bytes) if item.image_bytes is not None else item.thumb_path
+            with Image.open(source) as thumb:
                 thumb = thumb.convert("RGB")
                 thumb.thumbnail((cell - 8, cell - 8))
                 px = x0 + (cell - thumb.width) // 2

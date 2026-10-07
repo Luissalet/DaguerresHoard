@@ -71,6 +71,11 @@ class DescribeBody(BaseModel):
     caption: bool = False
 
 
+class ExportBody(BaseModel):
+    ids: list[str]
+    title: str = "Photo selection"
+
+
 class CraftEngineBody(BaseModel):
     engine: str
 
@@ -538,6 +543,20 @@ def create_app(data_dir: Path, static_dir: Path | None = None, port: int = 8814)
     @app.post("/api/agent/craft_engines", dependencies=agent_auth)
     def agent_craft_engines():
         return run(lib.craft_status, tool="craft_engines", args={})
+
+    @app.get("/api/exports/{export_id}/{filename}")
+    def export_file(export_id: str, filename: str):
+        if not ID_RE.fullmatch(export_id) or filename not in {"gallery.html", "manifest.json", "contact-sheet.jpg"}:
+            raise ApiError(404, "not_found", "Export file not found")
+        folder = (settings.data_dir / "exports").resolve()
+        path = (folder / export_id / filename).resolve()
+        if not path.is_relative_to(folder) or not path.is_file():
+            raise ApiError(404, "not_found", "Export file not found")
+        return FileResponse(path)
+
+    @app.post("/api/agent/photos_export", dependencies=agent_auth)
+    def agent_export(body: ExportBody):
+        return run(lambda: lib.export_photos(body.ids, body.title), tool="photos_export", args=body.model_dump())
 
     @app.post("/api/agent/craft_tools", dependencies=agent_auth)
     def agent_craft_tools(body: CraftEngineBody):
