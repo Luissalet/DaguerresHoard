@@ -149,7 +149,7 @@ a per-cache-directory singleton, loaded once per process with
 
 No `multiprocessing`. Subprocesses are limited to `explorer /select,` on
 Windows for "Open in Explorer" and explicitly configured local PhotoCraft or
-LightCraft CLIs, each launched with isolated app data and file paths.
+LightCraft CLIs, each launched with isolated application data and file paths.
 
 ## HTTP surface
 

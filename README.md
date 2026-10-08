@@ -240,7 +240,7 @@ flowchart LR
 ## Development
 
 ```bash
-.venv/bin/python -m pytest -q            # 141 tests, about 30 s, no network, no GPU
+.venv/bin/python -m pytest -q            # local tests, no model downloads or GPU
 .venv/bin/python -m pytest -q -m model   # 1 opt-in test with the real CLIP model (downloads it if missing)
 (cd frontend && npm ci && npm run build) # TypeScript strict
 ```

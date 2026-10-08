@@ -249,7 +249,7 @@ flowchart LR
 ## Desarrollo
 
 ```bash
-.venv/bin/python -m pytest -q            # 141 tests, unos 30 s, sin red ni GPU
+.venv/bin/python -m pytest -q            # pruebas locales, sin descargar modelos ni GPU
 .venv/bin/python -m pytest -q -m model   # 1 test opcional con el modelo CLIP real (lo descarga si falta)
 (cd frontend && npm ci && npm run build) # TypeScript estricto
 ```
