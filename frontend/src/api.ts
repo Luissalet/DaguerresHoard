@@ -12,6 +12,8 @@ import type {
   Root,
   SearchResult,
   TimelineResult,
+  VideoDetail,
+  VideoListResult,
 } from "./types";
 
 export class ApiError extends Error {
@@ -92,6 +94,9 @@ export const api = {
     post<SearchResult>("/api/search", { query, filters, limit }),
   similar: (photo_id: string, limit = 12) => post<SearchResult>("/api/similar", { photo_id, limit }),
   duplicates: (kind: "exact" | "near", limit = 50) => post<DuplicatesResult>("/api/duplicates", { kind, limit }),
+  listVideos: (params: Params = {}) => request<VideoListResult>(`/api/videos?${qs(params)}`),
+  getVideo: (id: string) => request<VideoDetail>(`/api/videos/${id}`),
+  videoStreamUrl: (id: string) => `/api/videos/${id}/stream`,
   timeline: () => request<TimelineResult>("/api/timeline?samples=4"),
   listAlbums: () => request<Album[]>("/api/albums"),
   getAlbum: (id: string) => request<Album>(`/api/albums/${id}`),

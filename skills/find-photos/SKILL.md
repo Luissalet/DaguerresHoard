@@ -44,6 +44,10 @@ and receipts under Daguerre data.
    say "up to", and ask the owner to check each group first.
 8. "When / how many": `photos_timeline()` or `photos_timeline(year=2024)`.
 9. "Make an album with these": `photos_album(name, photo_ids)`.
+    Videos in the folders are indexed as key frames: `videos_list()` shows them,
+    `videos_describe(video_id)` gives each frame with its timestamp (`01:23`). A
+    search hit with `video_id`/`timestamp` is a moment of a video, not a photo: say
+    "around 01:23 in <video_name>". Use `frames="exclude"` when only photos are wanted.
 10. "Prepare/export this selection": `photos_export(ids=[...], title=...)`,
     with 1-20 IDs in the requested order. Repeats are deliberate. It returns a
     standalone preview gallery, contact sheet and source manifest, with no image

@@ -11,6 +11,11 @@ export interface Photo {
   n?: number;
   caption_match?: boolean;
   relevance?: "strong" | "medium" | "weak";
+  // set when the photo is a key frame of a video
+  video_id?: string;
+  frame_ts?: number;
+  timestamp?: string;
+  video_name?: string;
 }
 
 export interface PhotoDetail extends Photo {
@@ -93,6 +98,8 @@ export interface LibraryStatus {
   roots: Root[];
   photo_count: number;
   missing_count: number;
+  video_count: number;
+  frame_count: number;
   embedder: { name: string; dim: number; semantic: boolean; stale_photos: number };
   geocoder_source: string;
   heic_support: boolean;
@@ -192,4 +199,62 @@ export interface AgentCall {
   duration_ms: number;
   error: string | null;
   created_at: string;
+}
+
+export interface VideoSummary {
+  id: string;
+  path: string;
+  name: string;
+  taken_at: string | null;
+  size: number;
+  duration: number | null;
+  duration_label: string | null;
+  width: number | null;
+  height: number | null;
+  frame_count: number;
+  status: "ok" | "no_extractor" | "error";
+  error?: string;
+  thumbnail_url: string | null;
+  stream_url: string;
+}
+
+export interface VideoFrame {
+  id: string;
+  ts: number;
+  timestamp: string;
+  width: number | null;
+  height: number | null;
+  caption: string | null;
+  thumbnail_url: string;
+}
+
+export interface VideoDetail extends VideoSummary {
+  frames: VideoFrame[];
+}
+
+export interface VideoListResult {
+  count: number;
+  returned: number;
+  results: VideoSummary[];
+  has_more: boolean;
+  next_offset?: number;
+  note?: string;
+}
+
+/** A key frame as the Photo the grid and the lightbox work with. */
+export function frameAsPhoto(video: VideoSummary, f: VideoFrame): Photo {
+  return {
+    id: f.id,
+    path: video.path,
+    taken_at: video.taken_at,
+    place: null,
+    size: 0,
+    width: f.width,
+    height: f.height,
+    thumbnail_url: f.thumbnail_url,
+    video_id: video.id,
+    frame_ts: f.ts,
+    timestamp: f.timestamp,
+    video_name: video.name,
+  };
 }

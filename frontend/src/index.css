@@ -1426,3 +1426,114 @@ body { font-family: "Plus Jakarta Sans Variable", var(--hoard-font-sans); }
 :root[data-theme="light"] .btn-primary:hover:not(:disabled) { background: var(--accent-dark); border-color: var(--accent-dark); }
 :root[data-theme="light"] .btn:hover:not(:disabled) { background: var(--bg-elevated); border-color: var(--accent); }
 :root[data-theme="light"] .input { background: var(--bg-elevated); }
+
+/* videos: key frames */
+.video-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  color: white;
+  background: rgba(0, 0, 0, 0.62);
+  max-width: calc(100% - 16px);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.frame-strip {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px 2px 8px;
+}
+
+.frame-chip {
+  position: relative;
+  flex: 0 0 auto;
+  width: 112px;
+  aspect-ratio: 4 / 3;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 2px solid transparent;
+  padding: 0;
+  background: var(--border);
+  cursor: pointer;
+}
+
+.frame-chip.active {
+  border-color: var(--accent);
+}
+
+.frame-chip img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.frame-chip .frame-time {
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  color: white;
+  background: rgba(0, 0, 0, 0.66);
+}
+
+.video-player {
+  width: 100%;
+  max-height: 55vh;
+  border-radius: 10px;
+  background: black;
+  margin: 8px 0;
+}
+
+.video-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: left;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0 0 10px;
+  cursor: pointer;
+  overflow: hidden;
+  color: var(--text);
+}
+
+.video-card:hover {
+  box-shadow: var(--shadow);
+}
+
+.video-card .video-cover {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  background: var(--border);
+}
+
+.video-card .video-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.video-card .video-info {
+  padding: 0 10px;
+  font-size: 13px;
+}
+
+.video-card .video-info .name {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

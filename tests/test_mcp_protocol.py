@@ -22,6 +22,7 @@ from mcp.client.stdio import StdioServerParameters, stdio_client
 from daguerre_hoard.api import create_app
 from daguerre_hoard.embeddings import FakeEmbedder
 from tests.conftest import make_image
+from tests.video_fakes import FakeExtractor, make_fake_video
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
@@ -43,6 +44,8 @@ def running_app(tmp_path, monkeypatch):
     photos_dir = tmp_path / "photos"
     make_image(photos_dir / "red.jpg", color=(220, 20, 20))
     lib = app.state.library
+    lib.frame_extractor = FakeExtractor()  # key frames of a stand-in video, no ffmpeg needed
+    make_fake_video(photos_dir / "clip.mp4")
     root = lib.add_root(str(photos_dir))
     job_id = lib.start_scan(root["id"])
     deadline = time.time() + 10
@@ -94,7 +97,7 @@ async def test_mcp_adapter_over_stdio(running_app, tmp_path):
             names = {t.name for t in tools.tools}
             assert names == {
                 "photos_search", "photos_similar", "photos_show", "photos_describe",
-                "photos_duplicates", "photos_timeline", "photos_library",
+                "photos_duplicates", "photos_timeline", "photos_library", "videos_list", "videos_describe",
                 "photos_add_folder", "photos_album", "photos_export", "craft_engines",
                 "craft_tools", "craft_call", "craft_develop_photo", "craft_create_layered_document", "craft_create_layered_photo", "craft_import_compositor",
             }
@@ -178,6 +181,22 @@ async def test_mcp_adapter_over_stdio(running_app, tmp_path):
 
             timeline = await session.call_tool("photos_timeline", {})
             assert "years" in json.loads(timeline.content[0].text)
+
+            # videos: key frames with timestamps, through the real protocol
+            vlist = await session.call_tool("videos_list", {})
+            assert vlist.isError is not True
+            vitems = json.loads(vlist.content[0].text)
+            assert vitems["count"] == 1 and vitems["results"][0]["name"] == "clip.mp4"
+            vdesc = await session.call_tool("videos_describe", {"video_id": vitems["results"][0]["id"]})
+            frames = json.loads(vdesc.content[0].text)["frames"]
+            assert [f["timestamp"] for f in frames] == ["00:00", "00:12"]
+            frame_hit = await session.call_tool("photos_search", {"query": "blue", "frames": "only", "limit": 2})
+            top = json.loads(frame_hit.content[0].text)["results"][0]
+            assert top["timestamp"] == "00:00" and top["video_name"] == "clip.mp4"
+            frame_view = await session.call_tool("photos_show", {"ids": [frames[0]["id"]]})
+            assert [c.type for c in frame_view.content] == ["text", "image"]
+            bad_video = await session.call_tool("videos_describe", {"video_id": "0" * 32})
+            assert bad_video.isError is True and "videos_list" in bad_video.content[0].text
 
             lib_result = await session.call_tool("photos_library", {})
             assert lib_result.isError is not True

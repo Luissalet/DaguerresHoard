@@ -76,7 +76,8 @@ mcp = FastMCP(
     APP_NAME,
     instructions=(
         "Daguerre's Hoard indexes the owner's local photo folders so you can find, look at "
-        "and organise their photos. Daguerre never modifies, moves or deletes photos. "
+        "and organise their photos; videos in those folders are indexed as key frames with "
+        "timestamps (videos_list, videos_describe). Daguerre never modifies, moves or deletes photos. "
         "Translate search queries to English before calling photos_search. "
         "Results are ranked, not filtered: use each result's 'relevance' band "
         "(strong/medium/weak) and the top-level 'note' to judge how sure to sound, "
@@ -149,6 +150,7 @@ def photos_search(
     orientation: Literal["landscape", "portrait"] | None = None,
     min_megapixels: float | None = None,
     has_gps: bool | None = None,
+    frames: Literal["include", "exclude", "only"] | None = None,
     limit: int = 12,
     offset: int = 0,
     min_score: float | None = None,
@@ -163,12 +165,16 @@ def photos_search(
     filters alone give a plain listing, newest first.
     Returns {returned, indexed_total, has_more, next_offset?, note?,
     results:[{n, id, path, taken_at, place, width, height, score,
-    relevance}]}. Results are ranked, not matched: `indexed_total` counts
+    relevance}]}. A result that is a key frame of a video also carries
+    video_id, timestamp ("01:23"), frame_ts (seconds), video_name and `path`
+    = the video; call videos_describe(video_id) for its other frames. Results are ranked, not matched: `indexed_total` counts
     every photo that passed the filters, never "N matches". Judge each hit
     by `relevance` (strong/medium/weak) and read `note`.
     Filters (AND): taken_after/taken_before (ISO date, inclusive), year,
     month (1-12), place (city, parent city or country), folder and camera
-    (substrings), orientation, min_megapixels, has_gps. limit 1-50 (default
+    (substrings), orientation, min_megapixels, has_gps, frames (video key
+    frames: text queries include them by default; "only" = just frames,
+    "exclude" = just photos; listings without a query exclude them). limit 1-50 (default
     12); page on with offset=next_offset. contact_sheet=true attaches one
     numbered JPEG: only if you can see images, never in a text-only turn.
     Keywords: search photos, find pictures, photo of, all photos from,
@@ -179,7 +185,7 @@ def photos_search(
         for k, v in dict(
             taken_after=taken_after, taken_before=taken_before, year=year, month=month,
             place=place, folder=folder, camera=camera, orientation=orientation,
-            min_megapixels=min_megapixels, has_gps=has_gps,
+            min_megapixels=min_megapixels, has_gps=has_gps, frames=frames,
         ).items()
         if v is not None
     }
@@ -270,6 +276,41 @@ def photos_describe(photo_id: str, caption: bool = False) -> list:
     qué cámara, describe la foto
     """
     return [_text(_call("photos_describe", {"photo_id": photo_id, "caption": caption}))]
+
+
+@mcp.tool(annotations=READ_ONLY)
+def videos_list(folder: str | None = None, limit: int = 20, offset: int = 0) -> list:
+    """List the owner's indexed videos with their duration and key-frame count. Listar videos de la fototeca.
+
+    Videos found in the photo folders, newest first: {count, returned,
+    has_more, next_offset?, note?, results:[{id, path, name, taken_at,
+    duration, duration_label, width, height, frame_count, status}]}.
+    `status` is "ok", "no_extractor" (ffmpeg missing: no frames) or "error".
+    `folder` is a substring of the path; `limit` 1-200 (default 20); page on
+    with offset=next_offset. Pass an `id` to videos_describe to see the key
+    frames and their timestamps. Videos are never modified.
+    Keywords: list videos, my videos, clips, video library, listar videos,
+    mis videos, videos de la fototeca
+    """
+    return [_text(_call("videos_list", {"folder": folder, "limit": limit, "offset": offset}))]
+
+
+@mcp.tool(annotations=READ_ONLY)
+def videos_describe(video_id: str, frames_limit: int | None = None) -> list:
+    """One video and its key frames with timestamps. Detalles de un video y sus fotogramas.
+
+    Everything Daguerre knows about one video: {id, path, name, taken_at,
+    duration, duration_label, width, height, frame_count, status, error?,
+    frames:[{id, ts (seconds), timestamp ("01:23"), width, height, caption}]}
+    in time order. Each frame `id` works in photos_show (to look at it),
+    photos_describe, photos_similar and photos_album. Frames are picked at
+    scene changes plus one every ~30 s, up to 48 per video, so a frame is
+    where something changes, not a continuous transcript: say which timestamp
+    you looked at. `frames_limit` caps the list (has_more_frames tells).
+    Keywords: video frames, key frames, scenes of a video, timestamp in video,
+    fotogramas de un video, escenas, minuto del video
+    """
+    return [_text(_call("videos_describe", {"video_id": video_id, "frames_limit": frames_limit}))]
 
 
 @mcp.tool(annotations=READ_ONLY)

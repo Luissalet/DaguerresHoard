@@ -42,7 +42,9 @@ CREATE TABLE IF NOT EXISTS photos (
     embed_row INTEGER,
     embed_model TEXT,
     indexed_at TEXT NOT NULL,
-    missing INTEGER NOT NULL DEFAULT 0
+    missing INTEGER NOT NULL DEFAULT 0,
+    video_id TEXT,
+    frame_ts REAL
 );
 CREATE INDEX IF NOT EXISTS idx_photos_hash ON photos(content_hash);
 CREATE INDEX IF NOT EXISTS idx_photos_phash ON photos(phash);
@@ -52,6 +54,26 @@ CREATE INDEX IF NOT EXISTS idx_photos_root ON photos(root_id);
 CREATE VIRTUAL TABLE IF NOT EXISTS photos_fts USING fts5(
     photo_id UNINDEXED, caption, tokenize='porter unicode61'
 );
+
+CREATE TABLE IF NOT EXISTS videos (
+    id TEXT PRIMARY KEY,
+    root_id INTEGER NOT NULL REFERENCES roots(id),
+    path TEXT UNIQUE NOT NULL,
+    size INTEGER NOT NULL,
+    mtime_ns INTEGER NOT NULL,
+    quick_hash TEXT NOT NULL,
+    duration REAL,
+    width INTEGER,
+    height INTEGER,
+    taken_at TEXT,
+    frame_count INTEGER NOT NULL DEFAULT 0,
+    status TEXT NOT NULL DEFAULT 'ok',
+    error TEXT,
+    params TEXT,
+    indexed_at TEXT NOT NULL,
+    missing INTEGER NOT NULL DEFAULT 0
+);
+CREATE INDEX IF NOT EXISTS idx_videos_root ON videos(root_id);
 
 CREATE TABLE IF NOT EXISTS albums (
     id TEXT PRIMARY KEY,
@@ -102,6 +124,11 @@ def _migrate(conn: sqlite3.Connection) -> None:
         # Vectors written before this column existed have an unknown origin:
         # leave embed_model NULL so the next scan re-embeds them.
         conn.execute("ALTER TABLE photos ADD COLUMN embed_model TEXT")
+    if "video_id" not in cols:
+        # Key frames of videos are photo rows linked to their video.
+        conn.execute("ALTER TABLE photos ADD COLUMN video_id TEXT")
+        conn.execute("ALTER TABLE photos ADD COLUMN frame_ts REAL")
+    conn.execute("CREATE INDEX IF NOT EXISTS idx_photos_video ON photos(video_id)")
     fts_sql = conn.execute(
         "SELECT sql FROM sqlite_master WHERE name = 'photos_fts'"
     ).fetchone()

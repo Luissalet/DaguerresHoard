@@ -22,6 +22,7 @@
   the file time with `date_source = "file_mtime"`.
 - `thumbnails.py` -- EXIF-rotated WebP thumbnails (shared `imaging.thumbnail`: JPEG `draft()` decode, transparency
   kept), 512 px long side, q80, written atomically to `data/thumbs/<id[:2]>/<id>.webp`.
+- `video_frames.py` / `videos.py` -- video key frames. `video_frames.py` plans timestamps (scene changes first, then a grid frame every 30 s where no scene frame is within 2 s, capped at 48; pure `plan_times`) and extracts them with ffmpeg/ffprobe (`DAGUERRE_FFMPEG`/`DAGUERRE_FFPROBE` or PATH; no ffmpeg -> `available = False`). `videos.py` (`VideoMixin` of `Library`) runs as a pass of the scan between the photo pass and embedding: a `videos` row per file (size, mtime, head+tail hash, extraction params) and one `photos` row per frame (`video_id`, `frame_ts`; JPEG under `data/frames/<video id>/`), so frames reuse thumbnails, pHash, embeddings, full-text and albums. Photo-only views (grid, duplicates, timeline, places, counts) filter `video_id IS NULL`; search and similar include frames. Re-scans are incremental (unchanged stat -> skip; same hash -> refresh stat; moved -> keep id and frames; changed params or content -> rebuild; ffmpeg appearing later retries `no_extractor` videos). Videos are only read.
 - `phash.py` -- 64-bit pHash (the shared `imaging.phash`, bit-identical to the `imagehash` values already stored; the
   `imagehash`/SciPy dependency is gone) and an exact multi-index near-duplicate lookup (below), plus union-find.
 - `duplicates.py` -- exact and near groups and the keeper rule.

@@ -1,6 +1,6 @@
 # MCP tools
 
-Daguerre's Hoard exposes 17 photo-library and local Craft-engine tools over stdio
+Daguerre's Hoard exposes 19 photo-library and local Craft-engine tools over stdio
 (`daguerre_hoard/mcp_server.py`, a standalone script: stdlib + `httpx` + `mcp`).
 Every tool calls the app's
 own `/api/agent/<tool>` endpoint and returns exactly what that endpoint
@@ -66,6 +66,8 @@ system proxy settings for these calls.
 | `photos_duplicates` | yes | yes | exact / near duplicate groups + keeper |
 | `photos_timeline` | yes | yes | counts per year/month, on this day |
 | `photos_library` | yes | yes | folders, counts, model, running jobs |
+| `videos_list` | yes | yes | indexed videos with duration and key-frame count |
+| `videos_describe` | yes | yes | one video and its key frames with timestamps |
 | `photos_add_folder` | no (adds) | yes | register a folder and index it |
 | `photos_album` | no (adds) | yes | create or extend an album |
 | `photos_export` | no (derived files) | yes | ordered portable gallery, contact sheet and manifest |
@@ -189,6 +191,31 @@ stale_photos}, geocoder_source, heic_support, recent_jobs: [{id, kind,
 status, progress, message}], note?}`. `semantic: false` means content
 search needs the model download; `stale_photos` are photos still to be
 embedded with the active model.
+
+## videos_list
+
+`folder` (optional substring of the path), `limit` 1-200 (default 20), `offset`.
+Returns `{count, returned, has_more, next_offset?, note?, results: [{id, path,
+name, taken_at, duration, duration_label, width, height, frame_count, status,
+error?}]}`, newest first. `status` is `ok`, `no_extractor` (ffmpeg not found:
+listed without frames, retried on the next scan) or `error` (no frame could be
+read). Videos found under the registered folders are indexed by the scan, never
+modified.
+
+## videos_describe
+
+`video_id` (from `videos_list`; a frame's `video_id` from `photos_search` works
+too), `frames_limit` (optional). Returns the video fields plus `frames: [{id,
+ts, timestamp, width, height, caption}]` in time order (`ts` in seconds,
+`timestamp` as `01:23`, or `1:02:03` past an hour) and `has_more_frames`. Frames
+are picked at scene changes plus one every ~30 s (up to 48 per video), so they
+mark where something changes, not a continuous transcript. Each frame `id` is a
+normal photo id: `photos_show` renders it, `photos_similar` and `photos_album`
+accept it. A key frame that appears in `photos_search` results also carries
+`video_id`, `frame_ts`, `timestamp`, `video_name`, and its `path` is the video.
+`photos_search` has a `frames` filter: text queries include frames by default
+(`only` = just frames, `exclude` = just photos); a filter-only listing excludes
+them unless `frames=include|only` is given.
 
 ## photos_add_folder
 

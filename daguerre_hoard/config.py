@@ -17,6 +17,7 @@ SUPPORTED_EXTENSIONS = {
     ".jpg", ".jpeg", ".png", ".webp", ".gif", ".bmp", ".tif", ".tiff",
     ".heic", ".heif",
 }
+VIDEO_EXTENSIONS = {".mp4", ".mov", ".mkv", ".avi", ".webm", ".m4v", ".wmv", ".mpg", ".mpeg", ".3gp"}
 MIN_FILE_SIZE_BYTES = 8 * 1024
 
 EMBED_DIM = 512
@@ -35,6 +36,11 @@ class Settings:
     @property
     def thumbs_dir(self) -> Path:
         return self.data_dir / "thumbs"
+
+    @property
+    def frames_dir(self) -> Path:
+        """Key frames extracted from videos (derived data, one folder per video)."""
+        return self.data_dir / "frames"
 
     @property
     def vectors_path(self) -> Path:
@@ -56,6 +62,7 @@ class Settings:
         for d in (
             self.data_dir,
             self.thumbs_dir,
+            self.frames_dir,
             self.models_dir,
             self.geodata_dir,
             self.logs_dir,

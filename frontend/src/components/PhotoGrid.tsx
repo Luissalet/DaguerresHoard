@@ -33,6 +33,11 @@ export default function PhotoGrid({ photos, onOpen, selectable, selectedIds, onT
               // match was; this mirrors the `relevance` band an agent gets.
               <span className={`relevance-dot relevance-${p.relevance}`} title={`relevance: ${p.relevance}`} />
             )}
+            {p.video_id && (
+              <span className="video-badge" title={p.video_name}>
+                video · {p.timestamp}
+              </span>
+            )}
             <div className="meta">
               <span>{p.taken_at ? p.taken_at.slice(0, 10) : ""}</span>
               {p.place && <span className="meta-place">{p.place}</span>}

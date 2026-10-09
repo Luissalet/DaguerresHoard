@@ -8,7 +8,7 @@ import sys
 from pathlib import Path
 from typing import Iterable, Iterator
 
-from .config import MIN_FILE_SIZE_BYTES
+from .config import MIN_FILE_SIZE_BYTES, VIDEO_EXTENSIONS
 from .formats import indexable_extensions
 
 HIDDEN_PREFIXES = (".",)
@@ -37,6 +37,7 @@ def walk_images(
     root: Path,
     excluded_globs: list[str] | None = None,
     skip_dirs: Iterable[Path] = (),
+    extensions: set[str] | None = None,
 ) -> Iterator[Path]:
     """Yield image file paths under root, in a stable order.
 
@@ -48,7 +49,7 @@ def walk_images(
     data folders, so a root that contains the data dir never indexes its
     own thumbnails."""
     excluded_globs = excluded_globs or []
-    extensions = indexable_extensions()
+    extensions = indexable_extensions() if extensions is None else extensions
     root = Path(root)
     skip = {_norm(p) for p in skip_dirs}
     stack = [str(root)]
@@ -95,6 +96,15 @@ def walk_images(
             yield full
         # reversed so the stack pops sub-folders in alphabetical order
         stack.extend(reversed(subdirs))
+
+
+def walk_videos(
+    root: Path,
+    excluded_globs: list[str] | None = None,
+    skip_dirs: Iterable[Path] = (),
+) -> Iterator[Path]:
+    """Like `walk_images`, for the video container formats (same skipping rules)."""
+    return walk_images(root, excluded_globs, skip_dirs, extensions=set(VIDEO_EXTENSIONS))
 
 
 def stat_signature(path: Path) -> tuple[int, int]:

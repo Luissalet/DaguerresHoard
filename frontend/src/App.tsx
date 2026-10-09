@@ -11,6 +11,7 @@ import PlacesPage from "./pages/PlacesPage";
 import SearchPage from "./pages/SearchPage";
 import SettingsPage from "./pages/SettingsPage";
 import TimelinePage from "./pages/TimelinePage";
+import VideosPage from "./pages/VideosPage";
 import type { LibraryStatus } from "./types";
 
 type Theme = "light" | "dark";
@@ -95,6 +96,7 @@ export default function App() {
     timeline: t.nav_timeline,
     places: t.nav_places,
     albums: t.nav_albums,
+    videos: t.nav_videos,
     settings: t.nav_settings,
     activity: t.nav_activity,
   };
@@ -153,6 +155,7 @@ export default function App() {
             <PlacesPage t={t} platformIsWindows={platformIsWindows} onOpenSettings={() => setPage("settings")} />
           )}
           {page === "albums" && <AlbumsPage t={t} platformIsWindows={platformIsWindows} />}
+          {page === "videos" && <VideosPage t={t} platformIsWindows={platformIsWindows} status={status} />}
           {page === "settings" && <SettingsPage t={t} status={status} onChanged={refreshStatus} />}
           {page === "activity" && <ActivityPage t={t} />}
         </main>

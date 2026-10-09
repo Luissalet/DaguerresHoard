@@ -7,6 +7,7 @@ import {
   MapPin,
   Search,
   Settings as SettingsIcon,
+  Video,
 } from "lucide-react";
 import type { Dict } from "../i18n";
 import type { LibraryStatus } from "../types";
@@ -18,6 +19,7 @@ export type Page =
   | "timeline"
   | "places"
   | "albums"
+  | "videos"
   | "settings"
   | "activity";
 
@@ -35,6 +37,7 @@ const ITEMS: { id: Page; icon: typeof Images; labelKey: keyof Dict }[] = [
   { id: "timeline", icon: Activity, labelKey: "nav_timeline" },
   { id: "places", icon: MapPin, labelKey: "nav_places" },
   { id: "albums", icon: FolderOpen, labelKey: "nav_albums" },
+  { id: "videos", icon: Video, labelKey: "nav_videos" },
   { id: "settings", icon: SettingsIcon, labelKey: "nav_settings" },
   { id: "activity", icon: Eye, labelKey: "nav_activity" },
 ];

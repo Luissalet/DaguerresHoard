@@ -10,6 +10,15 @@ export interface Dict {
   nav_albums: string;
   nav_settings: string;
   nav_activity: string;
+  nav_videos: string;
+  videos_empty_title: string;
+  videos_empty_body: string;
+  video_key_frames: string;
+  video_play_from: (ts: string) => string;
+  video_hide_player: string;
+  video_frames_n: (n: number) => string;
+  video_no_frames: string;
+  video_player_failed: string;
   search_placeholder: string;
   search_button: string;
   filters: string;
@@ -183,6 +192,15 @@ export const dict: Record<Lang, Dict> = {
     nav_albums: "Albums",
     nav_settings: "Settings",
     nav_activity: "Assistant activity",
+    nav_videos: "Videos",
+    videos_empty_title: "No videos yet",
+    videos_empty_body: "Videos in your folders show up here with their key frames after the next scan.",
+    video_key_frames: "Key frames",
+    video_play_from: (ts: string) => `Play from ${ts}`,
+    video_hide_player: "Hide player",
+    video_frames_n: (n: number) => `${n} key frame${n === 1 ? "" : "s"}`,
+    video_no_frames: "No key frames (ffmpeg not found, or the video could not be read)",
+    video_player_failed: "This browser cannot play the video; the key frames still work.",
     search_placeholder: "Describe what you are looking for…",
     search_button: "Search",
     filters: "Filters",
@@ -364,6 +382,15 @@ export const dict: Record<Lang, Dict> = {
     nav_albums: "Álbumes",
     nav_settings: "Ajustes",
     nav_activity: "Actividad del asistente",
+    nav_videos: "Vídeos",
+    videos_empty_title: "Aún no hay vídeos",
+    videos_empty_body: "Los vídeos de tus carpetas aparecen aquí con sus fotogramas clave tras el siguiente escaneo.",
+    video_key_frames: "Fotogramas clave",
+    video_play_from: (ts: string) => `Reproducir desde ${ts}`,
+    video_hide_player: "Ocultar reproductor",
+    video_frames_n: (n: number) => `${n} fotograma${n === 1 ? "" : "s"} clave`,
+    video_no_frames: "Sin fotogramas clave (no se encontró ffmpeg o no se pudo leer el vídeo)",
+    video_player_failed: "Este navegador no puede reproducir el vídeo; los fotogramas clave siguen funcionando.",
     search_placeholder: "Describe lo que buscas…",
     search_button: "Buscar",
     filters: "Filtros",

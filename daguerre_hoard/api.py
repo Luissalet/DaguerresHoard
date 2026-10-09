@@ -114,6 +114,23 @@ class DuplicatesBody(BaseModel):
     include_ids: bool = False
 
 
+class VideosListBody(BaseModel):
+    folder: str | None = None
+    limit: int = 20
+    offset: int = 0
+
+
+class VideoBody(BaseModel):
+    video_id: str
+    frames_limit: int | None = None
+
+
+class VideoSettingsBody(BaseModel):
+    enabled: bool | None = None
+    max_frames: int | None = None
+    interval_s: float | None = None
+
+
 class TimelineBody(BaseModel):
     year: int | None = None
 
@@ -265,7 +282,8 @@ def create_app(data_dir: Path, static_dir: Path | None = None, port: int = 8814)
             "version": __version__,
             "status": "ok",
             "hoard_link": family.health_block(),
-            "photo_count": c.execute("SELECT COUNT(*) c FROM photos WHERE missing = 0").fetchone()["c"],
+            "photo_count": c.execute("SELECT COUNT(*) c FROM photos WHERE missing = 0 AND video_id IS NULL").fetchone()["c"],
+            "video_count": c.execute("SELECT COUNT(*) c FROM videos WHERE missing = 0").fetchone()["c"],
             "roots": c.execute("SELECT COUNT(*) c FROM roots").fetchone()["c"],
             "embedder": lib.embedder.name,
         }
@@ -293,13 +311,14 @@ def create_app(data_dir: Path, static_dir: Path | None = None, port: int = 8814)
         orientation: str | None = None,
         min_megapixels: float | None = None,
         has_gps: bool | None = None,
+        frames: str | None = None,
     ):
         filters = {
             k: v
             for k, v in dict(
                 taken_after=taken_after, taken_before=taken_before, year=year, month=month,
                 place=place, folder=folder, camera=camera, orientation=orientation,
-                min_megapixels=min_megapixels, has_gps=has_gps,
+                min_megapixels=min_megapixels, has_gps=has_gps, frames=frames,
             ).items()
             if v is not None
         }
@@ -332,7 +351,7 @@ def create_app(data_dir: Path, static_dir: Path | None = None, port: int = 8814)
     def open_in_explorer(photo_id: str):
         _check_id(photo_id)
         row = run(lambda: lib._resolve_photo(photo_id, None))
-        path = Path(row["path"])
+        path = Path((row["video_id"] and lib._video_path(row["video_id"])) or row["path"])  # a frame reveals its video
         if not path.exists():
             raise ApiError(404, "not_found", f"the file is not reachable right now: {path}")
         # The path is passed as one argument (never spliced into a command string), so a quote or a comma in a
@@ -340,6 +359,29 @@ def create_app(data_dir: Path, static_dir: Path | None = None, port: int = 8814)
         if not proc.reveal_in_file_manager(path):
             raise ApiError(400, "unsupported_platform", "no file manager could be started on this system.")
         return {"ok": True}
+
+    # -- videos: key frames linked to their video (UI) ------------------------ #
+    @app.get("/api/videos")
+    def list_videos(folder: str | None = None, limit: int = 60, offset: int = 0):
+        return run(lambda: lib.list_videos(folder, limit, offset))
+
+    @app.get("/api/videos/{video_id}")
+    def get_video(video_id: str):
+        return run(lambda: lib.get_video(video_id))
+
+    @app.get("/api/videos/{video_id}/stream")
+    def stream_video(video_id: str):
+        """The original video for the in-page player (read-only; supports Range so seeking works)."""
+        path = run(lambda: lib.video_file(video_id))
+        return FileResponse(path, headers={"Cache-Control": "private, max-age=600"})
+
+    @app.get("/api/video-settings")
+    def get_video_settings():
+        return lib.video_settings()
+
+    @app.post("/api/video-settings")
+    def set_video_settings(body: VideoSettingsBody):
+        return run(lambda: lib.set_video_settings(body.enabled, body.max_frames, body.interval_s))
 
     @app.get("/api/roots")
     def list_roots():
@@ -608,6 +650,18 @@ def create_app(data_dir: Path, static_dir: Path | None = None, port: int = 8814)
     def agent_show(body: ShowBody):
         return run(lambda: lib.show(body.ids, body.size), tool="photos_show", args=body.model_dump())
 
+    @app.post("/api/agent/videos_list", dependencies=agent_auth)
+    def agent_videos_list(body: VideosListBody):
+        return _strip_agent_urls(
+            run(lambda: lib.list_videos(body.folder, body.limit, body.offset), tool="videos_list", args=body.model_dump())
+        )
+
+    @app.post("/api/agent/videos_describe", dependencies=agent_auth)
+    def agent_videos_describe(body: VideoBody):
+        return _strip_agent_urls(
+            run(lambda: lib.get_video(body.video_id, body.frames_limit), tool="videos_describe", args=body.model_dump())
+        )
+
     @app.post("/api/agent/photos_describe", dependencies=agent_auth)
     def agent_describe(body: DescribeBody):
         return _strip_agent_urls(
@@ -679,7 +733,7 @@ def create_app(data_dir: Path, static_dir: Path | None = None, port: int = 8814)
     return app
 
 
-_UI_ONLY_KEYS = {"thumbnail_url", "note_codes"}
+_UI_ONLY_KEYS = {"thumbnail_url", "note_codes", "stream_url"}
 
 
 def _strip_agent_urls(obj: Any) -> Any:

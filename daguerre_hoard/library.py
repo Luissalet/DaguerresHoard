@@ -42,6 +42,7 @@ from .metadata import extract_metadata
 from .phash import compute_phash
 from .scanning import stat_signature, walk_images
 from .thumbnails import make_thumbnail, thumb_path
+from .videos import VideoMixin
 
 log = logging.getLogger(__name__)
 
@@ -54,8 +55,9 @@ ID_RE = re.compile(r"^[0-9a-f]{32}$")
 
 FILTER_NAMES = (
     "taken_after", "taken_before", "year", "month", "place", "folder",
-    "camera", "orientation", "min_megapixels", "has_gps",
+    "camera", "orientation", "min_megapixels", "has_gps", "frames",
 )
+FRAME_MODES = ("include", "exclude", "only")
 # CLIP ViT-B/32 (Qdrant ONNX, vision + text) as the Hugging Face cache
 # stores it, measured on a real download.
 MODEL_DOWNLOAD_BYTES = 608_000_000
@@ -185,7 +187,7 @@ class _Prepared:
     error: str | None = None
 
 
-class Library:
+class Library(VideoMixin):
     def __init__(self, settings: Settings, conn: sqlite3.Connection | None = None, embedder: Embedder | None = None):
         settings.ensure_dirs()
         self.settings = settings
@@ -199,6 +201,7 @@ class Library:
         self.backend = Backend(settings.data_dir, self.conn)
         self.craft_engines = CraftEngines(settings.data_dir, port=settings.port)
         self._index_lock = threading.Lock()
+        self._init_videos()
         self._model_lock = threading.Lock()
         self._maybe_regeocode()
 
@@ -262,6 +265,7 @@ class Library:
         """UI-only (human) operation -- never exposed as an agent tool.
         Forgets the folder and Daguerre's own derived data (index rows, album
         memberships, captions, thumbnails). The original files are untouched."""
+        self._forget_root_videos(root_id)
         c = self.conn
         ids = [r["id"] for r in c.execute("SELECT id FROM photos WHERE root_id = ?", (root_id,)).fetchall()]
         for start in range(0, len(ids), 500):
@@ -284,7 +288,10 @@ class Library:
         d = dict(r)
         d["excluded_globs"] = json.loads(d["excluded_globs"])
         d["photo_count"] = self.conn.execute(
-            "SELECT COUNT(*) c FROM photos WHERE root_id = ? AND missing = 0", (r["id"],)
+            "SELECT COUNT(*) c FROM photos WHERE root_id = ? AND missing = 0 AND video_id IS NULL", (r["id"],)
+        ).fetchone()["c"]
+        d["video_count"] = self.conn.execute(
+            "SELECT COUNT(*) c FROM videos WHERE root_id = ? AND missing = 0", (r["id"],)
         ).fetchone()["c"]
         d["exists"] = Path(d["path"]).is_dir()
         return d
@@ -353,6 +360,10 @@ class Library:
                 )
                 handle.set_stats(stats)
 
+        # Videos: key frames become photo rows linked to the video (see videos.py); they join the embedding
+        # queue below and so go through the same model as photos.
+        self._index_videos(roots, stats, record_error, pending_embed, handle)
+
         # Photos whose vector is missing or came from another embedder
         # (e.g. indexed before the CLIP model was downloaded) are re-embedded
         # from their thumbnail: vectors from two models are not comparable.
@@ -381,6 +392,13 @@ class Library:
         c.commit()
         handle.set_stats(stats)
         summary = f"indexed {total} files: {stats['new']} new, {stats['updated']} changed, {stats['moved']} moved"
+        if stats.get("videos_seen"):
+            summary += (
+                f"; {stats['videos_seen']} videos: {stats['videos_new'] + stats['videos_updated']} processed, "
+                f"{stats['frames']} key frames"
+            )
+            if stats["videos_no_ffmpeg"]:
+                summary += f", {stats['videos_no_ffmpeg']} without frames (ffmpeg not found)"
         if stats["errors"]:
             summary += f", {stats['errors']} could not be read"
         handle.progress(1.0, summary)
@@ -565,6 +583,10 @@ class Library:
         }
         if score is not None:
             d["score"] = round(float(score), 4)
+        if row["video_id"]:
+            frame = self._frame_fields(row)
+            d["path"] = frame.pop("video_path")  # what the owner knows: the video, not the extracted JPEG
+            d.update(frame)
         return d
 
     def validate_filters(self, filters: dict | None) -> dict:
@@ -601,6 +623,10 @@ class Library:
                 if not 1 <= month <= 12:
                     raise ValidationError(f"month must be 1-12, got {month}")
                 out[key] = month
+            elif key == "frames":
+                if value not in FRAME_MODES:
+                    raise ValidationError(f"frames must be one of {', '.join(FRAME_MODES)}, got {value!r}")
+                out[key] = value
             elif key == "orientation":
                 if value not in ("landscape", "portrait"):
                     raise ValidationError(f"orientation must be 'landscape' or 'portrait', got {value!r}")
@@ -627,6 +653,12 @@ class Library:
         f = self.validate_filters(filters)
         clauses = ["missing = 0"]
         params: list[Any] = []
+        # Key frames of videos are photo rows too: hidden by default, `include` mixes them in, `only` is just them.
+        frames_mode = f.get("frames", "exclude")
+        if frames_mode == "exclude":
+            clauses.append("video_id IS NULL")
+        elif frames_mode == "only":
+            clauses.append("video_id IS NOT NULL")
         for key, op in (("taken_after", ">="), ("taken_before", "<=")):
             if key in f:
                 value = f[key]
@@ -784,7 +816,7 @@ class Library:
                     f"query looks {_LANGUAGE_NAMES.get(lang, lang)}; CLIP matches English far better "
                     "than other languages, translate it and retry"
                 )
-        rows = self._embedded_rows(filters)
+        rows = self._embedded_rows({"frames": "include", **filters})
         if not rows:
             payload: dict[str, Any] = {
                 "query": query, "returned": 0, "indexed_total": 0, "count": 0,
@@ -1005,7 +1037,7 @@ class Library:
         if row["embed_row"] is None or row["embed_model"] != self.embedder.name:
             raise ValidationError("this photo has no embedding for the current model yet; wait for indexing to finish (see photos_library)")
         qvec = self.vectors.get(row["embed_row"])
-        others = [r for r in self._embedded_rows({}) if r["id"] != row["id"]]
+        others = [r for r in self._embedded_rows({"frames": "include"}) if r["id"] != row["id"]]
         row_by_embed = {r["embed_row"]: r for r in others}
         all_hits = self.vectors.search(qvec, row_by_embed.keys(), limit=len(row_by_embed) or 1)
         if min_score is not None:
@@ -1387,7 +1419,7 @@ class Library:
         if kind not in ("exact", "near"):
             raise ValidationError(f"kind must be 'exact' or 'near', got {kind!r}")
         limit = _clamp_limit(limit, 10)
-        rows = self.conn.execute("SELECT * FROM photos WHERE missing = 0").fetchall()
+        rows = self.conn.execute("SELECT * FROM photos WHERE missing = 0 AND video_id IS NULL").fetchall()
         photo_rows = [
             PhotoRow(
                 id=r["id"], path=r["path"], size=r["size"], width=r["width"], height=r["height"],
@@ -1460,7 +1492,7 @@ class Library:
         c = self.conn
         rows = c.execute(
             "SELECT substr(taken_at,1,4) y, substr(taken_at,6,2) m, COUNT(*) c FROM photos "
-            "WHERE missing = 0 AND taken_at IS NOT NULL GROUP BY y, m ORDER BY y, m"
+            "WHERE missing = 0 AND video_id IS NULL AND taken_at IS NOT NULL GROUP BY y, m ORDER BY y, m"
         ).fetchall()
         by_year: dict[str, dict[str, int]] = {}
         for r in rows:
@@ -1468,7 +1500,7 @@ class Library:
         today = dt.date.today()
         month_day = f"{today.month:02d}-{today.day:02d}"
         otd_rows = c.execute(
-            "SELECT * FROM photos WHERE missing = 0 AND substr(taken_at,6,5) = ? "
+            "SELECT * FROM photos WHERE missing = 0 AND video_id IS NULL AND substr(taken_at,6,5) = ? "
             "AND substr(taken_at,1,4) < ? ORDER BY taken_at DESC",
             (month_day, f"{today.year:04d}"),
         ).fetchall()
@@ -1492,7 +1524,7 @@ class Library:
             for y, months in result["months"].items():
                 for m in months:
                     ids = c.execute(
-                        "SELECT id FROM photos WHERE missing = 0 AND substr(taken_at,1,7) = ? "
+                        "SELECT id FROM photos WHERE missing = 0 AND video_id IS NULL AND substr(taken_at,1,7) = ? "
                         "ORDER BY taken_at LIMIT ?",
                         (f"{y}-{m}", int(samples)),
                     ).fetchall()
@@ -1508,7 +1540,7 @@ class Library:
         # neighbourhoods through `region`.
         rows = self.conn.execute(
             "SELECT country, COALESCE(region, city) AS place, COUNT(*) c, MIN(id) sample_id FROM photos "
-            "WHERE missing = 0 AND city IS NOT NULL GROUP BY country, place ORDER BY country, c DESC"
+            "WHERE missing = 0 AND video_id IS NULL AND city IS NOT NULL GROUP BY country, place ORDER BY country, c DESC"
         ).fetchall()
         by_country: dict[str, list[dict]] = {}
         for r in rows:
@@ -1524,7 +1556,7 @@ class Library:
         # the Cadiz photos and the download hint never showed. Count every
         # photo that has GPS but no city.
         approximate_count = self.conn.execute(
-            "SELECT COUNT(*) c FROM photos WHERE missing = 0 AND city IS NULL AND gps_lat IS NOT NULL"
+            "SELECT COUNT(*) c FROM photos WHERE missing = 0 AND video_id IS NULL AND city IS NULL AND gps_lat IS NOT NULL"
         ).fetchone()["c"]
         out: dict[str, Any] = {"countries": by_country, "approximate_count": approximate_count}
         if approximate_count and self.geocoder.source == "bundled-fixture":
@@ -1536,8 +1568,10 @@ class Library:
 
     def library_status(self, compact: bool = False) -> dict:
         c = self.conn
-        total = c.execute("SELECT COUNT(*) c FROM photos WHERE missing = 0").fetchone()["c"]
-        missing = c.execute("SELECT COUNT(*) c FROM photos WHERE missing = 1").fetchone()["c"]
+        total = c.execute("SELECT COUNT(*) c FROM photos WHERE missing = 0 AND video_id IS NULL").fetchone()["c"]
+        missing = c.execute("SELECT COUNT(*) c FROM photos WHERE missing = 1 AND video_id IS NULL").fetchone()["c"]
+        video_count = c.execute("SELECT COUNT(*) c FROM videos WHERE missing = 0").fetchone()["c"]
+        frame_count = c.execute("SELECT COUNT(*) c FROM photos WHERE missing = 0 AND video_id IS NOT NULL").fetchone()["c"]
         stale = c.execute(
             "SELECT COUNT(*) c FROM photos WHERE missing = 0 AND "
             "(embed_row IS NULL OR embed_model IS NULL OR embed_model != ?)",
@@ -1548,6 +1582,9 @@ class Library:
             "roots": self.list_roots(),
             "photo_count": total,
             "missing_count": missing,
+            "video_count": video_count,
+            "frame_count": frame_count,
+            "video_frames": self.video_settings(),
             "embedder": {
                 "name": self.embedder.name,
                 "dim": self.embedder.dim,

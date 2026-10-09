@@ -3,7 +3,8 @@ import { Check, ChevronLeft, ChevronRight, ExternalLink, FolderPlus, Minus, Plus
 import { api, errorText, fileName, formatBytes, type CraftArtifact, type CraftEngineStatus } from "../api";
 import { missingReason, useBackend } from "../backendStatus";
 import type { Dict } from "../i18n";
-import type { Album, Photo, PhotoDetail } from "../types";
+import FrameStrip from "./FrameStrip";
+import { frameAsPhoto, type Album, type Photo, type PhotoDetail, type VideoDetail } from "../types";
 
 interface Props {
   photos: Photo[];
@@ -29,6 +30,10 @@ export default function Lightbox({ photos, index, onClose, onIndexChange, t, pla
   const [fullFailed, setFullFailed] = useState(false);
   const [captioning, setCaptioning] = useState(false);
   const [captionError, setCaptionError] = useState<string | null>(null);
+  const [video, setVideo] = useState<VideoDetail | null>(null);
+  const [playing, setPlaying] = useState(false);
+  const [playerFailed, setPlayerFailed] = useState(false);
+  const playerRef = useRef<HTMLVideoElement | null>(null);
   const backend = useBackend();
   const noVision = missingReason(backend?.vision, t.no_vision_model);
   const [albums, setAlbums] = useState<Album[]>([]);
@@ -65,6 +70,24 @@ export default function Lightbox({ photos, index, onClose, onIndexChange, t, pla
       .then((r) => setSimilar(r.results))
       .catch(() => {});
   }, [photo?.id]);
+
+  // A key frame of a video: load the video's other frames, and keep an open player on this frame's time.
+  useEffect(() => {
+    setVideo(null);
+    if (!photo?.video_id) return;
+    let alive = true;
+    api
+      .getVideo(photo.video_id)
+      .then((v) => alive && setVideo(v))
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, [photo?.video_id]);
+
+  useEffect(() => {
+    if (playing && playerRef.current && photo?.frame_ts !== undefined) playerRef.current.currentTime = photo.frame_ts;
+  }, [photo?.id, playing]);
 
   function go(delta: number) {
     const next = index + delta;
@@ -234,9 +257,60 @@ export default function Lightbox({ photos, index, onClose, onIndexChange, t, pla
       </div>
       <aside className="lightbox-side">
         <h3 className="lightbox-title" title={photo.path}>
-          {fileName(photo.path)}
+          {photo.video_id ? `${photo.video_name ?? fileName(photo.path)} · ${photo.timestamp}` : fileName(photo.path)}
         </h3>
         {fullFailed && <p className="error-text">{t.missing_file}</p>}
+        {photo.video_id && (
+          <section className="side-section">
+            <div className="side-label">
+              {photo.video_name} · {photo.timestamp}
+            </div>
+            {video && video.frames.length > 0 && (
+              <>
+                <div className="muted small">{t.video_key_frames}</div>
+                <FrameStrip
+                  frames={video.frames}
+                  activeId={photo.id}
+                  onPick={(f) => {
+                    const i = photos.findIndex((p) => p.id === f.id);
+                    if (i >= 0) {
+                      setDetached(null);
+                      onIndexChange(i);
+                    } else {
+                      setDetached(frameAsPhoto(video, f));
+                    }
+                  }}
+                />
+              </>
+            )}
+            {playing ? (
+              <>
+                <video
+                  ref={(el) => {
+                    playerRef.current = el;
+                    if (el && photo.frame_ts !== undefined && el.readyState === 0) {
+                      const ts = photo.frame_ts;
+                      el.addEventListener("loadedmetadata", () => (el.currentTime = ts), { once: true });
+                    }
+                  }}
+                  className="video-player"
+                  src={api.videoStreamUrl(photo.video_id)}
+                  controls
+                  preload="metadata"
+                  onError={() => setPlayerFailed(true)}
+                />
+                {playerFailed && <p className="error-text small">{t.video_player_failed}</p>}
+                <button className="btn btn-block" onClick={() => setPlaying(false)}>
+                  {t.video_hide_player}
+                </button>
+              </>
+            ) : (
+              <button className="btn btn-block" onClick={() => setPlaying(true)}>
+                {t.video_play_from(photo.timestamp ?? "00:00")}
+              </button>
+            )}
+          </section>
+        )}
         <div className="meta-row">
           <span className="k">{t.taken}</span>
           <span className="v">
@@ -276,7 +350,7 @@ export default function Lightbox({ photos, index, onClose, onIndexChange, t, pla
         </div>
         <div className="meta-row">
           <span className="k">{photo.width && photo.height ? `${photo.width} × ${photo.height}` : ""}</span>
-          <span className="v">{formatBytes(photo.size)}</span>
+          <span className="v">{photo.video_id ? "" : formatBytes(photo.size)}</span>
         </div>
 
         {platformIsWindows && (
