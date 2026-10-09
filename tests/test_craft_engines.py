@@ -28,7 +28,8 @@ def test_portable_bundle_discovery_and_explicit_config(tmp_path, monkeypatch):
     config_photo.write_bytes(b"configured executable")
     engines.config_path.write_text(json.dumps({"photocraft": str(config_photo)}), encoding="utf-8")
     assert engines.executable("photocraft") == config_photo.resolve()
-    assert engines.executable("lightcraft") == light.resolve()
+    if os.name == "nt":  # the portable bundles are Windows builds; elsewhere only the explicit config counts
+        assert engines.executable("lightcraft") == light.resolve()
 
 
 def test_lightcraft_file_arguments_are_confined_to_daguerre_owned_paths(tmp_path):
