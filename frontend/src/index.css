@@ -1187,6 +1187,62 @@ table.activity-table td {
   border-top: 1px solid var(--border);
 }
 
+.edits-panel {
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+
+.star-row {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-bottom: 10px;
+}
+
+.star-btn {
+  height: auto;
+  padding: 4px;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-radius: 6px;
+}
+
+.star-btn.on {
+  color: var(--accent);
+}
+
+.edits-form {
+  display: grid;
+  gap: 8px;
+}
+
+.edits-recipe {
+  margin: 10px 0 0;
+  overflow-wrap: anywhere;
+}
+
+.sidecar-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 10px;
+  color: var(--text-muted);
+}
+
+.sidecar-row svg {
+  flex: none;
+  margin-top: 2px;
+}
+
+.sidecar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
 .craft-exposure {
   display: block;
   margin-top: 14px;

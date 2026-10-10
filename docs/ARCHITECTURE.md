@@ -61,6 +61,16 @@
 - `compositor.py` -- bounded read-only `.comp` package preflight and immutable
   manifest/PNG snapshot; per-layer unsupported-property and conversion reports.
   Native import/save/reopen is composed through `CraftEngines`.
+- `xmp.py` -- pure module (no database, no FastAPI): the retouch recipe model
+  and its validation, the mapping to and from the `crs:` / `xmp:` / `dc:` /
+  `tiff:` properties and Daguerre's own `daguerre:Recipe`, a safe XMP parser
+  (expat with DOCTYPE and entity declarations rejected, size/node/depth caps)
+  that keeps namespace prefixes, the merge that updates only the properties
+  Daguerre owns, and extraction of XMP embedded in JPEG/TIFF/PNG/WebP.
+- `edits.py` -- `EditsMixin` of `Library`: the `photo_edits` table, the opt-in
+  `xmp_sidecars` setting, reading sidecars at scan time (signature = path +
+  mtime + size, so unchanged files cost a `stat`), writing/merging sidecars
+  atomically with a backup of foreign ones in `data/xmp-backups/`.
 - `jobs.py` -- `JobManager` / `JobHandle`: a daemon thread per job,
   progress and stats in the `jobs` table.
 - `library.py` -- the engine (no FastAPI import): indexing pipeline and
@@ -75,7 +85,9 @@
 
 `data/daguerre.db` (SQLite, WAL): `roots`, `photos` (one row per file; `id`
 is a random 32-hex id that survives moves), `photos_fts` (FTS5 over
-captions), `albums` / `album_photos`, `jobs`, `agent_calls`, `settings`.
+captions), `albums` / `album_photos`, `photo_edits` (rating, label, keywords,
+recipe JSON, what a sidecar carried that Daguerre does not apply, the sidecar's
+signature), `jobs`, `agent_calls`, `settings`.
 Vectors live in `data/vectors.f32`, a float32 matrix addressed by
 `photos.embed_row`; `photos.embed_model` records which embedder wrote the
 vector, and search only compares vectors of the active model. The CLIP
@@ -157,6 +169,9 @@ LightCraft CLIs, each launched with isolated application data and file paths.
 - `/api/health` -- `{service: "daguerres-hoard", name, version, status,
   photo_count, roots, embedder}`.
 - `/api/agent/<tool>` -- the registered MCP tools, audited in `agent_calls`.
+- `/api/photos/{id}/edits` (GET, PUT), `/api/photos/{id}/sidecar/read` and
+  `/sidecar/write` (POST) -- ratings, recipe and `.xmp` sidecars for the UI (not
+  audited); `/api/settings` carries `xmp_sidecars`.
 - `/api/exports/{id}/{filename}` -- locally serves the gallery, source manifest
   and contact-sheet files of an export (only these three filenames).
 - `/api/craft/status` -- local executable discovery; `/api/craft/artifacts/{filename}`

@@ -179,6 +179,28 @@ export interface Dict {
   no_vision_model: string;
   no_llm_model: string;
   backend_forget_token: string;
+  edits_title: string;
+  edits_rating: string;
+  edits_rejected: string;
+  edits_label: string;
+  edits_keywords: string;
+  edits_save: string;
+  edits_saved: string;
+  edits_recipe: string;
+  edits_no_recipe: string;
+  sidecar_title: string;
+  sidecar_none: string;
+  sidecar_by_daguerre: string;
+  sidecar_by_foreign: string;
+  sidecar_invalid: string;
+  sidecar_changed: string;
+  sidecar_reread: string;
+  sidecar_write: string;
+  sidecar_write_off: string;
+  sidecar_written: string;
+  imported_not_applied: (n: number) => string;
+  settings_xmp_label: string;
+  settings_xmp_hint: string;
 }
 
 export const dict: Record<Lang, Dict> = {
@@ -371,6 +393,29 @@ export const dict: Record<Lang, Dict> = {
     no_vision_model: "No vision model is loaded. Faustus can serve one, or load one in Ollama.",
     no_llm_model: "No language model is loaded. Faustus can serve one, or load one in Ollama.",
     backend_forget_token: "Forget token",
+    edits_title: "Rating and retouch",
+    edits_rating: "Rating",
+    edits_rejected: "Rejected",
+    edits_label: "Label (for example Red)",
+    edits_keywords: "Keywords, separated by commas",
+    edits_save: "Save",
+    edits_saved: "Saved in Daguerre.",
+    edits_recipe: "Develop recipe",
+    edits_no_recipe: "No develop settings.",
+    sidecar_title: ".xmp sidecar",
+    sidecar_none: "none next to this photo.",
+    sidecar_by_daguerre: "written by Daguerre.",
+    sidecar_by_foreign: "made by another program; Daguerre read it and keeps it intact.",
+    sidecar_invalid: "not valid XMP; Daguerre will not touch it.",
+    sidecar_changed: "Changed on disk since it was read.",
+    sidecar_reread: "Re-read",
+    sidecar_write: "Write .xmp",
+    sidecar_write_off: "Turn on \"Write .xmp sidecars\" in Settings to write it.",
+    sidecar_written: "Saved, and the .xmp sidecar is up to date.",
+    imported_not_applied: (n: number) => `${n} imported settings that Daguerre does not apply`,
+    settings_xmp_label: "Write .xmp sidecars next to edited photos (off by default)",
+    settings_xmp_hint:
+      "Ratings, labels, keywords and develop recipes are kept in Daguerre. With this on they are also saved as standard .xmp files next to each photo, for RAW developers. The photo itself is never changed, and an existing .xmp is backed up and merged, not replaced.",
   },
   es: {
     appName: "Daguerre's Hoard",
@@ -560,6 +605,29 @@ export const dict: Record<Lang, Dict> = {
     no_vision_model: "No hay ningún modelo de visión cargado. Faustus puede servir uno, o puedes cargarlo en Ollama.",
     no_llm_model: "No hay ningún modelo de lenguaje cargado. Faustus puede servir uno, o puedes cargarlo en Ollama.",
     backend_forget_token: "Olvidar el token",
+    edits_title: "Valoración y retoque",
+    edits_rating: "Valoración",
+    edits_rejected: "Descartada",
+    edits_label: "Etiqueta (por ejemplo Rojo)",
+    edits_keywords: "Palabras clave, separadas por comas",
+    edits_save: "Guardar",
+    edits_saved: "Guardado en Daguerre.",
+    edits_recipe: "Receta de revelado",
+    edits_no_recipe: "Sin ajustes de revelado.",
+    sidecar_title: "Archivo .xmp",
+    sidecar_none: "no hay ninguno junto a esta foto.",
+    sidecar_by_daguerre: "escrito por Daguerre.",
+    sidecar_by_foreign: "creado por otro programa; Daguerre lo ha leído y lo respeta.",
+    sidecar_invalid: "no es un XMP válido; Daguerre no lo tocará.",
+    sidecar_changed: "Ha cambiado en el disco desde que se leyó.",
+    sidecar_reread: "Releer",
+    sidecar_write: "Escribir .xmp",
+    sidecar_write_off: "Activa «Escribir archivos .xmp» en Ajustes para poder escribirlo.",
+    sidecar_written: "Guardado, y el archivo .xmp está al día.",
+    imported_not_applied: (n: number) => `${n} ajustes importados que Daguerre no aplica`,
+    settings_xmp_label: "Escribir archivos .xmp junto a las fotos editadas (desactivado por defecto)",
+    settings_xmp_hint:
+      "Las valoraciones, etiquetas, palabras clave y recetas de revelado se guardan en Daguerre. Con esto activado, además se guardan como archivos .xmp estándar junto a cada foto, para los reveladores RAW. La foto nunca se modifica, y un .xmp que ya exista se copia como respaldo y se fusiona, no se sustituye.",
   },
 };
 

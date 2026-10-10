@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import time
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 from urllib.parse import urlparse
 
 from fastapi import Depends, FastAPI, Request
@@ -74,6 +74,33 @@ class DescribeBody(BaseModel):
 class ExportBody(BaseModel):
     ids: list[str]
     title: str = "Photo selection"
+
+
+class PhotoIdBody(BaseModel):
+    photo_id: str
+
+
+class SetEditsBody(BaseModel):
+    """Only the fields that are present change; `recipe` settings set to null are cleared."""
+
+    photo_id: str
+    recipe: dict[str, Any] | None = None
+    rating: Any = None
+    label: str | None = None
+    keywords: list[str] | None = None
+
+
+class UiEditsBody(BaseModel):
+    recipe: dict[str, Any] | None = None
+    rating: Any = None
+    label: str | None = None
+    keywords: list[str] | None = None
+    write_sidecar: bool = True
+
+
+class SidecarBody(BaseModel):
+    photo_id: str
+    action: Literal["read", "write"] = "read"
 
 
 class CraftEngineBody(BaseModel):
@@ -165,6 +192,7 @@ class SettingsBody(BaseModel):
     ollama_base_url: str | None = None
     ollama_model: str | None = None
     translate_search: bool | None = None
+    xmp_sidecars: bool | None = None
 
 
 class CaptionBatchBody(BaseModel):
@@ -440,6 +468,28 @@ def create_app(data_dir: Path, static_dir: Path | None = None, port: int = 8814)
         _check_id(photo_id)
         return run(lambda: lib.describe(photo_id, caption=True))
 
+    # -- edits (rating, label, keywords, develop recipe) and their .xmp sidecars -- #
+    @app.get("/api/photos/{photo_id}/edits")
+    def ui_get_edits(photo_id: str):
+        _check_id(photo_id)
+        return run(lambda: lib.get_edits(photo_id))
+
+    @app.put("/api/photos/{photo_id}/edits")
+    def ui_set_edits(photo_id: str, body: UiEditsBody):
+        _check_id(photo_id)
+        patch = {k: getattr(body, k) for k in body.model_fields_set if k in ("recipe", "rating", "label", "keywords")}
+        return run(lambda: lib.set_edits(photo_id, patch, write=body.write_sidecar))
+
+    @app.post("/api/photos/{photo_id}/sidecar/read")
+    def ui_read_sidecar(photo_id: str):
+        _check_id(photo_id)
+        return run(lambda: lib.read_sidecar(photo_id))
+
+    @app.post("/api/photos/{photo_id}/sidecar/write")
+    def ui_write_sidecar(photo_id: str):
+        _check_id(photo_id)
+        return run(lambda: lib.write_sidecar(photo_id))
+
     # -- albums ---------------------------------------------------------- #
     @app.get("/api/albums")
     def list_albums():
@@ -471,6 +521,7 @@ def create_app(data_dir: Path, static_dir: Path | None = None, port: int = 8814)
             "ollama_base_url": dbmod.get_setting(lib.conn, "ollama_base_url", DEFAULT_BASE_URL),
             "ollama_model": dbmod.get_setting(lib.conn, "ollama_model", DEFAULT_MODEL),
             "translate_search": lib.translate_search_enabled(),
+            "xmp_sidecars": lib.xmp_sidecars_enabled(),
         }
 
     @app.post("/api/settings")
@@ -489,6 +540,8 @@ def create_app(data_dir: Path, static_dir: Path | None = None, port: int = 8814)
             changed_legacy_vision = True
         if body.translate_search is not None:
             lib.set_translate_search(body.translate_search)
+        if body.xmp_sidecars is not None:
+            lib.set_xmp_sidecars(body.xmp_sidecars)
         if changed_legacy_vision:
             # The legacy Ollama fields feed the `vision` capability's
             # explicit override (see backend.py); rebuild it so a saved
@@ -697,6 +750,20 @@ def create_app(data_dir: Path, static_dir: Path | None = None, port: int = 8814)
     def agent_album(body: AlbumBody):
         return _strip_agent_urls(run(lambda: lib.album(body.name, body.photo_ids, created_by="agent"),
                    tool="photos_album", args=body.model_dump()))
+
+    @app.post("/api/agent/photos_edits", dependencies=agent_auth)
+    def agent_edits(body: PhotoIdBody):
+        return run(lambda: lib.get_edits(body.photo_id), tool="photos_edits", args=body.model_dump())
+
+    @app.post("/api/agent/photos_set_edits", dependencies=agent_auth)
+    def agent_set_edits(body: SetEditsBody):
+        patch = {k: getattr(body, k) for k in body.model_fields_set if k in ("recipe", "rating", "label", "keywords")}
+        return run(lambda: lib.set_edits(body.photo_id, patch), tool="photos_set_edits", args=body.model_dump())
+
+    @app.post("/api/agent/photos_sidecar", dependencies=agent_auth)
+    def agent_sidecar(body: SidecarBody):
+        call = lib.write_sidecar if body.action == "write" else lib.read_sidecar
+        return run(lambda: call(body.photo_id), tool="photos_sidecar", args=body.model_dump())
 
     # The family contract (Hoard Link 0.4): the shared GET /api/agent/tools +
     # POST /api/agent/call over the per-tool routes above (which stay as they

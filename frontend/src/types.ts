@@ -36,6 +36,33 @@ export interface PhotoDetail extends Photo {
   caption_error?: string;
   date_source?: "exif" | "file_mtime";
   missing?: boolean;
+  edits?: PhotoEdits;
+}
+
+export interface SidecarWrite {
+  written: boolean;
+  path?: string;
+  created?: boolean;
+  merged?: boolean;
+  backup_of_original?: string;
+  reason?: string;
+  error?: string;
+}
+
+// rating, label, keywords and the develop recipe of one photo, and the state of its .xmp sidecar
+export interface PhotoEdits {
+  photo_id: string;
+  rating: number | null;
+  label: string | null;
+  keywords: string[] | null;
+  recipe: Record<string, unknown>;
+  source: "daguerre" | "sidecar" | "embedded" | null;
+  sidecar: { path: string; exists: boolean; changed_on_disk?: boolean; written_by?: "daguerre" | "foreign" | "invalid" };
+  write_sidecars: boolean;
+  imported_not_applied?: { source: string; crs: Record<string, unknown> };
+  sidecar_write?: SidecarWrite;
+  read?: string;
+  note?: string;
 }
 
 export interface SearchResult {

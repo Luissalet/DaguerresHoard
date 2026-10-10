@@ -3,6 +3,7 @@ import { Check, ChevronLeft, ChevronRight, ExternalLink, FolderPlus, Minus, Plus
 import { api, errorText, fileName, formatBytes, type CraftArtifact, type CraftEngineStatus } from "../api";
 import { missingReason, useBackend } from "../backendStatus";
 import type { Dict } from "../i18n";
+import EditsPanel from "./EditsPanel";
 import FrameStrip from "./FrameStrip";
 import { frameAsPhoto, type Album, type Photo, type PhotoDetail, type VideoDetail } from "../types";
 
@@ -358,6 +359,8 @@ export default function Lightbox({ photos, index, onClose, onIndexChange, t, pla
             <ExternalLink size={14} /> {t.open_in_explorer}
           </button>
         )}
+
+        {!photo.video_id && <EditsPanel photoId={photo.id} t={t} onExposure={setCraftExposure} />}
 
         <section className="side-section craft-actions">
           <div className="side-label">{t.craft_tools}</div>

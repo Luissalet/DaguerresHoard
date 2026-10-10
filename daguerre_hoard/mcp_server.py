@@ -77,7 +77,7 @@ mcp = FastMCP(
     instructions=(
         "Daguerre's Hoard indexes the owner's local photo folders so you can find, look at "
         "and organise their photos; videos in those folders are indexed as key frames with "
-        "timestamps (videos_list, videos_describe). Daguerre never modifies, moves or deletes photos. "
+        "timestamps (videos_list, videos_describe). Daguerre never modifies, moves or deletes photos (the one file it may write next to a photo is an optional .xmp sidecar, only when the owner turned that on). "
         "Translate search queries to English before calling photos_search. "
         "Results are ranked, not filtered: use each result's 'relevance' band "
         "(strong/medium/weak) and the top-level 'note' to judge how sure to sound, "
@@ -422,6 +422,79 @@ def photos_export(ids: list[str], title: str = "Photo selection") -> list:
     manifest, exportar fotos, galería local, selección, álbum, hoja de contacto
     """
     return [_text(_call("photos_export", {"ids": ids, "title": title}))]
+
+
+@mcp.tool(annotations=READ_ONLY)
+def photos_edits(photo_id: str) -> list:
+    """Rating, label, keywords and develop recipe of one photo, and its .xmp sidecar state. Valoración y receta de revelado.
+
+    Everything Daguerre keeps about how a photo has been rated and retouched: rating (-1 rejected, 0-5 stars),
+    label, keywords and the develop recipe, plus whether an .xmp sidecar sits next to the file, whether it changed
+    on disk since Daguerre last read it, and any develop settings found in it that Daguerre does not apply
+    (`imported_not_applied`). A changed sidecar is read first, so the answer is current.
+
+    Returns {photo_id, rating, label, keywords, recipe, source, sidecar:{path, exists, changed_on_disk,
+    written_by}, write_sidecars, imported_not_applied?, note}. A recipe holds only the settings that are set:
+    exposure (EV -5..5), contrast, highlights, shadows, whites, blacks, vibrance, saturation, clarity, dehaze
+    (-100..100), temperature (K 2000-50000), tint (-150..150), crop {left, top, right, bottom (0-1), angle}, orientation.
+    Keywords: photo rating, stars, label, keywords, develop settings, xmp sidecar, retouch recipe, valoración,
+    estrellas, etiqueta, palabras clave, ajustes de revelado, archivo xmp, receta de retoque
+    """
+    return [_text(_call("photos_edits", {"photo_id": photo_id}))]
+
+
+@mcp.tool(annotations=ADDITIVE)
+def photos_set_edits(
+    photo_id: str,
+    recipe: dict | None = None,
+    rating: int | None = None,
+    label: str | None = None,
+    keywords: list[str] | None = None,
+) -> list:
+    """Set rating, label, keywords or develop recipe of a photo; keeps its .xmp sidecar in step (write). Valorar y etiquetar.
+
+    Only the arguments you pass change. `recipe` is merged setting by setting (a setting set to null is cleared);
+    accepted settings: exposure (EV -5..5), contrast, highlights, shadows, whites, blacks, vibrance, saturation,
+    clarity, dehaze (-100..100), temperature (K 2000-50000), tint (-150..150), crop {left, top, right, bottom as
+    0-1 fractions, angle}, orientation (EXIF 1-8). `rating` is -1 (rejected) or 0-5 stars; `label` a short text such
+    as "Red"; `keywords` the full list (replaces the old one).
+
+    The photo file is never modified. If the owner turned on "Write .xmp sidecars" in Settings (off by default),
+    Daguerre also writes or merges `<photo name>.xmp` next to the photo in the standard form RAW developers read
+    (a foreign sidecar is backed up first and every field Daguerre does not own is kept); otherwise the edits stay
+    in Daguerre. Returns the same object as photos_edits plus `sidecar_write` ({written, path, merged, ...} or the
+    reason it was not written). Only exposure is rendered by Daguerre itself (craft_develop_photo).
+    Keywords: rate photo, give stars, label photo, tag photo, keywords, retouch recipe, write xmp, valorar foto,
+    poner estrellas, etiquetar foto, palabras clave, receta de retoque, escribir xmp
+    """
+    payload: dict = {"photo_id": photo_id}
+    if recipe is not None:
+        payload["recipe"] = recipe
+    if rating is not None:
+        payload["rating"] = rating
+    if label is not None:
+        payload["label"] = label
+    if keywords is not None:
+        payload["keywords"] = keywords
+    return [_text(_call("photos_set_edits", payload))]
+
+
+@mcp.tool(annotations=ADDITIVE)
+def photos_sidecar(photo_id: str, action: Literal["read", "write"] = "read") -> list:
+    """Read a photo's .xmp sidecar into Daguerre, or write Daguerre's edits to it (write). Leer o escribir el archivo xmp.
+
+    action="read": re-read the sidecar next to the photo (or, without one, the XMP embedded in the JPEG/TIFF/PNG/WebP)
+    and merge its rating, label, keywords and develop settings into Daguerre's edits; settings Daguerre does not
+    apply come back in `imported_not_applied`. Scans do this automatically; use it after the owner edited the file.
+    action="write": write or merge the stored edits into `<photo name>.xmp`. Needs "Write .xmp sidecars" turned on by
+    the owner in Settings (off by default; you cannot turn it on) and something to write. A sidecar Daguerre did not
+    write is backed up under Daguerre's data folder first and merged, never replaced; an unreadable one is left alone
+    and the error says so. The photo itself is never modified.
+    Returns the photos_edits object plus `read` or `sidecar_write`.
+    Keywords: xmp sidecar, import xmp, export xmp, sync metadata, develop settings, leer xmp, escribir xmp,
+    sincronizar metadatos, archivo sidecar
+    """
+    return [_text(_call("photos_sidecar", {"photo_id": photo_id, "action": action}))]
 
 
 @mcp.tool(annotations=READ_ONLY)

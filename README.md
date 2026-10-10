@@ -30,7 +30,9 @@ for a single contact-sheet image of the candidates and check ten photos
 for the price of one image before it claims anything; a text-only model
 never receives an image it did not ask for. Daguerre
 never modifies, moves or deletes an original file; that invariant is
-tested.
+tested. The one file it may write next to a photo is an optional `.xmp`
+sidecar with your ratings and retouch recipe, off by default (see
+[Ratings, retouch recipes and .xmp sidecars](#ratings-retouch-recipes-and-xmp-sidecars)).
 
 ## Use cases
 
@@ -76,8 +78,9 @@ real MCP stdio by a script that plays a small local model
 | Places and time | Offline reverse geocoding (bundled 10-city table, or GeoNames `cities1000` on request, where a neighbourhood is labelled with the city it belongs to: "Alfama, Lisbon, Portugal"), countries and cities with photo counts, timeline by year and month, "on this day" | No map tiles, to avoid any network request for a view. The bundled table places nothing more than 50 km from its 10 cities |
 | Captions | Optional, from a local vision model found through the shared backend (see below), per photo or as a background batch, stored in a full-text index for hybrid search | Off by default; never generated during indexing |
 | Albums | Created by you or the agent from the lightbox or by tool call; the agent can only add | No nested albums |
+| Ratings, labels, keywords, retouch recipes | Per photo: 0-5 stars (or rejected), a label, keywords and a small non-destructive develop recipe, stored in Daguerre and, if you turn it on, kept as a standard `.xmp` sidecar next to the photo; existing sidecars (and XMP embedded in JPEG/TIFF/PNG/WebP) are read on every scan. Details below | Daguerre renders only the exposure of a recipe (through LightCraft); the rest is data for RAW developers. Sidecar writing is off by default |
 | Interface | React desktop-style UI: thumbnail grid with infinite scroll, lightbox with zoom and pan on a large (1600 px) preview of the original, EXIF panel, similar strip, English and Spanish, light and dark | Sidebar sections are not deep-linkable URLs |
-| Assistant integration | `faustus-plugin.json`, 19 MCP tools over stdio, every agent call audited in "Assistant activity" | The agent can add a folder but not remove one |
+| Assistant integration | `faustus-plugin.json`, 22 MCP tools over stdio, every agent call audited in "Assistant activity" | The agent can add a folder but not remove one |
 | Shared models | Captions and query translation share whatever model server Faustus or a local Ollama/llama.cpp/OpenAI-compatible server already has running (Settings -> Shared models shows what resolved and why, with a manual override) | Image search itself (CLIP) is always local, never shared: it is not a chat model the shared backend covers |
 
 ## Shared models
@@ -119,6 +122,9 @@ launches the MCP adapter itself.
 | `photos_add_folder` | Register a folder and index it | adds only |
 | `photos_album` | Create or extend an album | adds only |
 | `photos_export` | Ordered gallery HTML, contact-sheet JPEG and source manifest | writes derived files |
+| `photos_edits` | Rating, label, keywords, develop recipe and `.xmp` sidecar state of one photo (reads a changed sidecar first) | yes |
+| `photos_set_edits` | Set rating, label, keywords or recipe settings; keeps the `.xmp` in step when the owner enabled sidecars | writes Daguerre's data, and the sidecar only if enabled |
+| `photos_sidecar` | `read` or `write` the photo's `.xmp` now | writes Daguerre's data, and the sidecar only if enabled |
 
 `photos_export(ids=[...], title="Summer selection")` turns up to 20 chosen photos
 into a portable HTML gallery with its previews embedded, a numbered contact sheet
@@ -156,6 +162,61 @@ The skill that tells the model when and how to use the tools:
 
 ![Lightbox with EXIF panel and similar photos](docs/media/lightbox.png)
 *The lightbox: preview of the original, EXIF, place, captions, albums and visually similar photos.*
+
+## Ratings, retouch recipes and .xmp sidecars
+
+Every photo can carry a rating (-1 rejected, 0-5 stars), a label, keywords and a
+**retouch recipe**: a small, non-destructive description of a develop. All of it
+lives in Daguerre's database and the photo is never changed. Set it in the
+lightbox (**Rating and retouch**), with `PUT /api/photos/{id}/edits` or with the
+`photos_set_edits` tool; `photos_describe` and `photos_edits` show it.
+
+| Recipe field | Range | Standard XMP property |
+| --- | --- | --- |
+| `exposure` | -5 to +5 EV | `crs:Exposure2012` |
+| `contrast`, `highlights`, `shadows`, `whites`, `blacks`, `clarity` | -100 to 100 | `crs:Contrast2012`, `Highlights2012`, `Shadows2012`, `Whites2012`, `Blacks2012`, `Clarity2012` |
+| `vibrance`, `saturation`, `dehaze` | -100 to 100 | `crs:Vibrance`, `Saturation`, `Dehaze` |
+| `temperature` (K), `tint` | 2000-50000, -150 to 150 | `crs:Temperature`, `crs:Tint` (+ `crs:WhiteBalance="Custom"`) |
+| `crop` `{left, top, right, bottom, angle}` | edges 0-1, angle -45 to 45 | `crs:CropLeft/Top/Right/Bottom`, `CropAngle`, `HasCrop` |
+| `orientation` | EXIF 1-8 | `tiff:Orientation` |
+| rating, label, keywords | -1/0-5, text, list | `xmp:Rating`, `xmp:Label`, `dc:subject` |
+| the whole recipe | | `daguerre:Recipe` (JSON) and `daguerre:Version`, in Daguerre's own namespace, so nothing is lost on a round trip |
+
+**Writing is opt-in.** Settings -> *Write .xmp sidecars next to edited photos*
+(off by default; an assistant cannot turn it on). With it on, every edit also
+writes `IMG_0001.xmp` next to `IMG_0001.jpg` (the RAW-developer convention; an
+existing `IMG_0001.jpg.xmp` is used instead if that is the file you have). The
+photo itself is never touched. An existing sidecar is **merged, never replaced**:
+it is parsed, only the properties above are updated in place, and every other
+namespace, field, list and unmapped develop setting stays as it was. The first
+time Daguerre changes a sidecar it did not write, it copies the original to
+`data/xmp-backups/`. A sidecar that is not valid XMP is left alone and the edit
+is kept in Daguerre with the error. Writes are atomic (temp file + rename).
+
+**Reading is always on.** Each scan reads a new or changed sidecar (one `stat`
+per photo when nothing changed) and, the first time it sees a file with no
+sidecar, the XMP embedded in the JPEG/TIFF/PNG/WebP. The sidecar's rating, label
+and keywords win; its develop settings overlay the stored recipe as a starting
+point (for example `crs:Exposure2012="+0.85"` becomes `exposure: 0.85`). What
+Daguerre has no equivalent for (tone curves, HSL, sharpening, masks...) and any
+value outside its ranges is listed as *imported, not applied* and stays in the
+file. Develop settings embedded in a finished JPEG are already baked into its
+pixels, so they are only listed, never turned into a recipe. If the sidecar
+changed on disk, an edit or `photos_edits` reads it first, so a hand edit is not
+overwritten. Removing a sidecar keeps the edits.
+
+XML from files is untrusted: documents with a DOCTYPE or entity declarations
+(entity expansion, external entities) are rejected before anything expands, and
+size, depth and node count are capped. No network access is involved.
+
+Limits: Daguerre renders only the recipe's exposure (`craft_develop_photo`);
+the other settings are data for RAW developers. RAW formats (CR3, NEF, ARW,
+DNG...) are not indexed by Daguerre yet, so sidecars are used for the formats it
+does index. `IMG_1.jpg` and `IMG_1.png` in one folder share `IMG_1.xmp`, as in
+RAW developers. Comments in a merged sidecar are dropped and its whitespace is
+normalised. Extended XMP (more than 64 KB in a JPEG) is not read. Temperature
+is in Kelvin, as in RAW files; the relative scale used for JPEGs is reported as
+not applied.
 
 ## Quick start
 
@@ -288,7 +349,9 @@ Python 3.11, 3.12 and 3.13, builds the UI with Node 22, and drives
 - Every assistant call is recorded under **Assistant activity** (tool,
   arguments, duration, result or error); the interface's own clicks use
   separate routes and are not mixed in.
-- Originals are only read. Removing a folder in Settings forgets Daguerre's
+- Originals are only read. The one file written outside `data/` is the optional
+  `<photo name>.xmp` sidecar, only while *Write .xmp sidecars* is on (off by
+  default), merged and backed up as described above. Removing a folder in Settings forgets Daguerre's
   own data about it (index rows, thumbnails, album entries), never the
   files. The agent can add folders and albums but not remove anything.
 - Place names come from [GeoNames](https://www.geonames.org/) (CC BY 4.0)

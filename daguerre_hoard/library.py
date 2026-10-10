@@ -31,6 +31,7 @@ from .contact_sheet import MAX_ITEMS as SHEET_MAX_ITEMS
 from .contact_sheet import ContactSheetItem, encode_jpeg_under, render_contact_sheet
 from .craft_engines import CraftEngines
 from .duplicates import PhotoRow, exact_duplicate_groups, near_duplicate_groups
+from .edits import EditsMixin
 from .embeddings import ClipEmbedder, Embedder, FakeEmbedder, VectorStore
 from .formats import HEIF_AVAILABLE
 from .geocode import GEOCODER_VERSION, ReverseGeocoder, download_geonames
@@ -187,7 +188,7 @@ class _Prepared:
     error: str | None = None
 
 
-class Library(VideoMixin):
+class Library(VideoMixin, EditsMixin):
     def __init__(self, settings: Settings, conn: sqlite3.Connection | None = None, embedder: Embedder | None = None):
         settings.ensure_dirs()
         self.settings = settings
@@ -201,6 +202,7 @@ class Library(VideoMixin):
         self.backend = Backend(settings.data_dir, self.conn)
         self.craft_engines = CraftEngines(settings.data_dir, port=settings.port)
         self._index_lock = threading.Lock()
+        self._edits_lock = threading.RLock()
         self._init_videos()
         self._model_lock = threading.Lock()
         self._maybe_regeocode()
@@ -272,6 +274,7 @@ class Library(VideoMixin):
             chunk = ids[start : start + 500]
             marks = ",".join("?" * len(chunk))
             c.execute(f"DELETE FROM album_photos WHERE photo_id IN ({marks})", chunk)
+            c.execute(f"DELETE FROM photo_edits WHERE photo_id IN ({marks})", chunk)
             c.execute(
                 f"DELETE FROM photos_fts WHERE rowid IN (SELECT rowid FROM photos WHERE id IN ({marks}))", chunk
             )
@@ -322,7 +325,7 @@ class Library(VideoMixin):
             query, params = query + " WHERE id = ?", (root_id,)
         roots = [dict(r) for r in c.execute(query, params).fetchall()]
         stats = {"files_seen": 0, "new": 0, "updated": 0, "moved": 0, "unchanged": 0,
-                 "embedded": 0, "errors": 0, "error_samples": []}
+                 "embedded": 0, "sidecars_read": 0, "embedded_read": 0, "errors": 0, "error_samples": []}
 
         def record_error(path: Path, exc: BaseException | str) -> None:
             stats["errors"] += 1
@@ -360,6 +363,9 @@ class Library(VideoMixin):
                 )
                 handle.set_stats(stats)
 
+        # Sidecars (.xmp next to a photo) and embedded XMP: ratings, labels, keywords and develop settings.
+        self._sync_sidecars(plan, stats, record_error)
+
         # Videos: key frames become photo rows linked to the video (see videos.py); they join the embedding
         # queue below and so go through the same model as photos.
         self._index_videos(roots, stats, record_error, pending_embed, handle)
@@ -392,6 +398,8 @@ class Library(VideoMixin):
         c.commit()
         handle.set_stats(stats)
         summary = f"indexed {total} files: {stats['new']} new, {stats['updated']} changed, {stats['moved']} moved"
+        if stats["sidecars_read"]:
+            summary += f", {stats['sidecars_read']} .xmp sidecars read"
         if stats.get("videos_seen"):
             summary += (
                 f"; {stats['videos_seen']} videos: {stats['videos_new'] + stats['videos_updated']} processed, "
@@ -1219,6 +1227,10 @@ class Library(VideoMixin):
             out["caption_error"] = caption_error
         if row["missing"]:
             out["missing"] = True
+        if not row["video_id"]:
+            edits = self.edits_summary(row)
+            if edits:
+                out["edits"] = edits
         return out
 
     def _store_caption(self, photo_id: str, text: str) -> None:

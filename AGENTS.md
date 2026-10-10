@@ -7,6 +7,13 @@ Reglas para cualquier agente de código que trabaje en este repositorio.
 - **Nunca** modifiques, muevas ni borres un archivo bajo una carpeta
   registrada como root (fuera de `data/`). Es un invariante probado en
   `tests/test_library.py`; si lo rompes, el usuario pierde fotos reales.
+  Única excepción: con el ajuste `xmp_sidecars` activado por el dueño (apagado
+  por defecto), `edits.py` crea o fusiona `<nombre>.xmp` junto a una foto
+  editada, nunca la foto: copia antes a `data/xmp-backups/` cualquier `.xmp`
+  ajeno, no sobrescribe uno ilegible y escribe de forma atómica. Está probado en
+  `tests/test_xmp_sidecars.py`; no ampliar esa excepción a otros archivos.
+- El XML que viene de archivos del usuario (`.xmp`) no es de fiar: solo se lee
+  con `xmp.parse_xmp` (sin DOCTYPE ni entidades, con tope de tamaño y nodos).
 - Todo lo que se escribe en disco por la app vive bajo `data/` (o
   `data-demo/` con `--demo`). Nunca rutas fuera del repo salvo que el
   usuario lo pida explícitamente (`--data-dir`).

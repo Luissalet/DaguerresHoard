@@ -114,6 +114,22 @@ CREATE TABLE IF NOT EXISTS settings (
     key TEXT PRIMARY KEY,
     value TEXT
 );
+
+CREATE TABLE IF NOT EXISTS photo_edits (
+    photo_id TEXT PRIMARY KEY REFERENCES photos(id),
+    rating INTEGER,
+    label TEXT,
+    keywords TEXT,
+    recipe TEXT NOT NULL DEFAULT '{}',
+    imported TEXT,
+    source TEXT,
+    sidecar_path TEXT,
+    sidecar_mtime_ns INTEGER,
+    sidecar_size INTEGER,
+    sidecar_owner TEXT,
+    embedded_hash TEXT,
+    updated_at TEXT NOT NULL
+);
 """
 
 

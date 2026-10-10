@@ -1,6 +1,6 @@
 # MCP tools
 
-Daguerre's Hoard exposes 19 photo-library and local Craft-engine tools over stdio
+Daguerre's Hoard exposes 22 photo-library and local Craft-engine tools over stdio
 (`daguerre_hoard/mcp_server.py`, a standalone script: stdlib + `httpx` + `mcp`).
 Every tool calls the app's
 own `/api/agent/<tool>` endpoint and returns exactly what that endpoint
@@ -71,6 +71,9 @@ system proxy settings for these calls.
 | `photos_add_folder` | no (adds) | yes | register a folder and index it |
 | `photos_album` | no (adds) | yes | create or extend an album |
 | `photos_export` | no (derived files) | yes | ordered portable gallery, contact sheet and manifest |
+| `photos_edits` | yes | yes | rating, label, keywords, recipe and `.xmp` sidecar state of one photo |
+| `photos_set_edits` | no (Daguerre's data; the `.xmp` only if the owner enabled it) | yes | set rating, label, keywords or recipe settings |
+| `photos_sidecar` | no (Daguerre's data; the `.xmp` only if the owner enabled it) | yes | `read` or `write` the photo's `.xmp` now |
 | `craft_engines` | yes | yes | configured PhotoCraft/LightCraft executable status |
 | `craft_tools` | yes | yes | live upstream MCP tools and schemas for one engine |
 | `craft_call` | no (isolated workspace) | yes | batch calls to the complete native MCP surface |
@@ -250,6 +253,43 @@ an entirely unreadable selection is `invalid_argument`. Identical title, ordered
 selection, photo bytes and exported metadata reuse the same export; changing
 order, pixels or captions creates another export.
 The MCP response has text only. The export creates no album and changes no root.
+
+## photos_edits
+
+`photo_id`. Returns `{photo_id, rating, label, keywords, recipe, source,
+sidecar: {path, exists, changed_on_disk?, written_by?}, write_sidecars,
+imported_not_applied?, note}`. A sidecar that changed on disk is read first.
+`rating` is -1 (rejected), 0-5 or null; `source` is where the values came from
+(`daguerre`, `sidecar`, `embedded`); `written_by` is `daguerre`, `foreign` or
+`invalid`. `imported_not_applied.crs` holds develop settings found in a sidecar
+(or in embedded XMP) that Daguerre does not apply, such as tone curves.
+
+## photos_set_edits
+
+`photo_id` plus any of `recipe`, `rating`, `label`, `keywords`; only what is
+passed changes. `recipe` is merged setting by setting and a setting set to `null`
+is cleared. Settings: `exposure` (EV -5..5), `contrast`, `highlights`, `shadows`,
+`whites`, `blacks`, `vibrance`, `saturation`, `clarity`, `dehaze` (-100..100),
+`temperature` (K 2000..50000), `tint` (-150..150), `crop`
+`{left, top, right, bottom, angle}` (edges 0..1 with right > left and bottom > top,
+angle -45..45), `orientation` (EXIF 1..8). `rating` -1 or 0..5; `label` up to 64
+characters; `keywords` is the whole list. A bad value is a 400 `invalid_argument`
+that lists what is accepted. Returns the `photos_edits` object plus
+`sidecar_write`: `{written: true, path, created, merged, bytes,
+backup_of_original?}` when the owner enabled *Write .xmp sidecars*, otherwise
+`{written: false, reason}` (the edit is still saved in Daguerre), or
+`{written: false, error}` if the file could not be written.
+
+## photos_sidecar
+
+`photo_id`, `action` = `read` (default) or `write`. `read` re-reads the sidecar
+(or, without one, the embedded XMP) and merges it into the edits; returns the
+`photos_edits` object plus `read` (`sidecar`, `embedded` or why nothing was
+found). `write` writes or merges the stored edits into `<photo name>.xmp`; it
+needs the owner's *Write .xmp sidecars* setting (an assistant cannot enable it),
+something to write, and a sidecar that is valid XMP if one exists. A sidecar
+Daguerre did not write is copied to `data/xmp-backups/` first and merged, never
+replaced. The photo file is never modified.
 
 ## craft_import_compositor
 

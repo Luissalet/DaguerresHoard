@@ -232,6 +232,7 @@ export default function SettingsPage({ t, status, onChanged }: Props) {
   const [ollamaMsg, setOllamaMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [flash, setFlash] = useState<string | null>(null);
   const [translateSearch, setTranslateSearch] = useState<boolean | null>(null);
+  const [xmpSidecars, setXmpSidecars] = useState<boolean | null>(null);
   const backend = useBackend();
   const noVision = missingReason(backend?.vision, t.no_vision_model);
   const noLlm = missingReason(backend?.llm, t.no_llm_model);
@@ -246,7 +247,10 @@ export default function SettingsPage({ t, status, onChanged }: Props) {
   useEffect(() => {
     api
       .getSettings()
-      .then((s) => setTranslateSearch(s.translate_search))
+      .then((s) => {
+        setTranslateSearch(s.translate_search);
+        setXmpSidecars(s.xmp_sidecars);
+      })
       .catch(() => {});
   }, []);
 
@@ -532,6 +536,23 @@ export default function SettingsPage({ t, status, onChanged }: Props) {
           </label>
         )}
         {translateSearch !== null && noLlm && <p className="muted small">{t.no_llm_model}</p>}
+        {xmpSidecars !== null && (
+          <>
+            <label className="checkbox-row">
+              <input
+                type="checkbox"
+                checked={xmpSidecars}
+                onChange={(e) => {
+                  const next = e.target.checked;
+                  setXmpSidecars(next);
+                  act(() => api.setSettings({ xmp_sidecars: next }));
+                }}
+              />
+              {t.settings_xmp_label}
+            </label>
+            <p className="muted small">{t.settings_xmp_hint}</p>
+          </>
+        )}
       </section>
     </div>
   );

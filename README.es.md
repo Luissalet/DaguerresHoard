@@ -38,7 +38,10 @@ débil) en cada uno. Un modelo con visión puede pedir una sola hoja de
 contactos con las candidatas y revisar diez fotos por el precio de una
 imagen antes de afirmar nada; un modelo solo de texto nunca recibe una
 imagen que no haya pedido. Daguerre nunca modifica,
-mueve ni borra un archivo original; es un invariante con su test.
+mueve ni borra un archivo original; es un invariante con su test. El único
+archivo que puede escribir junto a una foto es un `.xmp` opcional con tus
+valoraciones y tu receta de retoque, desactivado por defecto (ver
+[Valoraciones, recetas de retoque y archivos .xmp](#valoraciones-recetas-de-retoque-y-archivos-xmp)).
 
 ## Casos de uso
 
@@ -79,8 +82,9 @@ está en [docs/USABILITY_REPORT.md](docs/USABILITY_REPORT.md)):
 | Lugares y tiempo | Geocodificación inversa sin conexión (tabla integrada de 10 ciudades o GeoNames `cities1000` bajo petición, donde cada barrio lleva la ciudad a la que pertenece: «Alfama, Lisbon, Portugal»), países y ciudades con recuentos, cronología por año y mes, «un día como hoy» | Sin mapas con teselas, para no hacer peticiones de red por una vista. La tabla integrada no ubica nada a más de 50 km de sus 10 ciudades |
 | Descripciones | Opcionales, con un modelo de visión local que encuentra el backend compartido (ver más abajo), por foto o en lote en segundo plano, guardado en un índice de texto completo para la búsqueda híbrida | Desactivado por defecto; nunca se genera durante el indexado |
 | Álbumes | Los creas tú o el agente, desde el visor o con una herramienta; el agente solo puede añadir | Sin álbumes anidados |
+| Valoraciones, etiquetas, palabras clave y recetas de retoque | Por foto: de 0 a 5 estrellas (o descartada), una etiqueta, palabras clave y una pequeña receta de revelado no destructiva, guardadas en Daguerre y, si lo activas, también como un `.xmp` estándar junto a la foto; los `.xmp` que ya existan (y el XMP incrustado en JPEG/TIFF/PNG/WebP) se leen en cada escaneo. Detalles más abajo | Daguerre solo renderiza la exposición de una receta (con LightCraft); el resto son datos para los reveladores RAW. La escritura de `.xmp` está desactivada por defecto |
 | Interfaz | Interfaz React de escritorio: cuadrícula de miniaturas con carga continua, visor con zoom y desplazamiento sobre una vista previa grande (1600 px) del original, panel EXIF, fotos parecidas, inglés y español, tema claro y oscuro | Las secciones de la barra lateral no tienen URL propia |
-| Integración con el asistente | `faustus-plugin.json`, 19 herramientas MCP por stdio y cada llamada del agente registrada en «Actividad del asistente» | El agente puede añadir una carpeta, pero no quitarla |
+| Integración con el asistente | `faustus-plugin.json`, 22 herramientas MCP por stdio y cada llamada del agente registrada en «Actividad del asistente» | El agente puede añadir una carpeta, pero no quitarla |
 | Modelos compartidos | Las descripciones y la traducción de búsquedas usan el modelo que ya tenga en marcha Faustus, o un Ollama/llama.cpp/servidor local compatible con OpenAI (Ajustes -> Modelos compartidos muestra qué se resolvió y por qué, con un ajuste manual) | La búsqueda de imágenes (CLIP) siempre es local: no es un modelo de chat que cubra el backend compartido |
 
 ## Modelos compartidos
@@ -126,6 +130,9 @@ trabajo de la aplicación y arranca él mismo el adaptador MCP.
 | `photos_add_folder` | Registra una carpeta y la indexa | solo añade |
 | `photos_album` | Crea o amplía un álbum | solo añade |
 | `photos_export` | Galería HTML ordenada, hoja de contacto JPEG y manifiesto de fuentes | escribe archivos derivados |
+| `photos_edits` | Valoración, etiqueta, palabras clave, receta de revelado y estado del `.xmp` de una foto (lee antes un `.xmp` que haya cambiado) | sí |
+| `photos_set_edits` | Fija valoración, etiqueta, palabras clave o ajustes de la receta; mantiene el `.xmp` al día si el dueño activó los sidecars | escribe datos de Daguerre, y el `.xmp` solo si está activado |
+| `photos_sidecar` | `read` o `write` del `.xmp` de la foto ahora | escribe datos de Daguerre, y el `.xmp` solo si está activado |
 
 `photos_export(ids=[...], title="Selección de verano")` convierte hasta 20 fotos
 elegidas en una galería HTML portátil con sus vistas previas incluidas, una hoja
@@ -164,6 +171,66 @@ usar las herramientas: [skills/find-photos/SKILL.md](skills/find-photos/SKILL.md
 
 ![Visor con panel EXIF y fotos parecidas](docs/media/lightbox.png)
 *El visor: vista previa del original, EXIF, lugar, descripción, álbumes y fotos parecidas.*
+
+## Valoraciones, recetas de retoque y archivos .xmp
+
+Cada foto puede llevar una valoración (-1 descartada, de 0 a 5 estrellas), una
+etiqueta, palabras clave y una **receta de retoque**: una descripción pequeña y
+no destructiva de un revelado. Todo vive en la base de datos de Daguerre y la
+foto nunca se modifica. Se fija en el visor (**Valoración y retoque**), con
+`PUT /api/photos/{id}/edits` o con la herramienta `photos_set_edits`;
+`photos_describe` y `photos_edits` lo muestran.
+
+| Campo de la receta | Rango | Propiedad XMP estándar |
+| --- | --- | --- |
+| `exposure` | de -5 a +5 EV | `crs:Exposure2012` |
+| `contrast`, `highlights`, `shadows`, `whites`, `blacks`, `clarity` | de -100 a 100 | `crs:Contrast2012`, `Highlights2012`, `Shadows2012`, `Whites2012`, `Blacks2012`, `Clarity2012` |
+| `vibrance`, `saturation`, `dehaze` | de -100 a 100 | `crs:Vibrance`, `Saturation`, `Dehaze` |
+| `temperature` (K), `tint` | 2000-50000, de -150 a 150 | `crs:Temperature`, `crs:Tint` (+ `crs:WhiteBalance="Custom"`) |
+| `crop` `{left, top, right, bottom, angle}` | bordes 0-1, ángulo de -45 a 45 | `crs:CropLeft/Top/Right/Bottom`, `CropAngle`, `HasCrop` |
+| `orientation` | EXIF 1-8 | `tiff:Orientation` |
+| valoración, etiqueta, palabras clave | -1/0-5, texto, lista | `xmp:Rating`, `xmp:Label`, `dc:subject` |
+| la receta completa | | `daguerre:Recipe` (JSON) y `daguerre:Version`, en el espacio de nombres propio de Daguerre, para no perder nada en un viaje de ida y vuelta |
+
+**Escribir es opcional.** Ajustes -> *Escribir archivos .xmp junto a las fotos
+editadas* (desactivado por defecto; un asistente no puede activarlo). Con eso
+activado, cada edición escribe también `IMG_0001.xmp` junto a `IMG_0001.jpg` (la
+convención de los reveladores RAW; si ya tienes un `IMG_0001.jpg.xmp`, se usa
+ese). La foto no se toca nunca. Un sidecar existente se **fusiona, no se
+sustituye**: se analiza, solo se actualizan en su sitio las propiedades de
+arriba, y todo lo demás (otros espacios de nombres, campos, listas y ajustes de
+revelado sin equivalente) queda como estaba. La primera vez que Daguerre
+modifica un sidecar que no escribió él, copia el original a `data/xmp-backups/`.
+Un sidecar que no sea XMP válido se deja en paz y la edición se conserva en
+Daguerre junto con el error. Las escrituras son atómicas (archivo temporal y
+renombrado).
+
+**Leer está siempre activado.** Cada escaneo lee un sidecar nuevo o cambiado (un
+`stat` por foto si no ha cambiado nada) y, la primera vez que ve un archivo sin
+sidecar, el XMP incrustado en el JPEG/TIFF/PNG/WebP. Mandan la valoración, la
+etiqueta y las palabras clave del sidecar; sus ajustes de revelado se superponen
+a la receta guardada como punto de partida (por ejemplo `crs:Exposure2012="+0.85"`
+pasa a `exposure: 0.85`). Lo que Daguerre no sabe representar (curvas de tono,
+HSL, nitidez, máscaras...) y cualquier valor fuera de sus rangos se muestra como
+*importado, no aplicado* y permanece en el archivo. Los ajustes incrustados en un
+JPEG ya terminado están horneados en sus píxeles, así que solo se listan y nunca
+se convierten en receta. Si el sidecar cambió en el disco, una edición o
+`photos_edits` lo lee antes, de modo que una edición a mano no se pisa. Si borras
+el sidecar, las ediciones se conservan.
+
+El XML de los archivos no es de fiar: los documentos con DOCTYPE o declaraciones
+de entidades (expansión de entidades, entidades externas) se rechazan antes de
+expandir nada, y el tamaño, la profundidad y el número de nodos están acotados.
+No interviene la red.
+
+Límites: Daguerre solo renderiza la exposición de la receta
+(`craft_develop_photo`); el resto de ajustes son datos para los reveladores RAW.
+Los formatos RAW (CR3, NEF, ARW, DNG...) aún no los indexa Daguerre, así que los
+sidecars se usan con los formatos que sí indexa. `IMG_1.jpg` e `IMG_1.png` en una
+carpeta comparten `IMG_1.xmp`, como en los reveladores RAW. Los comentarios de un
+sidecar fusionado se pierden y se normalizan sus espacios en blanco. El XMP
+extendido (más de 64 KB en un JPEG) no se lee. La temperatura va en Kelvin, como
+en los RAW; la escala relativa de los JPEG se muestra como no aplicada.
 
 ## Inicio rápido
 
@@ -306,7 +373,10 @@ Python 3.11, 3.12 y 3.13, compila la interfaz con Node 22 y prueba
 - Cada llamada del asistente queda registrada en **Actividad del
   asistente** (herramienta, argumentos, duración, resultado o error); los
   clics de la propia interfaz van por otras rutas y no se mezclan.
-- Los originales solo se leen. Quitar una carpeta en Ajustes borra los
+- Los originales solo se leen. El único archivo que se escribe fuera de `data/`
+  es el `.xmp` opcional de una foto editada, solo mientras *Escribir archivos
+  .xmp* esté activado (desactivado por defecto), fusionado y con copia previa
+  como se describe arriba. Quitar una carpeta en Ajustes borra los
   datos propios de Daguerre sobre ella (filas del índice, miniaturas,
   entradas de álbumes), nunca los archivos. El agente puede añadir
   carpetas y álbumes, pero no quitar nada.

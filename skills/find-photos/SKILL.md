@@ -6,7 +6,9 @@ description: Find, look at, organise and export the owner's local photos with Da
 # Finding photos with Daguerre
 
 Daguerre never modifies, moves or deletes an original photo. `photos_add_folder`
-and `photos_album` add library information; `photos_export` writes derived
+and `photos_album` add library information; `photos_set_edits` stores ratings,
+labels, keywords and retouch recipes in Daguerre and, only if the owner turned on
+"Write .xmp sidecars", in a `<photo name>.xmp` next to the photo; `photos_export` writes derived
 previews and a manifest, and Craft tools create editable copies, derivatives
 and receipts under Daguerre data.
 
@@ -53,6 +55,20 @@ and receipts under Daguerre data.
     standalone preview gallery, contact sheet and source manifest, with no image
     payload in the chat. Check `complete` and `omitted` before saying all photos
     were exported. Original files are referenced, not packaged at full resolution.
+
+## Ratings, keywords and retouch recipes
+
+11. "Rate / tag / label this photo", "give it 4 stars", "what did I rate this":
+    `photos_set_edits(photo_id, rating=4, keywords=[...], label="Red")` and
+    `photos_edits(photo_id)`. A retouch recipe is `recipe={"exposure": 0.5,
+    "contrast": 10, "crop": {"left": 0.1, "right": 0.9}}` (a setting set to null is
+    cleared). Only exposure is rendered by Daguerre (`craft_develop_photo`); the
+    rest is data for RAW developers. Check `sidecar_write`: if `written` is false
+    with a reason, the edit is saved in Daguerre only, and you cannot turn the
+    setting on -- tell the owner it is in Settings ("Write .xmp sidecars").
+    After the owner edited the `.xmp` elsewhere, `photos_sidecar(photo_id, "read")`
+    brings it in. `imported_not_applied` lists develop settings Daguerre keeps
+    but does not apply: do not say they were applied.
 
 ## Editable package imports
 

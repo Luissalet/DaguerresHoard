@@ -99,6 +99,7 @@ async def test_mcp_adapter_over_stdio(running_app, tmp_path):
                 "photos_search", "photos_similar", "photos_show", "photos_describe",
                 "photos_duplicates", "photos_timeline", "photos_library", "videos_list", "videos_describe",
                 "photos_add_folder", "photos_album", "photos_export", "craft_engines",
+                "photos_edits", "photos_set_edits", "photos_sidecar",
                 "craft_tools", "craft_call", "craft_develop_photo", "craft_create_layered_document", "craft_create_layered_photo", "craft_import_compositor",
             }
             for tool in tools.tools:
@@ -108,6 +109,7 @@ async def test_mcp_adapter_over_stdio(running_app, tmp_path):
             read_only = {t.name for t in tools.tools if t.annotations.readOnlyHint}
             assert read_only == names - {
                 "photos_add_folder", "photos_album", "photos_export", "craft_call",
+                "photos_set_edits", "photos_sidecar",
                 "craft_develop_photo", "craft_create_layered_document", "craft_create_layered_photo", "craft_import_compositor",
             }
             if os.environ.get('DAGUERRE_CRAFT_BUNDLES'):

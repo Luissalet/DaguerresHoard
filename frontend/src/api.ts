@@ -8,6 +8,7 @@ import type {
   LibraryStatus,
   ModelStatus,
   PhotoDetail,
+  PhotoEdits,
   PhotoListResult,
   Root,
   SearchResult,
@@ -82,6 +83,13 @@ export const api = {
   listPhotos: (params: Params) => request<PhotoListResult>(`/api/photos?${qs(params)}`),
   getPhoto: (id: string) => request<PhotoDetail>(`/api/photos/${id}`),
   caption: (id: string) => post<PhotoDetail>(`/api/photos/${id}/caption`),
+  getEdits: (id: string) => request<PhotoEdits>(`/api/photos/${id}/edits`),
+  setEdits: (
+    id: string,
+    body: { rating?: number | null; label?: string | null; keywords?: string[] | null; recipe?: Record<string, unknown> | null },
+  ) => request<PhotoEdits>(`/api/photos/${id}/edits`, { method: "PUT", body: JSON.stringify(body) }),
+  readSidecar: (id: string) => post<PhotoEdits>(`/api/photos/${id}/sidecar/read`),
+  writeSidecar: (id: string) => post<PhotoEdits>(`/api/photos/${id}/sidecar/write`),
   previewUrl: (id: string, size = 1600) => `/api/photos/${id}/preview?size=${size}`,
   openInExplorer: (id: string) => post<{ ok: boolean }>(`/api/photos/${id}/open`),
   addRoot: (path: string, excluded_globs: string[] = []) => post<Root>("/api/roots", { path, excluded_globs }),
@@ -104,9 +112,9 @@ export const api = {
   albumRemove: (id: string, photo_ids: string[]) => post<Album>(`/api/albums/${id}/remove`, { photo_ids }),
   deleteAlbum: (id: string) => request<{ ok: boolean }>(`/api/albums/${id}`, { method: "DELETE" }),
   getSettings: () =>
-    request<{ ollama_base_url: string; ollama_model: string; translate_search: boolean }>("/api/settings"),
-  setSettings: (body: { ollama_base_url?: string; ollama_model?: string; translate_search?: boolean }) =>
-    post<{ ollama_base_url: string; ollama_model: string; translate_search: boolean }>("/api/settings", body),
+    request<{ ollama_base_url: string; ollama_model: string; translate_search: boolean; xmp_sidecars: boolean }>("/api/settings"),
+  setSettings: (body: { ollama_base_url?: string; ollama_model?: string; translate_search?: boolean; xmp_sidecars?: boolean }) =>
+    post<{ ollama_base_url: string; ollama_model: string; translate_search: boolean; xmp_sidecars: boolean }>("/api/settings", body),
   testOllama: () => post<{ ok: boolean; error: string | null }>("/api/settings/ollama/test"),
   captionBatch: (limit = 500) => post<{ job_id: string }>("/api/captions/batch", { limit }),
   modelStatus: () => request<ModelStatus>("/api/model"),
