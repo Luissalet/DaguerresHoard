@@ -75,7 +75,7 @@ está en [docs/USABILITY_REPORT.md](docs/USABILITY_REPORT.md)):
 | Área | Disponible ahora | Límite |
 | --- | --- | --- |
 | Indexado | Escaneos incrementales en segundo plano: un archivo sin cambios cuesta un `stat`; los modificados se vuelven a leer; los movidos o renombrados conservan su id, su vector, su descripción y sus álbumes. Hash y decodificación en paralelo, progreso con archivos/s y tiempo restante, y un archivo ilegible se anota sin parar el escaneo. JPEG, PNG, WebP, GIF, BMP, TIFF y HEIC/HEIF | Sin vigilancia del sistema de archivos: los reescaneos los lanza el usuario, el agente o una carpeta nueva |
-| Metadatos | Fecha EXIF con zona horaria, cámara, objetivo, exposición, ISO, focal, orientación y GPS; si no hay fecha EXIF se usa la del archivo y se indica | Solo EXIF; no lee archivos XMP |
+| Metadatos | Fecha EXIF con zona horaria, cámara, objetivo, exposición, ISO, focal, orientación y GPS; si no hay fecha EXIF se usa la del archivo y se indica | Fecha, cámara y lugar salen solo del EXIF; el XMP aporta valoraciones, etiquetas, palabras clave y recetas (ver abajo) |
 | Vídeos | Los vídeos de las carpetas (MP4, MOV, MKV, AVI, WebM, M4V, WMV, MPG, 3GP) se indexan como **fotogramas clave**: uno en cada cambio de escena (puntuación `scene` de ffmpeg) más uno cada 30 s como respaldo para imágenes estáticas, hasta 48 por vídeo (ambos ajustables con `POST /api/video-settings`). Cada fotograma pasa por el mismo proceso que las fotos (miniatura, hash perceptual, embedding CLIP si el modelo está instalado, texto completo, álbumes) y queda enlazado a su vídeo con su marca de tiempo. Página Vídeos con tira de fotogramas y reproductor que salta al fotograma pulsado; los resultados de búsqueda muestran `video · 01:23`; herramientas `videos_list` y `videos_describe`. Incremental: un vídeo solo se vuelve a procesar si cambió su contenido (tamaño/fecha y luego un hash de principio y final), un archivo movido conserva sus fotogramas y uno borrado se oculta | Necesita `ffmpeg` en el PATH (o `DAGUERRE_FFMPEG`); sin él los vídeos se listan sin fotogramas y el siguiente escaneo lo reintenta. Los fotogramas son imágenes fijas: sin audio, sin transcripción ni descripción del clip, sin seguimiento de objetos. El reproductor depende de que el navegador soporte el códec (los fotogramas funcionan igual). Los fotogramas no aparecen en la cuadrícula normal, duplicados, cronología ni lugares |
 | Búsqueda | Texto a imagen con CLIP ViT-B/32 (en inglés funciona mejor; las herramientas piden al modelo que traduzca), fotos parecidas y filtros (rango de fechas, año, mes, lugar, carpeta, cámara, orientación, megapíxeles, GPS). Híbrida con las descripciones cuando existen | El modelo (unos 600 MB) solo se descarga cuando el usuario lo pide en Ajustes. Hasta entonces funciona un modo básico que solo entiende colores, y cada resultado lo avisa |
 | Duplicados | Exactos (BLAKE2b) y aproximados (pHash, distancia de Hamming hasta 6, búsqueda exacta multiíndice, union-find), con la copia recomendada (el original, no la copia de seguridad ni la del chat) y el espacio que ocupan las copias sobrantes | Solo lectura por diseño: «Copiar rutas de las copias extra» y «Abrir carpeta»; borrar es cosa tuya. Un grupo aproximado puede juntar fotos distintas que se parecen, así que su espacio se muestra como «hasta» |
@@ -193,17 +193,31 @@ foto nunca se modifica. Se fija en el visor (**Valoración y retoque**), con
 | la receta completa | | `daguerre:Recipe` (JSON) y `daguerre:Version`, en el espacio de nombres propio de Daguerre, para no perder nada en un viaje de ida y vuelta |
 
 **Escribir es opcional.** Ajustes -> *Escribir archivos .xmp junto a las fotos
-editadas* (desactivado por defecto; un asistente no puede activarlo). Con eso
-activado, cada edición escribe también `IMG_0001.xmp` junto a `IMG_0001.jpg` (la
-convención de los reveladores RAW; si ya tienes un `IMG_0001.jpg.xmp`, se usa
-ese). La foto no se toca nunca. Un sidecar existente se **fusiona, no se
+editadas* (desactivado por defecto). Ninguna herramienta del asistente puede activarlo, y
+`POST /api/settings` rechaza esa clave si la petición lleva el token del
+asistente, así que solo puede hacerlo la pantalla de Ajustes. Con eso activado,
+cada edición escribe también `IMG_0001.xmp` junto a `IMG_0001.jpg` (la
+convención de los reveladores RAW). **Si otro archivo de la carpeta tiene el
+mismo nombre** (`IMG_0001.png`, o un RAW que Daguerre no indexa, como
+`IMG_0001.cr3`), `IMG_0001.xmp` describiría más de un archivo, así que para esa
+foto Daguerre lee y escribe `IMG_0001.jpg.xmp` y no toca nunca el `IMG_0001.xmp`
+compartido (el JPEG no adopta los ajustes del RAW, y una edición de Daguerre
+nunca cambia cómo revela el RAW). La foto no se toca nunca. Un sidecar existente se **fusiona, no se
 sustituye**: se analiza, solo se actualizan en su sitio las propiedades de
 arriba, y todo lo demás (otros espacios de nombres, campos, listas y ajustes de
-revelado sin equivalente) queda como estaba. La primera vez que Daguerre
-modifica un sidecar que no escribió él, copia el original a `data/xmp-backups/`.
+revelado sin equivalente) queda como estaba. Antes de que Daguerre
+modifique un sidecar que no escribió él, o uno que otro programa ha cambiado desde
+la última escritura de Daguerre, copia el archivo a `data/xmp-backups/` (con un
+nombre derivado de su contenido, así que el mismo contenido se guarda una vez).
 Un sidecar que no sea XMP válido se deja en paz y la edición se conserva en
 Daguerre junto con el error. Las escrituras son atómicas (archivo temporal y
-renombrado).
+renombrado). Un ajuste cuyo valor no ha cambiado conserva su escritura original
+en el archivo (`Exposure2012="0.8512"`, `CropAngle="-2.1"` y
+`WhiteBalance="As Shot"` se quedan como están mientras no se mueva el valor que
+hay detrás); uno que cambies se escribe en el formato habitual (`+1.20`). Los
+caracteres de control, que XML no admite, se eliminan de la etiqueta y de las
+palabras clave, y el documento generado se vuelve a analizar antes de sustituir
+nada: si no se puede analizar, no se escribe y el error lo dice.
 
 **Leer está siempre activado.** Cada escaneo lee un sidecar nuevo o cambiado (un
 `stat` por foto si no ha cambiado nada) y, la primera vez que ve un archivo sin
@@ -226,8 +240,9 @@ No interviene la red.
 Límites: Daguerre solo renderiza la exposición de la receta
 (`craft_develop_photo`); el resto de ajustes son datos para los reveladores RAW.
 Los formatos RAW (CR3, NEF, ARW, DNG...) aún no los indexa Daguerre, así que los
-sidecars se usan con los formatos que sí indexa. `IMG_1.jpg` e `IMG_1.png` en una
-carpeta comparten `IMG_1.xmp`, como en los reveladores RAW. Los comentarios de un
+sidecars se usan con los formatos que sí indexa. Una foto cuyo nombre comparte otro
+archivo usa `IMG_1.jpg.xmp`, un nombre que los reveladores RAW no buscan: es el
+precio de no mezclar nunca los ajustes de dos archivos. Los comentarios de un
 sidecar fusionado se pierden y se normalizan sus espacios en blanco. El XMP
 extendido (más de 64 KB en un JPEG) no se lee. La temperatura va en Kelvin, como
 en los RAW; la escala relativa de los JPEG se muestra como no aplicada.

@@ -8,7 +8,7 @@ description: Find, look at, organise and export the owner's local photos with Da
 Daguerre never modifies, moves or deletes an original photo. `photos_add_folder`
 and `photos_album` add library information; `photos_set_edits` stores ratings,
 labels, keywords and retouch recipes in Daguerre and, only if the owner turned on
-"Write .xmp sidecars", in a `<photo name>.xmp` next to the photo; `photos_export` writes derived
+"Write .xmp sidecars", in a `<photo name>.xmp` (or `<photo name>.<ext>.xmp` when another file shares the name) next to the photo; `photos_export` writes derived
 previews and a manifest, and Craft tools create editable copies, derivatives
 and receipts under Daguerre data.
 

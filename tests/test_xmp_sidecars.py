@@ -449,6 +449,11 @@ def client(tmp_path, monkeypatch):
         yield c
 
 
+def _ui(client, **body):
+    # The Settings screen sends no token; the client fixture sends the assistant's bearer on everything else.
+    return client.post("/api/settings", json=body, headers={"Authorization": ""})
+
+
 def _wait_http(client, job_id, timeout=15.0):
     start = time.time()
     while time.time() - start < timeout:
@@ -478,7 +483,7 @@ def test_http_and_agent_routes_for_edits(client, tmp_path):
     assert refused.status_code == 400 and "off" in refused.json()["message"]
 
     # on: the agent writes through the same Library call, audited
-    assert client.post("/api/settings", json={"xmp_sidecars": True}).json()["xmp_sidecars"] is True
+    assert _ui(client, xmp_sidecars=True).json()["xmp_sidecars"] is True
     done = client.post("/api/agent/photos_set_edits", json={
         "photo_id": pid, "recipe": {"contrast": 9}, "label": "Yellow", "keywords": ["x", "y"]}).json()
     assert done["sidecar_write"]["written"] and done["recipe"] == {"exposure": 0.7, "contrast": 9}
@@ -514,8 +519,194 @@ def test_the_photo_is_byte_identical_after_every_xmp_operation(client, tmp_path)
     img = make_image(tmp_path / "photos" / "IMG_1.jpg")
     before = (_sha(img), img.stat().st_mtime_ns, img.stat().st_size)
     pid, _ = _http_photo(client, img.parent)
-    client.post("/api/settings", json={"xmp_sidecars": True})
+    _ui(client, xmp_sidecars=True)
     client.put(f"/api/photos/{pid}/edits", json={"recipe": RECIPE, "rating": 5, "label": "Red", "keywords": ["k"]})
     client.post(f"/api/photos/{pid}/sidecar/read")
     client.post(f"/api/photos/{pid}/sidecar/write")
     assert (_sha(img), img.stat().st_mtime_ns, img.stat().st_size) == before
+
+
+# --------------------------------------------------------------------------- #
+# Review fixes: shared names, characters XML cannot carry, spelling kept, backups, who may switch it on
+# --------------------------------------------------------------------------- #
+def _backups(tmp_path):
+    folder = tmp_path / "data" / "xmp-backups"
+    return sorted(folder.iterdir()) if folder.exists() else []
+
+
+def test_two_files_with_one_name_never_share_a_sidecar(library, tmp_path):
+    folder = tmp_path / "photos"
+    make_image(folder / "IMG_0001.jpg", color=(200, 60, 60))
+    make_image(folder / "IMG_0001.png", color=(60, 60, 200), fmt="PNG")
+    _scan(library, folder)
+    library.set_xmp_sidecars(True)
+    jpg, png = _photo(library, "IMG_0001.jpg")["id"], _photo(library, "IMG_0001.png")["id"]
+
+    library.set_edits(jpg, {"rating": 5, "recipe": {"exposure": 1.0}, "keywords": ["A-only"]})
+    assert (folder / "IMG_0001.jpg.xmp").is_file() and not (folder / "IMG_0001.xmp").exists()
+
+    other = library.get_edits(png)  # the PNG must not adopt the JPEG's values
+    assert other["rating"] is None and other["recipe"] == {} and other["keywords"] is None
+    assert other["sidecar"]["exists"] is False and other["sidecar"]["named_with_extension"] is True
+    assert other["sidecar"]["path"].endswith("IMG_0001.png.xmp")
+
+    library.set_edits(png, {"rating": 1, "recipe": {"exposure": -1.0}, "keywords": ["B-only"]})
+    assert (folder / "IMG_0001.png.xmp").is_file() and not (folder / "IMG_0001.xmp").exists()
+    first = library.get_edits(jpg)
+    assert first["rating"] == 5 and first["recipe"] == {"exposure": 1.0} and first["keywords"] == ["A-only"]
+    assert "B-only" not in (folder / "IMG_0001.jpg.xmp").read_text(encoding="utf-8")
+    assert "A-only" not in (folder / "IMG_0001.png.xmp").read_text(encoding="utf-8")
+
+    root = library.list_roots()[0]  # a rescan keeps them apart too
+    _rescan(library, root)
+    assert library.get_edits(jpg)["rating"] == 5 and library.get_edits(png)["rating"] == 1
+
+
+def test_an_unindexed_raw_next_to_a_jpeg_keeps_its_sidecar_untouched(library, tmp_path):
+    folder = tmp_path / "photos"
+    make_image(folder / "IMG_0002.jpg")
+    (folder / "IMG_0002.cr3").write_bytes(b"pretend raw " * 900)  # not an extension Daguerre indexes
+    raw_sidecar = folder / "IMG_0002.xmp"
+    raw_sidecar.write_text(RAW_DEVELOPER_XMP, encoding="utf-8")
+    original = raw_sidecar.read_bytes()
+    _, job = _scan(library, folder)
+    assert job["stats"]["sidecars_read"] == 0  # the RAW's develop settings are not the JPEG's
+    pid = _photo(library, "IMG_0002.jpg")["id"]
+    adopted = library.get_edits(pid)
+    assert adopted["rating"] is None and adopted["recipe"] == {} and adopted["sidecar"]["exists"] is False
+
+    library.set_xmp_sidecars(True)
+    out = library.set_edits(pid, {"rating": 2, "recipe": {"contrast": 5}})["sidecar_write"]
+    assert out["written"] and out["created"] and out["path"].endswith("IMG_0002.jpg.xmp")
+    assert raw_sidecar.read_bytes() == original  # not one byte of the RAW's sidecar changed
+    info = xmp.read_xmp((folder / "IMG_0002.jpg.xmp").read_bytes())
+    assert info.rating == 2 and info.crs["Contrast2012"] == "+5" and "Sharpness" not in info.crs
+    assert _backups(tmp_path) == []
+
+
+def test_a_file_alone_in_its_name_keeps_the_plain_sidecar_name(tmp_path):
+    alone = tmp_path / "a.jpg"
+    alone.write_bytes(b"x")
+    assert [c.name.lower() for c in xmp.sidecar_candidates(alone)] == ["a.xmp", "a.jpg.xmp"]
+    assert xmp.target_sidecar(alone).name == "a.xmp"
+    (tmp_path / "A.CR3").write_bytes(b"x")  # same stem, other case and extension, not indexed
+    assert xmp.shares_stem(alone)
+    assert [c.name.lower() for c in xmp.sidecar_candidates(alone)] == ["a.jpg.xmp"]
+    assert xmp.target_sidecar(alone).name == "a.jpg.xmp"
+    (tmp_path / "a.xmp").write_text("x")  # an .xmp is a sidecar, never a second photo
+    (tmp_path / "b.jpg").write_bytes(b"x")
+    (tmp_path / "b.xmp").write_text("x")
+    assert not xmp.shares_stem(tmp_path / "b.jpg") and xmp.target_sidecar(tmp_path / "b.jpg").name == "b.xmp"
+
+
+def test_control_characters_are_removed_before_anything_is_stored_or_written(library, tmp_path):
+    from daguerre_hoard.library import ValidationError
+
+    img = make_image(tmp_path / "photos" / "IMG_7.jpg")
+    side = img.parent / "IMG_7.xmp"
+    side.write_text(RAW_DEVELOPER_XMP, encoding="utf-8")
+    _scan(library, img.parent)
+    library.set_xmp_sidecars(True)
+    pid = _photo(library, "IMG_7.jpg")["id"]
+    out = library.set_edits(pid, {"keywords": ["ok", "bad\u0001word", "x\u0000y", "e\u001bsc", "\ufffeend", "s\ud800x"],
+                                  "label": "la\u0000bel"})
+    assert out["keywords"] == ["ok", "badword", "xy", "esc", "end", "sx"] and out["label"] == "label"
+    assert out["sidecar_write"]["written"] is True
+    info = xmp.read_xmp(side.read_bytes())  # the file is well-formed and says the same as the database
+    assert info.keywords == out["keywords"] and info.label == "label"
+    assert "ToneCurvePV2012" in side.read_text(encoding="utf-8")
+    assert library.set_edits(pid, {"rating": 2})["sidecar_write"]["written"] is True  # later edits still merge
+    with pytest.raises(ValidationError, match="printable"):
+        library.set_edits(pid, {"label": "\u0001\u0002"})
+    assert library.get_edits(pid)["label"] == "label"  # a refused edit changes nothing
+
+
+def test_output_that_would_not_parse_is_never_written(library, tmp_path, monkeypatch):
+    from daguerre_hoard.library import ValidationError
+
+    img = make_image(tmp_path / "photos" / "IMG_8.jpg")
+    side = img.parent / "IMG_8.xmp"
+    side.write_text(RAW_DEVELOPER_XMP, encoding="utf-8")
+    original = side.read_bytes()
+    _scan(library, img.parent)
+    library.set_xmp_sidecars(True)
+    pid = _photo(library, "IMG_8.jpg")["id"]
+    real_serialize = xmp.serialize
+    monkeypatch.setattr(xmp, "serialize", lambda root: b"<x><unclosed>")
+    out = library.set_edits(pid, {"rating": 4})
+    assert out["rating"] == 4  # the edit is kept in Daguerre
+    assert out["sidecar_write"]["written"] is False and "did not write" in out["sidecar_write"]["error"]
+    assert side.read_bytes() == original and _backups(tmp_path) == []
+    with pytest.raises(ValidationError, match="did not write"):
+        library.write_sidecar(pid)
+    assert side.read_bytes() == original
+    monkeypatch.setattr(xmp, "serialize", real_serialize)
+    # the layer below refuses too: text XML cannot hold, and a lone surrogate that UTF-8 cannot encode
+    for bad in ("a\u0001b", "s\ud800x"):
+        with pytest.raises(xmp.XmpOutputError):
+            xmp.merge_sidecar(None, xmp.SidecarEdits(label=bad))
+
+
+def test_http_edit_with_control_characters(client, tmp_path):
+    img = make_image(tmp_path / "photos" / "IMG_3.jpg")
+    pid, _ = _http_photo(client, img.parent)
+    _ui(client, xmp_sidecars=True)
+    ok = client.put(f"/api/photos/{pid}/edits", json={"keywords": ["a\u0001b", "ok"], "label": "x\u001by"})
+    assert ok.status_code == 200 and ok.json()["keywords"] == ["ab", "ok"] and ok.json()["label"] == "xy"
+    side = img.parent / "IMG_3.xmp"
+    assert xmp.read_xmp(side.read_bytes()).keywords == ["ab", "ok"]
+    raw = client.put(f"/api/photos/{pid}/edits", content=b'{"keywords": ["s\\ud800x"]}',
+                     headers={"content-type": "application/json"})
+    assert raw.status_code == 200 and raw.json()["keywords"] == ["sx"]
+    assert xmp.read_xmp(side.read_bytes()).keywords == ["sx"]
+
+
+def test_rewriting_keeps_the_original_spelling_of_settings_that_did_not_change():
+    foreign = (RAW_DEVELOPER_XMP.replace('crs:Exposure2012="+0.85"', 'crs:Exposure2012="0.8512"')
+               .replace('crs:WhiteBalance="Custom"', 'crs:WhiteBalance="As Shot"')
+               .replace('crs:CropAngle="-2.100000"', 'crs:CropAngle="-2.1"')
+               .replace('crs:Contrast2012="+14"', 'crs:Contrast2012="14"')).encode("utf-8")
+    info = xmp.read_xmp(foreign)
+    recipe, _ = xmp.crs_to_recipe(info.crs, None, info.orientation)
+    out = xmp.merge_sidecar(foreign, xmp.SidecarEdits(recipe=recipe, rating=4)).decode("utf-8")
+    for kept in ('crs:Exposure2012="0.8512"', 'crs:WhiteBalance="As Shot"', 'crs:CropAngle="-2.1"',
+                 'crs:Contrast2012="14"', 'crs:Temperature="6100"', 'crs:Tint="+8"'):
+        assert kept in out, kept
+    assert 'xmp:Rating="4"' in out  # what changed is written
+    moved = xmp.merge_sidecar(foreign, xmp.SidecarEdits(recipe={**recipe, "exposure": 1.2, "contrast": 20})).decode("utf-8")
+    assert 'crs:Exposure2012="+1.20"' in moved and 'crs:Contrast2012="+20"' in moved
+    assert 'crs:WhiteBalance="As Shot"' in moved and 'crs:CropAngle="-2.1"' in moved
+    warmer = xmp.merge_sidecar(foreign, xmp.SidecarEdits(recipe={**recipe, "temperature": 5000})).decode("utf-8")
+    assert 'crs:Temperature="5000"' in warmer and 'crs:WhiteBalance="Custom"' in warmer
+
+
+def test_a_sidecar_somebody_else_changed_is_backed_up_again(library, tmp_path):
+    img = make_image(tmp_path / "photos" / "IMG_5.jpg")
+    side = img.parent / "IMG_5.xmp"
+    side.write_text(RAW_DEVELOPER_XMP, encoding="utf-8")
+    original = side.read_bytes()
+    _scan(library, img.parent)
+    library.set_xmp_sidecars(True)
+    pid = _photo(library, "IMG_5.jpg")["id"]
+    library.set_edits(pid, {"rating": 1})
+    library.set_edits(pid, {"rating": 2})
+    assert len(_backups(tmp_path)) == 1 and _backups(tmp_path)[0].read_bytes() == original
+    # another program edits the file Daguerre had written
+    edited = side.read_bytes().replace(b'xmp:Rating="2"', b'xmp:Rating="5"')
+    side.write_bytes(edited)
+    later = time.time() + 5
+    os.utime(side, (later, later))
+    library.set_edits(pid, {"label": "Blue"})
+    backups = _backups(tmp_path)
+    assert len(backups) == 2 and edited in [b.read_bytes() for b in backups]
+    library.set_edits(pid, {"label": "Green"})
+    assert len(_backups(tmp_path)) == 2  # Daguerre's own writes are not backed up
+
+
+def test_the_assistants_token_cannot_switch_sidecar_writing_on(client):
+    refused = client.post("/api/settings", json={"xmp_sidecars": True})  # the fixture sends the bearer token
+    assert refused.status_code == 403 and "Settings screen" in refused.json()["message"]
+    assert client.get("/api/settings").json()["xmp_sidecars"] is False
+    assert client.post("/api/settings", json={"translate_search": False}).status_code == 200  # other keys unaffected
+    assert _ui(client, xmp_sidecars=True).json()["xmp_sidecars"] is True
+    assert _ui(client, xmp_sidecars=False).json()["xmp_sidecars"] is False

@@ -70,7 +70,10 @@
 - `edits.py` -- `EditsMixin` of `Library`: the `photo_edits` table, the opt-in
   `xmp_sidecars` setting, reading sidecars at scan time (signature = path +
   mtime + size, so unchanged files cost a `stat`), writing/merging sidecars
-  atomically with a backup of foreign ones in `data/xmp-backups/`.
+  atomically with a backup (named by content hash) of foreign or externally
+  changed ones in `data/xmp-backups/`. A name shared by several files in a folder
+  makes the sidecar `<name.ext>.xmp`; the written XMP is re-parsed before it
+  replaces anything.
 - `jobs.py` -- `JobManager` / `JobHandle`: a daemon thread per job,
   progress and stats in the `jobs` table.
 - `library.py` -- the engine (no FastAPI import): indexing pipeline and

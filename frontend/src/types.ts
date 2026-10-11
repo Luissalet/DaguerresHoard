@@ -57,7 +57,7 @@ export interface PhotoEdits {
   keywords: string[] | null;
   recipe: Record<string, unknown>;
   source: "daguerre" | "sidecar" | "embedded" | null;
-  sidecar: { path: string; exists: boolean; changed_on_disk?: boolean; written_by?: "daguerre" | "foreign" | "invalid" };
+  sidecar: { path: string; exists: boolean; changed_on_disk?: boolean; named_with_extension?: boolean; written_by?: "daguerre" | "foreign" | "invalid" };
   write_sidecars: boolean;
   imported_not_applied?: { source: string; crs: Record<string, unknown> };
   sidecar_write?: SidecarWrite;

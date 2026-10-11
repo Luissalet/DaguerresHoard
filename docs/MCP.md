@@ -285,11 +285,12 @@ backup_of_original?}` when the owner enabled *Write .xmp sidecars*, otherwise
 `photo_id`, `action` = `read` (default) or `write`. `read` re-reads the sidecar
 (or, without one, the embedded XMP) and merges it into the edits; returns the
 `photos_edits` object plus `read` (`sidecar`, `embedded` or why nothing was
-found). `write` writes or merges the stored edits into `<photo name>.xmp`; it
-needs the owner's *Write .xmp sidecars* setting (an assistant cannot enable it),
+found). `write` writes or merges the stored edits into `<photo name>.xmp` (`<photo name>.<ext>.xmp` when another file in the folder has the same name, so two files never share a sidecar); it
+needs the owner's *Write .xmp sidecars* setting (no tool enables it, and the HTTP settings route refuses the assistant's token for that key),
 something to write, and a sidecar that is valid XMP if one exists. A sidecar
-Daguerre did not write is copied to `data/xmp-backups/` first and merged, never
-replaced. The photo file is never modified.
+Daguerre did not write, or that changed since Daguerre's last write, is copied to
+`data/xmp-backups/` first and merged, never replaced. If the generated XMP would
+not parse, nothing is written. The photo file is never modified.
 
 ## craft_import_compositor
 

@@ -194,6 +194,7 @@ export interface Dict {
   sidecar_by_foreign: string;
   sidecar_invalid: string;
   sidecar_changed: string;
+  sidecar_shared_name: string;
   sidecar_reread: string;
   sidecar_write: string;
   sidecar_write_off: string;
@@ -408,6 +409,7 @@ export const dict: Record<Lang, Dict> = {
     sidecar_by_foreign: "made by another program; Daguerre read it and keeps it intact.",
     sidecar_invalid: "not valid XMP; Daguerre will not touch it.",
     sidecar_changed: "Changed on disk since it was read.",
+    sidecar_shared_name: "Another file in this folder has the same name, so the sidecar is called <photo name>.<extension>.xmp.",
     sidecar_reread: "Re-read",
     sidecar_write: "Write .xmp",
     sidecar_write_off: "Turn on \"Write .xmp sidecars\" in Settings to write it.",
@@ -620,6 +622,7 @@ export const dict: Record<Lang, Dict> = {
     sidecar_by_foreign: "creado por otro programa; Daguerre lo ha leído y lo respeta.",
     sidecar_invalid: "no es un XMP válido; Daguerre no lo tocará.",
     sidecar_changed: "Ha cambiado en el disco desde que se leyó.",
+    sidecar_shared_name: "Otro archivo de esta carpeta tiene el mismo nombre, así que el sidecar se llama <nombre de la foto>.<extensión>.xmp.",
     sidecar_reread: "Releer",
     sidecar_write: "Escribir .xmp",
     sidecar_write_off: "Activa «Escribir archivos .xmp» en Ajustes para poder escribirlo.",

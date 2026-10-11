@@ -525,7 +525,12 @@ def create_app(data_dir: Path, static_dir: Path | None = None, port: int = 8814)
         }
 
     @app.post("/api/settings")
-    def set_settings(body: SettingsBody):
+    def set_settings(body: SettingsBody, request: Request):
+        if body.xmp_sidecars is not None and request.headers.get("authorization"):
+            # Writing next to the owner's photos is the owner's decision: the Settings screen sends no token, and a
+            # request carrying the assistant's bearer token (data/mcp-token) cannot flip this switch.
+            raise ApiError(403, "forbidden", "Writing .xmp sidecars can only be switched on or off from Daguerre's "
+                           "Settings screen, not with the assistant's token.")
         changed_legacy_vision = False
         if body.ollama_base_url is not None:
             parsed = urlparse(body.ollama_base_url.strip())

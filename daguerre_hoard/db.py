@@ -128,6 +128,7 @@ CREATE TABLE IF NOT EXISTS photo_edits (
     sidecar_size INTEGER,
     sidecar_owner TEXT,
     embedded_hash TEXT,
+    sidecar_sha TEXT,
     updated_at TEXT NOT NULL
 );
 """
@@ -145,6 +146,9 @@ def _migrate(conn: sqlite3.Connection) -> None:
         conn.execute("ALTER TABLE photos ADD COLUMN video_id TEXT")
         conn.execute("ALTER TABLE photos ADD COLUMN frame_ts REAL")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_photos_video ON photos(video_id)")
+    edit_cols = {r["name"] for r in conn.execute("PRAGMA table_info(photo_edits)").fetchall()}
+    if edit_cols and "sidecar_sha" not in edit_cols:
+        conn.execute("ALTER TABLE photo_edits ADD COLUMN sidecar_sha TEXT")
     fts_sql = conn.execute(
         "SELECT sql FROM sqlite_master WHERE name = 'photos_fts'"
     ).fetchone()

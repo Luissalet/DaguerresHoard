@@ -8,9 +8,11 @@ Reglas para cualquier agente de código que trabaje en este repositorio.
   registrada como root (fuera de `data/`). Es un invariante probado en
   `tests/test_library.py`; si lo rompes, el usuario pierde fotos reales.
   Única excepción: con el ajuste `xmp_sidecars` activado por el dueño (apagado
-  por defecto), `edits.py` crea o fusiona `<nombre>.xmp` junto a una foto
-  editada, nunca la foto: copia antes a `data/xmp-backups/` cualquier `.xmp`
-  ajeno, no sobrescribe uno ilegible y escribe de forma atómica. Está probado en
+  por defecto; solo la pantalla de Ajustes lo cambia, no el token del asistente),
+  `edits.py` crea o fusiona `<nombre>.xmp` (o `<nombre.ext>.xmp` si otro archivo
+  comparte el nombre, nunca el `.xmp` de otro archivo) junto a una foto editada,
+  nunca la foto: copia antes a `data/xmp-backups/` cualquier `.xmp` ajeno o
+  cambiado por otro programa, no sobrescribe uno ilegible y escribe de forma atómica. Está probado en
   `tests/test_xmp_sidecars.py`; no ampliar esa excepción a otros archivos.
 - El XML que viene de archivos del usuario (`.xmp`) no es de fiar: solo se lee
   con `xmp.parse_xmp` (sin DOCTYPE ni entidades, con tope de tamaño y nodos).
