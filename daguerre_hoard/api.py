@@ -22,6 +22,7 @@ from . import __version__, db as dbmod
 from .config import DISPLAY_NAME, SERVICE_SLUG, Settings
 from .craft_engines import CraftEngineError
 from .hoard_link import family, proc, tokens
+from .hoard_link.copilot import install_copilot
 from .hoard_link.guard import install_guard
 from .library import ID_RE, Library, NotFoundError, ValidationError
 
@@ -772,6 +773,10 @@ def create_app(data_dir: Path, static_dir: Path | None = None, port: int = 8814)
     # so the two catalogues never disagree.
     family.install_fastapi(app, "daguerre", str(settings.data_dir),
                            mcp_source=str(Path(__file__).with_name("mcp_server.py")))
+
+    # The shared Faustus assistant panel: relay routes and the floating launcher. Mounted before the /api
+    # catch-all and the SPA catch-all so its routes are not shadowed.
+    install_copilot(app, "daguerre", str(settings.data_dir), app_name="Daguerre's Hoard")
 
     @app.api_route("/api/{rest:path}", methods=["GET", "POST", "PUT", "DELETE", "PATCH"])
     def api_not_found(rest: str):
