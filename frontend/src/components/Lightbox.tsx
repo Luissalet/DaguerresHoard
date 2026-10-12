@@ -3,6 +3,7 @@ import { Check, ChevronLeft, ChevronRight, ExternalLink, FolderPlus, Minus, Plus
 import { api, errorText, fileName, formatBytes, type CraftArtifact, type CraftEngineStatus } from "../api";
 import { missingReason, useBackend } from "../backendStatus";
 import type { Dict } from "../i18n";
+import { useCopilotForm, useCopilotOpen, useCopilotRefresh } from "../copilot-hooks";
 import EditsPanel from "./EditsPanel";
 import FrameStrip from "./FrameStrip";
 import { frameAsPhoto, type Album, type Photo, type PhotoDetail, type VideoDetail } from "../types";
@@ -129,6 +130,31 @@ export default function Lightbox({ photos, index, onClose, onIndexChange, t, pla
     el.addEventListener("wheel", onWheel, { passive: false });
     return () => el.removeEventListener("wheel", onWheel);
   }, []);
+
+  // The shared assistant panel: which photo is open, a reload when it finishes a turn, and the album field as a form.
+  useCopilotOpen(
+    "photo",
+    photo
+      ? { id: photo.id, name: fileName(photo.path), video_id: photo.video_id, video_name: photo.video_name, timestamp: photo.timestamp }
+      : null,
+    photo?.id ?? "",
+  );
+  useCopilotRefresh(() => {
+    const id = photo?.id;
+    if (!id) return;
+    api
+      .getPhoto(id)
+      .then((fresh) => {
+        if (openId.current === id) setDetail(fresh);
+      })
+      .catch(() => {});
+    api.listAlbums().then(setAlbums).catch(() => {});
+  });
+  const openId = useRef<string | undefined>(undefined);
+  openId.current = photo?.id;
+  useCopilotForm(() =>
+    photo ? { kind: "photo-album-add", object_id: photo.id, dirty: albumName.trim() !== "", fields: albumName.trim() ? { album: albumName.trim() } : {} } : null,
+  );
 
   if (!photo) return null;
 

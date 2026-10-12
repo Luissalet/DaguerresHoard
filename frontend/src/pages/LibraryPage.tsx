@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Images, Settings } from "lucide-react";
 import { api, errorText } from "../api";
 import Lightbox from "../components/Lightbox";
+import { useCopilotRefresh } from "../copilot-hooks";
 import PhotoGrid from "../components/PhotoGrid";
 import type { Dict } from "../i18n";
 import type { LibraryStatus, Photo } from "../types";
@@ -57,6 +58,19 @@ export default function LibraryPage({ t, platformIsWindows, status, onOpenSettin
     loadMore(0, true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [photoCount, indexing, loadMore]);
+
+  // The assistant finished a turn: re-read what is already loaded (same photos, fresh data) without jumping the scroll.
+  useCopilotRefresh(() => {
+    if (busy.current || openIndex !== null) return; // the open photo refreshes itself; the list behind it must not shift
+    api
+      .listPhotos({ offset: 0, limit: Math.min(500, Math.max(PAGE, loadedCount.current)) })
+      .then((r) => {
+        if (busy.current) return;
+        setPhotos(r.results);
+        setNextOffset(r.next_offset);
+      })
+      .catch(() => {});
+  });
 
   useEffect(() => {
     const el = sentinelRef.current;

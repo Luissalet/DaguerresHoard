@@ -3,6 +3,7 @@ import { AlertTriangle, ArrowLeft, MapPin } from "lucide-react";
 import { api, errorText } from "../api";
 import Lightbox from "../components/Lightbox";
 import PhotoGrid from "../components/PhotoGrid";
+import { useCopilotRefresh } from "../copilot-hooks";
 import type { Dict } from "../i18n";
 import type { Photo } from "../types";
 
@@ -43,6 +44,20 @@ export default function PlacesPage({ t, platformIsWindows, onOpenSettings }: Pro
       .then((r) => setCityPhotos(r.results))
       .catch((e) => setError(errorText(e)));
   }, [city]);
+
+  // The assistant finished a turn: reload the places and the open city in place (not under an open photo).
+  useCopilotRefresh(() => {
+    api
+      .places()
+      .then((r) => setCountries(r.countries))
+      .catch(() => {});
+    if (city && openIndex === null) {
+      api
+        .listPhotos({ place: city, limit: 500 })
+        .then((r) => setCityPhotos(r.results))
+        .catch(() => {});
+    }
+  });
 
   if (error) return <p className="error-text">{error}</p>;
   if (!countries) return <p className="muted">{t.loading}</p>;

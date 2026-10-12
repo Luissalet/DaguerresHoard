@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { AlertTriangle, Search as SearchIcon } from "lucide-react";
 import { api, errorText } from "../api";
 import Lightbox from "../components/Lightbox";
 import PhotoGrid from "../components/PhotoGrid";
+import { useCopilotForm, useCopilotOpen, useCopilotRefresh } from "../copilot-hooks";
 import type { Dict } from "../i18n";
 import type { Photo, SearchResult } from "../types";
 
@@ -25,6 +26,27 @@ export default function SearchPage({ t, platformIsWindows, onOpenSettings }: Pro
   const [loading, setLoading] = useState(false);
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
+  // The search as it was last submitted (not what is being typed): what the assistant panel sees and what a reload repeats.
+  const [submitted, setSubmitted] = useState<{ query: string; filters: Record<string, unknown> } | null>(null);
+  const submittedRef = useRef(submitted);
+  submittedRef.current = submitted;
+  useCopilotOpen("search", submitted ? { query: submitted.query, ...submitted.filters } : null, JSON.stringify(submitted));
+  useCopilotRefresh(() => {
+    const s = submittedRef.current;
+    if (!s || loadingRef.current || openIndex !== null) return; // an open photo must not shift under the user
+    api
+      .search(s.query, s.filters, 50)
+      .then((r) => submittedRef.current === s && setResult(r))
+      .catch(() => {});
+  });
+  const typed = (): Record<string, unknown> => ({ query, from, to, place, folder, camera, orientation });
+  useCopilotForm(() => {
+    const fields = Object.fromEntries(Object.entries(typed()).filter(([, v]) => String(v).trim() !== ""));
+    return { kind: "search", object_id: null, dirty: Object.keys(fields).length > 0, fields };
+  });
+  const loadingRef = useRef(false);
+  loadingRef.current = loading;
+
   async function runSearch(e?: React.FormEvent) {
     e?.preventDefault();
     if (!query.trim()) return;
@@ -38,6 +60,7 @@ export default function SearchPage({ t, platformIsWindows, onOpenSettings }: Pro
       if (folder.trim()) filters.folder = folder.trim();
       if (camera.trim()) filters.camera = camera.trim();
       if (orientation) filters.orientation = orientation;
+      setSubmitted({ query: query.trim(), filters });
       setResult(await api.search(query.trim(), filters, 50));
     } catch (err) {
       setError(errorText(err));

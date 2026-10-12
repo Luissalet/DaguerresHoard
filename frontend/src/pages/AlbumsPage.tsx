@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { ArrowLeft, Bot, FolderOpen, Plus, Trash2, X } from "lucide-react";
-import { api, errorText } from "../api";
+import { api, ApiError, errorText } from "../api";
 import Lightbox from "../components/Lightbox";
+import { useCopilotForm, useCopilotOpen, useCopilotRefresh } from "../copilot-hooks";
 import PhotoGrid from "../components/PhotoGrid";
 import type { Dict } from "../i18n";
 import type { Album } from "../types";
@@ -33,6 +34,29 @@ export default function AlbumsPage({ t, platformIsWindows }: Props) {
   }
 
   useEffect(refresh, []);
+
+  // The shared assistant panel: the open album, a reload in place when it finishes a turn, and the new-album form.
+  useCopilotOpen("album", openAlbum ? openAlbum.id : null, openAlbum?.id ?? "");
+  useCopilotRefresh(() => {
+    refresh();
+    const id = openAlbum?.id;
+    if (!id) return;
+    api
+      .getAlbum(id)
+      .then((fresh) => {
+        setOpenAlbum((cur) => (cur && cur.id === id ? fresh : cur));
+        // keep the user's selection to what is still in the album
+        const still = new Set((fresh.photos ?? []).map((p) => p.id));
+        setSelected((prev) => new Set([...prev].filter((p) => still.has(p))));
+      })
+      .catch((e) => {
+        // the server said no such album (deleted meanwhile); a network blip leaves the view alone
+        if (e instanceof ApiError) setOpenAlbum((cur) => (cur && cur.id === id ? null : cur));
+      });
+  });
+  useCopilotForm(() =>
+    openAlbum ? null : { kind: "album-new", object_id: null, dirty: newName.trim() !== "", fields: newName.trim() ? { name: newName.trim() } : {} },
+  );
 
   async function openDetail(album: Album) {
     try {

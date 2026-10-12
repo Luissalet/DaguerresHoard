@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState } from "react";
 import { Languages, Moon, Sun } from "lucide-react";
 import { api } from "./api";
 import Sidebar, { type Page } from "./components/Sidebar";
+import { setPage as setCopilotPage } from "./copilot-context";
+import { useCopilotRefresh } from "./copilot-hooks";
 import { detectLang, dict, type Lang } from "./i18n";
 import ActivityPage from "./pages/ActivityPage";
 import AlbumsPage from "./pages/AlbumsPage";
@@ -69,6 +71,8 @@ export default function App() {
   }, []);
 
   useEffect(refreshStatus, [refreshStatus]);
+  useEffect(() => setCopilotPage(page), [page]);
+  useCopilotRefresh(refreshStatus);
 
   // While a scan or model download runs, keep the counts and progress fresh.
   useEffect(() => {

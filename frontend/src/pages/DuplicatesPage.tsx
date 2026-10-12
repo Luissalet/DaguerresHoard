@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Check, Copy, ExternalLink } from "lucide-react";
 import { api, errorText, fileName, formatBytes, parentFolder } from "../api";
 import Lightbox from "../components/Lightbox";
+import { useCopilotRefresh } from "../copilot-hooks";
 import type { Dict } from "../i18n";
 import type { DuplicatesResult, Photo } from "../types";
 
@@ -27,6 +28,15 @@ export default function DuplicatesPage({ t, platformIsWindows }: Props) {
       .catch((e) => setError(errorText(e)))
       .finally(() => setLoading(false));
   }, [kind]);
+
+  // The assistant finished a turn: re-read the groups in place (not while a photo is open over them).
+  useCopilotRefresh(() => {
+    if (open) return;
+    api
+      .duplicates(kind, 50)
+      .then((r) => setData(r))
+      .catch(() => {});
+  });
 
   function copyPaths(photos: Photo[], keeperId: string, idx: number) {
     // A2 (live report): copying every path (keeper included) meant pasting

@@ -3,6 +3,7 @@ import { ArrowLeft, Play, Video as VideoIcon } from "lucide-react";
 import { api, errorText, formatBytes } from "../api";
 import FrameStrip from "../components/FrameStrip";
 import Lightbox from "../components/Lightbox";
+import { useCopilotOpen, useCopilotRefresh } from "../copilot-hooks";
 import type { Dict } from "../i18n";
 import { frameAsPhoto, type LibraryStatus, type VideoDetail, type VideoSummary } from "../types";
 
@@ -36,6 +37,23 @@ export default function VideosPage({ t, platformIsWindows, status }: Props) {
       .catch((e) => setError(errorText(e)))
       .finally(() => setLoaded(true));
   }, [open, status?.video_count, status?.indexing]);
+
+  // The shared assistant panel: the open video, and a reload in place when it finishes a turn.
+  useCopilotOpen("video", open ? open.id : null, open?.id ?? "");
+  useCopilotRefresh(() => {
+    const id = open?.id;
+    if (id) {
+      api
+        .getVideo(id)
+        .then((fresh) => setOpen((cur) => (cur && cur.id === id ? fresh : cur)))
+        .catch(() => {});
+    } else {
+      api
+        .listVideos({ limit: 200 })
+        .then((r) => setVideos(r.results))
+        .catch(() => {});
+    }
+  });
 
   async function openVideo(v: VideoSummary) {
     try {

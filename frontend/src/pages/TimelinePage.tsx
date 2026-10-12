@@ -3,6 +3,7 @@ import { ArrowLeft, CalendarDays } from "lucide-react";
 import { api, errorText } from "../api";
 import Lightbox from "../components/Lightbox";
 import PhotoGrid from "../components/PhotoGrid";
+import { useCopilotRefresh } from "../copilot-hooks";
 import type { Dict } from "../i18n";
 import type { Photo, TimelineResult } from "../types";
 
@@ -33,6 +34,20 @@ export default function TimelinePage({ t, platformIsWindows }: Props) {
       .then((r) => setMonthPhotos(r.results))
       .catch((e) => setError(errorText(e)));
   }, [month]);
+
+  // The assistant finished a turn: reload the overview and the open month in place (not under an open photo).
+  useCopilotRefresh(() => {
+    api
+      .timeline()
+      .then(setData)
+      .catch(() => {});
+    if (month && openIndex === null) {
+      api
+        .listPhotos({ year: Number(month.year), month: Number(month.month), limit: 500 })
+        .then((r) => setMonthPhotos(r.results))
+        .catch(() => {});
+    }
+  });
 
   if (error) return <p className="error-text">{error}</p>;
   if (!data) return <p className="muted">{t.loading}</p>;

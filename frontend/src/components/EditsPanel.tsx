@@ -1,6 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FileText, RefreshCw, Save, Star } from "lucide-react";
 import { api, errorText } from "../api";
+import { changedFields, editsPatch, parseKeywords, rebaseForm } from "../copilot-context";
+import { useCopilotForm, useCopilotRefresh } from "../copilot-hooks";
 import type { Dict } from "../i18n";
 import type { PhotoEdits } from "../types";
 
@@ -10,6 +12,13 @@ interface Props {
   // the recipe's exposure becomes the starting point of the exposure slider below
   onExposure?: (ev: number) => void;
 }
+
+interface FormValues {
+  label: string;
+  keywords: string;
+}
+
+const normKeywords = (text: string) => parseKeywords(text).join(", ");
 
 function recipeSummary(recipe: Record<string, unknown>): string[] {
   return Object.entries(recipe).map(([key, value]) => {
@@ -26,17 +35,30 @@ export default function EditsPanel({ photoId, t, onExposure }: Props) {
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // What the form was loaded with: only fields that differ from it are saved, and a reload moves the untouched ones.
+  const baseRef = useRef<FormValues | null>(null);
+  const formRef = useRef<FormValues>({ label: "", keywords: "" });
+  formRef.current = { label, keywords: normKeywords(keywords) };
+  const exposureRef = useRef<unknown>(undefined);
+  const currentPhoto = useRef(photoId);
+  currentPhoto.current = photoId;
 
-  function adopt(e: PhotoEdits) {
+  function adopt(e: PhotoEdits, keepTyped = false) {
     setEdits(e);
-    setLabel(e.label ?? "");
-    setKeywords((e.keywords ?? []).join(", "));
+    const next: FormValues = { label: e.label ?? "", keywords: (e.keywords ?? []).join(", ") };
+    const form = keepTyped && baseRef.current ? rebaseForm(baseRef.current, next, formRef.current) : next;
+    baseRef.current = next;
+    setLabel(form.label);
+    setKeywords(form.keywords);
     const ev = e.recipe.exposure;
-    if (typeof ev === "number" && onExposure) onExposure(Math.max(-3, Math.min(3, ev)));
+    // the slider follows the recipe on load and whenever the recipe's exposure itself changes, not on every reload
+    if ((!keepTyped || ev !== exposureRef.current) && typeof ev === "number" && onExposure) onExposure(Math.max(-3, Math.min(3, ev)));
+    exposureRef.current = ev;
   }
 
   useEffect(() => {
     setEdits(null);
+    baseRef.current = null;
     setMsg(null);
     setError(null);
     let alive = true;
@@ -50,13 +72,26 @@ export default function EditsPanel({ photoId, t, onExposure }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [photoId]);
 
-  async function run(fn: () => Promise<PhotoEdits>) {
+  // The assistant finished a turn: reload this photo's edits in place; what the user typed stays.
+  useCopilotRefresh(() => {
+    api
+      .getEdits(photoId)
+      .then((e) => {
+        if (currentPhoto.current === photoId) adopt(e, true);
+      })
+      .catch(() => {});
+  });
+
+  const changed = () => changedFields(baseRef.current, formRef.current);
+  useCopilotForm(() => (edits ? { kind: "photo-edits", object_id: photoId, dirty: Object.keys(changed()).length > 0, fields: changed() } : null));
+
+  async function run(fn: () => Promise<PhotoEdits>, keepTyped = true) {
     setBusy(true);
     setMsg(null);
     setError(null);
     try {
       const updated = await fn();
-      adopt(updated);
+      adopt(updated, keepTyped);
       if (updated.sidecar_write?.written) setMsg(t.sidecar_written);
       else if (updated.sidecar_write?.error) setError(updated.sidecar_write.error);
       else setMsg(t.edits_saved);
@@ -95,15 +130,10 @@ export default function EditsPanel({ photoId, t, onExposure }: Props) {
         className="edits-form"
         onSubmit={(e) => {
           e.preventDefault();
-          run(() =>
-            api.setEdits(photoId, {
-              label,
-              keywords: keywords
-                .split(",")
-                .map((k) => k.trim())
-                .filter(Boolean),
-            }),
-          );
+          // only what the user changed: an edit the assistant made meanwhile to the rest survives
+          const patch = editsPatch(changed());
+          if (Object.keys(patch).length === 0) return;
+          run(() => api.setEdits(photoId, patch), true);
         }}
       >
         <input className="input" placeholder={t.edits_label} value={label} onChange={(e) => setLabel(e.target.value)} maxLength={64} />
