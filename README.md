@@ -218,6 +218,16 @@ normalised. Extended XMP (more than 64 KB in a JPEG) is not read. Temperature
 is in Kelvin, as in RAW files; the relative scale used for JPEGs is reported as
 not applied.
 
+## Faustus assistant
+
+Once the shared Hoard Link launcher is installed, the app shows the family's Faustus panel (a floating button). The conversation, the model and the tools live in Faustus; this app only tells the panel what is open.
+
+- **Context per view.** The panel receives the page and the objects open in it, with real ids: a `photo` (file name only, not the path; taken date, place, size, caption cut to 240 characters, video link, and rating, label and up to 20 keywords from its edits), an `album` (name, photo count, creator, ids of its first 20 photos) and a `video` (name, duration, date, frame count, size). The open album also names the project. Creation forms (`new`) give no object.
+- **Unsaved fields.** The panel asks for them with the `daguerre:context-request` window event. The forms `photo-edits`, `photo-album-add`, `album-new` and `search` answer with the fields typed so far and a `dirty` flag.
+- **Refresh.** When the assistant finishes a turn the open view reloads in place (`hoard:copilot-turn-end` / `window.hoardCopilot.onTurnEnd`, merged into one reload). Fields you are typing keep your value; untouched ones follow the new data.
+- **Saving.** The edit form sends only the fields you changed (label as text, keywords as a list) to `PUT /api/photos/{id}/edits`, which leaves rating, label, keywords and recipe alone when they are not sent; an explicit empty value clears one. Adding to an album by name keeps what it holds, and removing photos keeps the others. No endpoint changed.
+- **Tests.** `cd frontend && npm test` (`node --test copilot-context.test.mjs`) and `python -m pytest tests/test_xmp_sidecars.py`.
+
 ## Quick start
 
 Requirements: Python 3.11 or newer and Node.js 22 (only to build the

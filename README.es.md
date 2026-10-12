@@ -232,6 +232,16 @@ sidecar fusionado se pierden y se normalizan sus espacios en blanco. El XMP
 extendido (más de 64 KB en un JPEG) no se lee. La temperatura va en Kelvin, como
 en los RAW; la escala relativa de los JPEG se muestra como no aplicada.
 
+## Asistente de Faustus
+
+Con el lanzador compartido de Hoard Link instalado, la app muestra el panel de Faustus de la familia (un botón flotante). La conversación, el modelo y las herramientas viven en Faustus; esta app solo le dice al panel qué hay abierto.
+
+- **Contexto por vista.** El panel recibe la página y los objetos abiertos en ella, con ids reales: una `photo` (solo el nombre del archivo, no la ruta; fecha, lugar, tamaño, pie cortado a 240 caracteres, vínculo con el vídeo, y valoración, etiqueta y hasta 20 palabras clave de sus ediciones), un `album` (nombre, número de fotos, creador, ids de sus 20 primeras fotos) y un `video` (nombre, duración, fecha, número de fotogramas, tamaño). El álbum abierto nombra además el proyecto. Los formularios de creación (`new`) no dan objeto.
+- **Campos sin guardar.** El panel los pide con el evento de ventana `daguerre:context-request`. Los formularios `photo-edits`, `photo-album-add`, `album-new` y `search` responden con lo escrito hasta ahora y una marca `dirty`.
+- **Refresco.** Cuando el asistente termina un turno, la vista abierta se recarga en el sitio (`hoard:copilot-turn-end` / `window.hoardCopilot.onTurnEnd`, unidos en una sola recarga). Los campos que estás escribiendo conservan tu valor; los que no has tocado siguen a los datos nuevos.
+- **Guardado.** El formulario de edición envía solo los campos que has cambiado (etiqueta como texto, palabras clave como lista) a `PUT /api/photos/{id}/edits`, que deja intactos valoración, etiqueta, palabras clave y receta cuando no se envían; un valor vacío explícito borra uno. Añadir a un álbum por nombre conserva lo que ya contiene, y quitar fotos conserva las demás. No cambia ningún endpoint.
+- **Pruebas.** `cd frontend && npm test` (`node --test copilot-context.test.mjs`) y `python -m pytest tests/test_xmp_sidecars.py`.
+
 ## Inicio rápido
 
 Requisitos: Python 3.11 o posterior y Node.js 22 (solo para compilar la
