@@ -519,3 +519,33 @@ def test_the_photo_is_byte_identical_after_every_xmp_operation(client, tmp_path)
     client.post(f"/api/photos/{pid}/sidecar/read")
     client.post(f"/api/photos/{pid}/sidecar/write")
     assert (_sha(img), img.stat().st_mtime_ns, img.stat().st_size) == before
+
+
+def test_ui_edit_form_sends_only_changed_fields_so_an_agent_edit_meanwhile_survives(client, tmp_path):
+    """The edit form saves just the fields the user changed; the route must merge them and leave everything else."""
+    img = make_image(tmp_path / "photos" / "IMG_7.jpg")
+    pid, _root = _http_photo(client, img.parent)
+    client.put(f"/api/photos/{pid}/edits", json={"rating": 2, "label": "Red", "keywords": ["a"], "recipe": {"exposure": 0.5}})
+    # the assistant edits label and rating while the user's form (loaded earlier) is open
+    client.post("/api/agent/photos_set_edits", json={"photo_id": pid, "label": "Green", "rating": 5})
+    # the user saves only the keywords they typed
+    out = client.put(f"/api/photos/{pid}/edits", json={"keywords": ["a", "b"]}).json()
+    assert out["keywords"] == ["a", "b"]
+    assert out["label"] == "Green" and out["rating"] == 5 and out["recipe"] == {"exposure": 0.5}
+    # an explicit clear of one field is a change too and still leaves the rest
+    out = client.put(f"/api/photos/{pid}/edits", json={"label": ""}).json()
+    assert out["label"] is None and out["keywords"] == ["a", "b"] and out["rating"] == 5
+
+
+def test_album_changes_merge_without_touching_the_rest(client, tmp_path):
+    """Adding to an album by name keeps what it holds; removing some photos keeps the others (agent and UI can interleave)."""
+    a = make_image(tmp_path / "photos" / "A1.jpg")
+    make_image(tmp_path / "photos" / "A2.jpg", color=(10, 200, 10))
+    pid, _root = _http_photo(client, a.parent)
+    ids = [p["id"] for p in client.get("/api/photos").json()["results"]]
+    assert len(ids) >= 2
+    first = client.post("/api/albums", json={"name": "Trip", "photo_ids": [ids[0]]}).json()
+    second = client.post("/api/albums", json={"name": "trip", "photo_ids": [ids[1]]}).json()
+    assert second["id"] == first["id"] and second["photo_count"] == 2
+    left = client.post(f"/api/albums/{first['id']}/remove", json={"photo_ids": [ids[0]]}).json()
+    assert [p["id"] for p in left["photos"]] == [ids[1]]
