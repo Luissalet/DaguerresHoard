@@ -42,6 +42,7 @@
     "env": {"DAGUERRE_URL": "{APP_URL}"},
     "optional_env": []
   },
+  "x-family": {"copilot": true},
   "provides": {"skills": ["skills/find-photos/SKILL.md"]},
   "notes": "Indexes local photo folders with CLIP embeddings and hands the model compact search results plus contact-sheet images. Never modifies, moves or deletes originals."
 }
