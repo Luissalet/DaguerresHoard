@@ -101,6 +101,7 @@ async def test_mcp_adapter_over_stdio(running_app, tmp_path):
                 "photos_add_folder", "photos_album", "photos_export", "craft_engines",
                 "photos_edits", "photos_set_edits", "photos_sidecar",
                 "craft_tools", "craft_call", "craft_develop_photo", "craft_create_layered_document", "craft_create_layered_photo", "craft_import_compositor",
+                "image_engines", "image_tools", "image_call", "image_develop_photo", "image_create_layered_document", "image_create_layered_photo", "image_import_compositor", "image_open_editor",
             }
             for tool in tools.tools:
                 assert "Keywords:" in tool.description, tool.name
@@ -111,8 +112,9 @@ async def test_mcp_adapter_over_stdio(running_app, tmp_path):
                 "photos_add_folder", "photos_album", "photos_export", "craft_call",
                 "photos_set_edits", "photos_sidecar",
                 "craft_develop_photo", "craft_create_layered_document", "craft_create_layered_photo", "craft_import_compositor",
+                "image_call", "image_develop_photo", "image_create_layered_document", "image_create_layered_photo", "image_import_compositor", "image_open_editor",
             }
-            if os.environ.get('DAGUERRE_CRAFT_BUNDLES'):
+            if os.environ.get('DAGUERRE_NATIVE_TESTS') == '1':
                 photo_tools = await session.call_tool('craft_tools', {'engine': 'photocraft'})
                 light_tools = await session.call_tool('craft_tools', {'engine': 'lightcraft'})
                 assert len(json.loads(photo_tools.content[0].text)['tools']) == 18

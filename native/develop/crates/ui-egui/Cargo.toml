@@ -1,0 +1,30 @@
+[package]
+name = "daguerre-develop-ui-egui"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Daguerre Develop egui frontend (Lightroom-style UI); swappable — nothing below depends on it (L5)"
+
+[lints]
+workspace = true
+
+[dependencies]
+daguerre-develop-geom = { workspace = true }
+daguerre-develop-color = { workspace = true }
+daguerre-develop-raster = { workspace = true }
+daguerre-develop-develop = { workspace = true }
+daguerre-develop-pipeline = { workspace = true }
+daguerre-develop-catalog = { workspace = true }
+web-time = { workspace = true }
+daguerre-develop-engine = { workspace = true }
+daguerre-develop-preview = { workspace = true }
+egui = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+log = { workspace = true }
+
+[dev-dependencies]
+daguerre-develop-codecs = { workspace = true }
+
+[build-dependencies]
+serde_json = { workspace = true }

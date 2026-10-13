@@ -1,0 +1,31 @@
+[package]
+name = "daguerre-layers-io"
+description = "Import/export between daguerre-layers documents and PSD/PSB and flat raster formats"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+daguerre-layers-geom = { workspace = true }
+daguerre-layers-color = { workspace = true }
+daguerre-layers-cms = { workspace = true }
+daguerre-layers-raster = { workspace = true }
+daguerre-layers-doc = { workspace = true }
+daguerre-layers-compose = { workspace = true }
+daguerre-layers-psd = { workspace = true }
+daguerre-layers-codecs = { workspace = true }
+daguerre-layers-raw = { workspace = true }
+daguerre-layers-text = { workspace = true }
+daguerre-layers-paint = { workspace = true }
+daguerre-layers-format = { path = "../format" }
+thiserror = { workspace = true }
+
+[dev-dependencies]
+daguerre-layers-psd = { workspace = true, features = ["testgen"] }
+daguerre-layers-raw = { workspace = true, features = ["testgen"] }
+proptest = { workspace = true }
+daguerre-layers-vector = { workspace = true }

@@ -45,7 +45,7 @@ def test_health(client):
 def test_craft_engine_discovery_and_artifact_routes_are_confined(client, tmp_path):
     status = client.get("/api/craft/status")
     assert status.status_code == 200
-    assert set(status.json()["engines"]) == {"photocraft", "lightcraft"}
+    assert set(status.json()["engines"]) == {"layers", "develop", "photocraft", "lightcraft"}
     assert client.get("/api/craft/artifacts/../daguerre.db").status_code in (404, 400)
 
     artifact_id = "a" * 32
@@ -96,7 +96,7 @@ def test_compositor_preflight_http_and_agent_routes(client, tmp_path):
 def test_craft_http_routes_run_native_photo_workflows_without_mutating_root(client, tmp_path):
     import hashlib, os
     from pathlib import Path
-    if not os.environ.get('DAGUERRE_CRAFT_BUNDLES'): pytest.skip('set DAGUERRE_CRAFT_BUNDLES for real HTTP craft integration')
+    if os.environ.get('DAGUERRE_NATIVE_TESTS') != '1': pytest.skip('enable real incorporated engine HTTP integration')
     status = client.get('/api/craft/status').json()['engines']
     assert status['photocraft']['available'] and status['lightcraft']['available']
     original = make_image(tmp_path / 'craft-originals' / 'source.png', color=(49, 92, 126))

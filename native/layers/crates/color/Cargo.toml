@@ -1,0 +1,12 @@
+[package]
+name = "daguerre-layers-color"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+daguerre-layers-cms = { workspace = true }
+serde = { workspace = true }

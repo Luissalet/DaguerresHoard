@@ -1,0 +1,31 @@
+[package]
+name = "daguerre-develop-cli"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish = false
+description = "Daguerre Develop command-line tool: headless render, command listing and the MCP server"
+
+[[bin]]
+name = "daguerre-develop-cli"
+path = "src/main.rs"
+
+[lints]
+workspace = true
+
+[dependencies]
+daguerre-develop-engine = { workspace = true }
+daguerre-develop-sysmem = { workspace = true }
+daguerre-develop-mcp = { workspace = true }
+daguerre-develop-ui-egui = { workspace = true }
+daguerre-develop-codecs = { workspace = true }
+daguerre-develop-raster = { workspace = true }
+daguerre-develop-merge = { workspace = true }
+serde_json = { workspace = true }
+dhat = { workspace = true, optional = true }
+
+[features]
+# Heap profiling: `cargo run --release -p daguerre-develop-cli --features dhat-heap -- snapshot …` counts
+# every allocation (live/peak bytes in `library.memory` / `ui.inspect`) and writes dhat-heap.json
+# (open it in DHAT's viewer: allocation sites by bytes at the peak). Slows allocation-heavy work.
+dhat-heap = ["dep:dhat"]

@@ -1,0 +1,13 @@
+[package]
+name = "daguerre-layers-testkit"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+daguerre-layers-geom = { workspace = true }
+daguerre-layers-color = { workspace = true }
+daguerre-layers-raster = { workspace = true }

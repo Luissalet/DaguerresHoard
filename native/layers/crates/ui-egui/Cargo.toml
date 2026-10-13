@@ -1,0 +1,38 @@
+[package]
+name = "daguerre-layers-ui-egui"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+daguerre-layers-geom = { workspace = true }
+daguerre-layers-color = { workspace = true }
+daguerre-layers-raster = { workspace = true }
+daguerre-layers-doc = { workspace = true }
+daguerre-layers-compose = { workspace = true }
+daguerre-layers-gpu = { workspace = true }
+daguerre-layers-engine = { workspace = true }
+daguerre-layers-plugins = { workspace = true }
+daguerre-layers-algo = { workspace = true }
+daguerre-layers-text = { workspace = true }
+egui = { workspace = true }
+egui_extras = { version = "0.36", default-features = false, features = ["svg"] }
+eframe = { workspace = true, features = ["default_fonts", "wgpu", "accesskit"] }
+serde = { workspace = true }
+serde_json = { workspace = true }
+log = { workspace = true }
+base64 = "0.22"
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+rayon = { workspace = true }
+
+[dev-dependencies]
+egui_kittest = { workspace = true, features = ["wgpu", "snapshot", "eframe"] }
+# Only for examples/snapshot.rs (offscreen UI renders of real files).
+daguerre-layers-io = { workspace = true }
+# Only for examples/interactive_bench.rs (JPEG encode, .dglayers saves).
+daguerre-layers-codecs = { workspace = true }
+daguerre-layers-format = { workspace = true }

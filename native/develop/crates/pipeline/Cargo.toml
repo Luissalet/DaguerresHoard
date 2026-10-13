@@ -1,0 +1,23 @@
+[package]
+name = "daguerre-develop-pipeline"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Daguerre Develop develop pipeline: scene-referred, float, resolution independent (CPU reference) (L2)"
+
+[lints]
+workspace = true
+
+[dependencies]
+daguerre-develop-geom = { workspace = true }
+daguerre-develop-color = { workspace = true }
+daguerre-develop-raster = { workspace = true }
+daguerre-develop-develop = { workspace = true }
+rayon = { workspace = true }
+serde = { workspace = true }
+
+[dev-dependencies]
+daguerre-develop-scenes = { workspace = true }
+proptest = { workspace = true }
+image = { workspace = true }
+serde_json = { workspace = true }

@@ -113,6 +113,11 @@ class CraftCallBody(BaseModel):
     calls: list[dict[str, Any]]
 
 
+class ImageEditorBody(BaseModel):
+    engine: str
+    artifact_id: str
+
+
 class CraftLayeredDocumentBody(BaseModel):
     name: str = "Daguerre canvas"
     width: int = 512
@@ -602,20 +607,24 @@ def create_app(data_dir: Path, static_dir: Path | None = None, port: int = 8814)
         return lib.recent_agent_calls(limit=limit)
 
     # -- agent tools (mirror the MCP tools one to one, audited) -------------- #
+    @app.get("/api/image-engine/status")
     @app.get("/api/craft/status")
     def craft_status():
         return lib.craft_status()
 
+    @app.post("/api/image-engine/from-photo")
     @app.post("/api/craft/from-photo")
     def craft_from_photo(body: CraftPhotoBody):
         _check_id(body.photo_id)
         return run(lambda: lib.craft_create_layered_photo(body.photo_id))
 
+    @app.post("/api/image-engine/develop")
     @app.post("/api/craft/develop")
     def craft_develop(body: CraftDevelopBody):
         _check_id(body.photo_id)
         return run(lambda: lib.craft_develop_photo(body.photo_id, body.exposure, body.output_format, body.long_edge))
 
+    @app.post("/api/image-engine/import-compositor")
     @app.post("/api/craft/import-compositor")
     def craft_import_compositor(body: CraftCompositorBody):
         return run(lambda: lib.craft_import_compositor(body.source_path, body.preflight_only))
@@ -626,7 +635,7 @@ def create_app(data_dir: Path, static_dir: Path | None = None, port: int = 8814)
         # previews/exports, PhotoCraft native documents and JSON receipts are served.
         import re
 
-        match = re.fullmatch(r"([0-9a-f]{32})\.(pcraft|json|png|jpg|jpeg|tif|tiff|webp|avif)", filename)
+        match = re.fullmatch(r"([0-9a-f]{32})\.(dglayers|pcraft|json|png|jpg|jpeg|tif|tiff|webp|avif)", filename)
         if not match:
             raise ApiError(404, "not_found", "Craft artifact not found")
         artifact_id, extension = match.groups()
@@ -634,8 +643,17 @@ def create_app(data_dir: Path, static_dir: Path | None = None, port: int = 8814)
         path = next((root / filename for root in roots if (root / filename).is_file()), None)
         if path is None:
             raise ApiError(404, "not_found", "Craft artifact not found")
-        return FileResponse(path, filename=filename if extension == "pcraft" else None)
+        return FileResponse(path, filename=filename if extension in {"pcraft", "dglayers"} else None)
 
+    @app.post("/api/image-engine/editor")
+    def image_editor(body: ImageEditorBody):
+        return run(lambda: lib.image_open_editor(body.artifact_id, body.engine))
+
+    @app.post("/api/agent/image_open_editor", dependencies=agent_auth)
+    def agent_image_editor(body: ImageEditorBody):
+        return run(lambda: lib.image_open_editor(body.artifact_id, body.engine), tool="image_open_editor", args=body.model_dump())
+
+    @app.post("/api/agent/image_engines", dependencies=agent_auth)
     @app.post("/api/agent/craft_engines", dependencies=agent_auth)
     def agent_craft_engines():
         return run(lib.craft_status, tool="craft_engines", args={})
@@ -654,30 +672,36 @@ def create_app(data_dir: Path, static_dir: Path | None = None, port: int = 8814)
     def agent_export(body: ExportBody):
         return run(lambda: lib.export_photos(body.ids, body.title), tool="photos_export", args=body.model_dump())
 
+    @app.post("/api/agent/image_tools", dependencies=agent_auth)
     @app.post("/api/agent/craft_tools", dependencies=agent_auth)
     def agent_craft_tools(body: CraftEngineBody):
         return run(lambda: lib.craft_tools(body.engine), tool="craft_tools", args=body.model_dump())
 
+    @app.post("/api/agent/image_call", dependencies=agent_auth)
     @app.post("/api/agent/craft_call", dependencies=agent_auth)
     def agent_craft_call(body: CraftCallBody):
         return run(lambda: lib.craft_call(body.engine, body.calls), tool="craft_call", args=body.model_dump())
 
+    @app.post("/api/agent/image_import_compositor", dependencies=agent_auth)
     @app.post("/api/agent/craft_import_compositor", dependencies=agent_auth)
     def agent_craft_import_compositor(body: CraftCompositorBody):
         return run(lambda: lib.craft_import_compositor(body.source_path, body.preflight_only),
                    tool="craft_import_compositor", args=body.model_dump())
 
+    @app.post("/api/agent/image_create_layered_document", dependencies=agent_auth)
     @app.post("/api/agent/craft_create_layered_document", dependencies=agent_auth)
     def agent_craft_create_layered_document(body: CraftLayeredDocumentBody):
         return run(lambda: lib.craft_create_layered_document(body.name, body.width, body.height, body.background),
                    tool="craft_create_layered_document", args=body.model_dump())
 
+    @app.post("/api/agent/image_create_layered_photo", dependencies=agent_auth)
     @app.post("/api/agent/craft_create_layered_photo", dependencies=agent_auth)
     def agent_craft_create_layered_photo(body: CraftPhotoBody):
         _check_id(body.photo_id)
         return run(lambda: lib.craft_create_layered_photo(body.photo_id),
                    tool="craft_create_layered_photo", args=body.model_dump())
 
+    @app.post("/api/agent/image_develop_photo", dependencies=agent_auth)
     @app.post("/api/agent/craft_develop_photo", dependencies=agent_auth)
     def agent_craft_develop_photo(body: CraftDevelopBody):
         _check_id(body.photo_id)

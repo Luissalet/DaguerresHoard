@@ -6,3 +6,4 @@
 *.jpeg binary
 *.webp binary
 *.ico binary
+native/*/assets/fonts/OFL-*.txt -whitespace

@@ -1,0 +1,21 @@
+[package]
+name = "daguerre-develop-merge"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Daguerre Develop Photo Merge: HDR merge (align, deghost) and panorama stitching (L3)"
+
+[lints]
+workspace = true
+
+[dependencies]
+daguerre-develop-geom = { workspace = true }
+daguerre-develop-color = { workspace = true }
+daguerre-develop-raster = { workspace = true }
+daguerre-develop-raw = { workspace = true }
+daguerre-develop-codecs = { workspace = true }
+daguerre-develop-meta = { workspace = true }
+daguerre-develop-scenes = { workspace = true }
+serde = { workspace = true }
+thiserror = { workspace = true }
+rayon = { workspace = true }

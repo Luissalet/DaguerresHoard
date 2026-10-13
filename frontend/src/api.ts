@@ -70,9 +70,10 @@ function qs(params: Params): string {
 }
 
 export const api = {
-  craftStatus: () => request<CraftEngineStatus>("/api/craft/status"),
-  craftFromPhoto: (photo_id: string) => post<CraftArtifact>("/api/craft/from-photo", { photo_id }),
-  craftDevelop: (photo_id: string, exposure: number) => post<CraftArtifact>("/api/craft/develop", { photo_id, exposure, output_format: "png" }),
+  craftStatus: () => request<CraftEngineStatus>("/api/image-engine/status"),
+  craftFromPhoto: (photo_id: string) => post<CraftArtifact>("/api/image-engine/from-photo", { photo_id }),
+  craftDevelop: (photo_id: string, exposure: number) => post<CraftArtifact>("/api/image-engine/develop", { photo_id, exposure, output_format: "png" }),
+  imageOpenEditor: (artifact_id: string, engine: string) => post<{ pid: number }>("/api/image-engine/editor", { artifact_id, engine }),
   libraryStatus: () => request<LibraryStatus>("/api/library"),
   places: () =>
     request<{

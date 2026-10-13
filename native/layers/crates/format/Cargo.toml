@@ -1,0 +1,26 @@
+[package]
+name = "daguerre-layers-format"
+description = "Native .dglayers document bundle: manifest + content-addressed zstd tiles"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+daguerre-layers-geom = { workspace = true }
+daguerre-layers-color = { workspace = true }
+daguerre-layers-raster = { workspace = true }
+daguerre-layers-doc = { workspace = true }
+daguerre-layers-codecs = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+flate2 = { workspace = true }
+blake3 = { version = "1.8", default-features = false, features = ["pure"] }
+ruzstd = "0.9"
+
+[dev-dependencies]
+proptest = { workspace = true }

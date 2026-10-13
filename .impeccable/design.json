@@ -1,0 +1,502 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-13T23:14:08Z",
+  "title": "Design System: Daguerre's Hoard",
+  "extensions": {
+    "colorMeta": {
+      "accent": {
+        "role": "primary",
+        "displayName": "Teal Accent",
+        "tonalRamp": [
+          "oklch(15.00% 0.10593 206.96)",
+          "oklch(26.43% 0.10593 206.96)",
+          "oklch(37.86% 0.10593 206.96)",
+          "oklch(49.29% 0.10593 206.96)",
+          "oklch(60.71% 0.10593 206.96)",
+          "oklch(72.14% 0.10593 206.96)",
+          "oklch(83.57% 0.10593 206.96)",
+          "oklch(95.00% 0.10593 206.96)"
+        ]
+      },
+      "accent-strong": {
+        "role": "primary",
+        "displayName": "Strong Teal Accent",
+        "tonalRamp": [
+          "oklch(15.00% 0.09370 206.84)",
+          "oklch(26.43% 0.09370 206.84)",
+          "oklch(37.86% 0.09370 206.84)",
+          "oklch(49.29% 0.09370 206.84)",
+          "oklch(60.71% 0.09370 206.84)",
+          "oklch(72.14% 0.09370 206.84)",
+          "oklch(83.57% 0.09370 206.84)",
+          "oklch(95.00% 0.09370 206.84)"
+        ]
+      },
+      "accent-soft": {
+        "role": "primary",
+        "displayName": "Soft Teal Accent",
+        "tonalRamp": [
+          "oklch(15.00% 0.10593 206.96)",
+          "oklch(26.43% 0.10593 206.96)",
+          "oklch(37.86% 0.10593 206.96)",
+          "oklch(49.29% 0.10593 206.96)",
+          "oklch(60.71% 0.10593 206.96)",
+          "oklch(72.14% 0.10593 206.96)",
+          "oklch(83.57% 0.10593 206.96)",
+          "oklch(95.00% 0.10593 206.96)"
+        ]
+      },
+      "accent-ink": {
+        "role": "neutral",
+        "displayName": "Accent Ink",
+        "tonalRamp": [
+          "oklch(15.00% 0.01059 207.04)",
+          "oklch(26.43% 0.01059 207.04)",
+          "oklch(37.86% 0.01059 207.04)",
+          "oklch(49.29% 0.01059 207.04)",
+          "oklch(60.71% 0.01059 207.04)",
+          "oklch(72.14% 0.01059 207.04)",
+          "oklch(83.57% 0.01059 207.04)",
+          "oklch(95.00% 0.01059 207.04)"
+        ]
+      },
+      "deep": {
+        "role": "neutral",
+        "displayName": "Deep Teal",
+        "tonalRamp": [
+          "oklch(15.00% 0.01173 196.33)",
+          "oklch(26.43% 0.01173 196.33)",
+          "oklch(37.86% 0.01173 196.33)",
+          "oklch(49.29% 0.01173 196.33)",
+          "oklch(60.71% 0.01173 196.33)",
+          "oklch(72.14% 0.01173 196.33)",
+          "oklch(83.57% 0.01173 196.33)",
+          "oklch(95.00% 0.01173 196.33)"
+        ]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Teal Surface",
+        "tonalRamp": [
+          "oklch(15.00% 0.01291 204.71)",
+          "oklch(26.43% 0.01291 204.71)",
+          "oklch(37.86% 0.01291 204.71)",
+          "oklch(49.29% 0.01291 204.71)",
+          "oklch(60.71% 0.01291 204.71)",
+          "oklch(72.14% 0.01291 204.71)",
+          "oklch(83.57% 0.01291 204.71)",
+          "oklch(95.00% 0.01291 204.71)"
+        ]
+      },
+      "elevated": {
+        "role": "neutral",
+        "displayName": "Elevated Teal",
+        "tonalRamp": [
+          "oklch(15.00% 0.01511 203.21)",
+          "oklch(26.43% 0.01511 203.21)",
+          "oklch(37.86% 0.01511 203.21)",
+          "oklch(49.29% 0.01511 203.21)",
+          "oklch(60.71% 0.01511 203.21)",
+          "oklch(72.14% 0.01511 203.21)",
+          "oklch(83.57% 0.01511 203.21)",
+          "oklch(95.00% 0.01511 203.21)"
+        ]
+      },
+      "border": {
+        "role": "neutral",
+        "displayName": "Teal Border",
+        "tonalRamp": [
+          "oklch(15.00% 0.01698 202.19)",
+          "oklch(26.43% 0.01698 202.19)",
+          "oklch(37.86% 0.01698 202.19)",
+          "oklch(49.29% 0.01698 202.19)",
+          "oklch(60.71% 0.01698 202.19)",
+          "oklch(72.14% 0.01698 202.19)",
+          "oklch(83.57% 0.01698 202.19)",
+          "oklch(95.00% 0.01698 202.19)"
+        ]
+      },
+      "border-hover": {
+        "role": "neutral",
+        "displayName": "Hover Border",
+        "tonalRamp": [
+          "oklch(15.00% 0.02191 204.73)",
+          "oklch(26.43% 0.02191 204.73)",
+          "oklch(37.86% 0.02191 204.73)",
+          "oklch(49.29% 0.02191 204.73)",
+          "oklch(60.71% 0.02191 204.73)",
+          "oklch(72.14% 0.02191 204.73)",
+          "oklch(83.57% 0.02191 204.73)",
+          "oklch(95.00% 0.02191 204.73)"
+        ]
+      },
+      "text": {
+        "role": "neutral",
+        "displayName": "Reading Text",
+        "tonalRamp": [
+          "oklch(15.00% 0.01078 204.12)",
+          "oklch(26.43% 0.01078 204.12)",
+          "oklch(37.86% 0.01078 204.12)",
+          "oklch(49.29% 0.01078 204.12)",
+          "oklch(60.71% 0.01078 204.12)",
+          "oklch(72.14% 0.01078 204.12)",
+          "oklch(83.57% 0.01078 204.12)",
+          "oklch(95.00% 0.01078 204.12)"
+        ]
+      },
+      "text-muted": {
+        "role": "neutral",
+        "displayName": "Muted Text",
+        "tonalRamp": [
+          "oklch(15.00% 0.01011 204.90)",
+          "oklch(26.43% 0.01011 204.90)",
+          "oklch(37.86% 0.01011 204.90)",
+          "oklch(49.29% 0.01011 204.90)",
+          "oklch(60.71% 0.01011 204.90)",
+          "oklch(72.14% 0.01011 204.90)",
+          "oklch(83.57% 0.01011 204.90)",
+          "oklch(95.00% 0.01011 204.90)"
+        ]
+      },
+      "text-dim": {
+        "role": "neutral",
+        "displayName": "Dim Text",
+        "tonalRamp": [
+          "oklch(15.00% 0.01147 204.09)",
+          "oklch(26.43% 0.01147 204.09)",
+          "oklch(37.86% 0.01147 204.09)",
+          "oklch(49.29% 0.01147 204.09)",
+          "oklch(60.71% 0.01147 204.09)",
+          "oklch(72.14% 0.01147 204.09)",
+          "oklch(83.57% 0.01147 204.09)",
+          "oklch(95.00% 0.01147 204.09)"
+        ]
+      },
+      "danger": {
+        "role": "semantic",
+        "displayName": "Danger",
+        "tonalRamp": [
+          "oklch(15.00% 0.15503 28.57)",
+          "oklch(26.43% 0.15503 28.57)",
+          "oklch(37.86% 0.15503 28.57)",
+          "oklch(49.29% 0.15503 28.57)",
+          "oklch(60.71% 0.15503 28.57)",
+          "oklch(72.14% 0.15503 28.57)",
+          "oklch(83.57% 0.15503 28.57)",
+          "oklch(95.00% 0.15503 28.57)"
+        ]
+      },
+      "warning": {
+        "role": "semantic",
+        "displayName": "Warning",
+        "tonalRamp": [
+          "oklch(15.00% 0.12744 84.93)",
+          "oklch(26.43% 0.12744 84.93)",
+          "oklch(37.86% 0.12744 84.93)",
+          "oklch(49.29% 0.12744 84.93)",
+          "oklch(60.71% 0.12744 84.93)",
+          "oklch(72.14% 0.12744 84.93)",
+          "oklch(83.57% 0.12744 84.93)",
+          "oklch(95.00% 0.12744 84.93)"
+        ]
+      },
+      "warning-soft": {
+        "role": "semantic",
+        "displayName": "Soft Warning",
+        "tonalRamp": [
+          "oklch(15.00% 0.12744 84.93)",
+          "oklch(26.43% 0.12744 84.93)",
+          "oklch(37.86% 0.12744 84.93)",
+          "oklch(49.29% 0.12744 84.93)",
+          "oklch(60.71% 0.12744 84.93)",
+          "oklch(72.14% 0.12744 84.93)",
+          "oklch(83.57% 0.12744 84.93)",
+          "oklch(95.00% 0.12744 84.93)"
+        ]
+      },
+      "light-accent": {
+        "role": "primary",
+        "displayName": "Light Theme Teal",
+        "tonalRamp": [
+          "oklch(15.00% 0.10857 197.97)",
+          "oklch(26.43% 0.10857 197.97)",
+          "oklch(37.86% 0.10857 197.97)",
+          "oklch(49.29% 0.10857 197.97)",
+          "oklch(60.71% 0.10857 197.97)",
+          "oklch(72.14% 0.10857 197.97)",
+          "oklch(83.57% 0.10857 197.97)",
+          "oklch(95.00% 0.10857 197.97)"
+        ]
+      },
+      "light-accent-strong": {
+        "role": "primary",
+        "displayName": "Light Theme Strong Teal",
+        "tonalRamp": [
+          "oklch(15.00% 0.08816 198.92)",
+          "oklch(26.43% 0.08816 198.92)",
+          "oklch(37.86% 0.08816 198.92)",
+          "oklch(49.29% 0.08816 198.92)",
+          "oklch(60.71% 0.08816 198.92)",
+          "oklch(72.14% 0.08816 198.92)",
+          "oklch(83.57% 0.08816 198.92)",
+          "oklch(95.00% 0.08816 198.92)"
+        ]
+      },
+      "light-accent-soft": {
+        "role": "primary",
+        "displayName": "Light Theme Soft Teal",
+        "tonalRamp": [
+          "oklch(15.00% 0.10857 197.97)",
+          "oklch(26.43% 0.10857 197.97)",
+          "oklch(37.86% 0.10857 197.97)",
+          "oklch(49.29% 0.10857 197.97)",
+          "oklch(60.71% 0.10857 197.97)",
+          "oklch(72.14% 0.10857 197.97)",
+          "oklch(83.57% 0.10857 197.97)",
+          "oklch(95.00% 0.10857 197.97)"
+        ]
+      },
+      "light-deep": {
+        "role": "neutral",
+        "displayName": "Light Page",
+        "tonalRamp": [
+          "oklch(15.00% 0.00213 197.12)",
+          "oklch(26.43% 0.00213 197.12)",
+          "oklch(37.86% 0.00213 197.12)",
+          "oklch(49.29% 0.00213 197.12)",
+          "oklch(60.71% 0.00213 197.12)",
+          "oklch(72.14% 0.00213 197.12)",
+          "oklch(83.57% 0.00213 197.12)",
+          "oklch(95.00% 0.00213 197.12)"
+        ]
+      },
+      "light-surface": {
+        "role": "neutral",
+        "displayName": "Light Surface",
+        "tonalRamp": [
+          "oklch(15.00% 0.00000 89.88)",
+          "oklch(26.43% 0.00000 89.88)",
+          "oklch(37.86% 0.00000 89.88)",
+          "oklch(49.29% 0.00000 89.88)",
+          "oklch(60.71% 0.00000 89.88)",
+          "oklch(72.14% 0.00000 89.88)",
+          "oklch(83.57% 0.00000 89.88)",
+          "oklch(95.00% 0.00000 89.88)"
+        ]
+      },
+      "light-sidebar": {
+        "role": "neutral",
+        "displayName": "Light Theme Dark Sidebar",
+        "tonalRamp": [
+          "oklch(15.00% 0.02719 203.57)",
+          "oklch(26.43% 0.02719 203.57)",
+          "oklch(37.86% 0.02719 203.57)",
+          "oklch(49.29% 0.02719 203.57)",
+          "oklch(60.71% 0.02719 203.57)",
+          "oklch(72.14% 0.02719 203.57)",
+          "oklch(83.57% 0.02719 203.57)",
+          "oklch(95.00% 0.02719 203.57)"
+        ]
+      },
+      "light-text": {
+        "role": "neutral",
+        "displayName": "Light Theme Reading Text",
+        "tonalRamp": [
+          "oklch(15.00% 0.02164 216.25)",
+          "oklch(26.43% 0.02164 216.25)",
+          "oklch(37.86% 0.02164 216.25)",
+          "oklch(49.29% 0.02164 216.25)",
+          "oklch(60.71% 0.02164 216.25)",
+          "oklch(72.14% 0.02164 216.25)",
+          "oklch(83.57% 0.02164 216.25)",
+          "oklch(95.00% 0.02164 216.25)"
+        ]
+      },
+      "light-text-muted": {
+        "role": "neutral",
+        "displayName": "Light Theme Muted Text",
+        "tonalRamp": [
+          "oklch(15.00% 0.02208 208.75)",
+          "oklch(26.43% 0.02208 208.75)",
+          "oklch(37.86% 0.02208 208.75)",
+          "oklch(49.29% 0.02208 208.75)",
+          "oklch(60.71% 0.02208 208.75)",
+          "oklch(72.14% 0.02208 208.75)",
+          "oklch(83.57% 0.02208 208.75)",
+          "oklch(95.00% 0.02208 208.75)"
+        ]
+      },
+      "light-border": {
+        "role": "neutral",
+        "displayName": "Light Theme Border",
+        "tonalRamp": [
+          "oklch(15.00% 0.00872 205.89)",
+          "oklch(26.43% 0.00872 205.89)",
+          "oklch(37.86% 0.00872 205.89)",
+          "oklch(49.29% 0.00872 205.89)",
+          "oklch(60.71% 0.00872 205.89)",
+          "oklch(72.14% 0.00872 205.89)",
+          "oklch(83.57% 0.00872 205.89)",
+          "oklch(95.00% 0.00872 205.89)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "body": {
+        "displayName": "Browser body",
+        "purpose": "The source font family; no invented body size is recorded."
+      },
+      "title": {
+        "displayName": "Topbar title",
+        "purpose": "Final shared-family topbar heading."
+      },
+      "button": {
+        "displayName": "Action label",
+        "purpose": "Semibold standard button text."
+      },
+      "metadata": {
+        "displayName": "Metadata",
+        "purpose": "Compact photo key/value rows."
+      },
+      "caption": {
+        "displayName": "Photo caption",
+        "purpose": "Multiline descriptive text."
+      },
+      "auxiliary": {
+        "displayName": "Supporting text",
+        "purpose": "Small notes, result links and exposure labels."
+      }
+    },
+    "shadows": [
+      {
+        "name": "light-card",
+        "value": "0 1px 2px rgba(15, 36, 38, 0.06), 0 8px 24px rgba(15, 36, 38, 0.06)",
+        "purpose": "Optional light-theme cards; default dark cards use no shadow."
+      },
+      {
+        "name": "thumbnail-hover",
+        "value": "0 6px 18px rgba(15, 36, 38, 0.18)",
+        "purpose": "Photo thumbnail hover feedback."
+      },
+      {
+        "name": "lightbox-image",
+        "value": "0 10px 40px rgba(0, 0, 0, 0.45)",
+        "purpose": "Contained image over the dimmed library."
+      }
+    ],
+    "motion": [
+      {
+        "name": "thumbnail-hover",
+        "value": "transform 0.12s ease, box-shadow 0.12s ease",
+        "purpose": "Incumbent thumbnail hover; translates upward by 1px."
+      },
+      {
+        "name": "media-card-hover",
+        "value": "border-color 0.12s, transform 0.12s",
+        "purpose": "Incumbent month and place card hover."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "compact-sidebar",
+        "value": "720px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Neutral button",
+      "kind": "button",
+      "refersTo": "button",
+      "description": "The incumbent neutral action used across the library.",
+      "html": "<button class=\"ds-button\">Create layered copy</button>",
+      "css": ".ds-button{display:inline-flex;align-items:center;gap:8px;padding:9px 16px;border-radius:var(--hoard-radius,8px);border:1px solid var(--border,#354243);background:var(--bg-elevated,#1b2425);color:var(--text,#e1ebec);cursor:pointer;font-weight:600;font-size:13.5px;min-height:36px;font-family:\"Plus Jakarta Sans Variable\",var(--hoard-font-sans, sans-serif);}.ds-button:hover:not(:disabled){background:var(--hoard-elevated,#242f30);border-color:var(--hoard-border-hover,#57696b);}.ds-button:focus-visible{outline:2px solid var(--accent,#45bccb);outline-offset:1px;}.ds-button:disabled{opacity:.5;cursor:not-allowed}"
+    },
+    {
+      "name": "Primary button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The default dark theme's accent-filled action; theme overrides remain in source.",
+      "html": "<button class=\"ds-primary\">Save changes</button>",
+      "css": ".ds-primary{display:inline-flex;align-items:center;gap:8px;padding:9px 16px;border-radius:var(--hoard-radius,8px);border:1px solid var(--border,#354243);background:var(--bg-elevated,#1b2425);color:var(--text,#e1ebec);cursor:pointer;font-weight:600;font-size:13.5px;min-height:36px;font-family:\"Plus Jakarta Sans Variable\",var(--hoard-font-sans, sans-serif);background:var(--hoard-accent,#45bccb);border-color:var(--hoard-accent,#45bccb);color:var(--hoard-accent-ink,#131a1b)}.ds-primary:hover:not(:disabled){background:var(--hoard-accent-strong,#65c7d4);border-color:var(--hoard-accent-strong,#65c7d4)}.ds-primary:focus-visible{outline:2px solid var(--accent,#45bccb);outline-offset:1px;}.ds-primary:disabled{opacity:.5;cursor:not-allowed}"
+    },
+    {
+      "name": "Text field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "A compact library field with an accent-border focus state.",
+      "html": "<input class=\"ds-input\" aria-label=\"Album name\" placeholder=\"New or existing album\">",
+      "css": ".ds-input{padding:9px 12px;border-radius:var(--hoard-radius,8px);border:1px solid var(--border,#354243);background:var(--hoard-surface,#1b2425);color:var(--text,#e1ebec);width:100%;font-family:\"Plus Jakarta Sans Variable\",var(--hoard-font-sans, sans-serif);}.ds-input:focus{outline:none;border-color:var(--hoard-accent,#45bccb)}.ds-input::placeholder{color:var(--hoard-text-dim,#9ba5a6)}"
+    },
+    {
+      "name": "Sidebar navigation",
+      "kind": "nav",
+      "description": "Default-theme active navigation uses tonal elevation and an accent icon.",
+      "html": "<nav class=\"ds-nav\" aria-label=\"Library\"><button class=\"ds-nav-item ds-current\" aria-current=\"page\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" aria-hidden=\"true\"><rect x=\"3\" y=\"3\" width=\"18\" height=\"18\" rx=\"2\"/><circle cx=\"8.5\" cy=\"8.5\" r=\"1.5\"/><path d=\"m21 15-5-5L5 21\"/></svg><span>Library</span></button></nav>",
+      "css": ".ds-nav{background:var(--hoard-surface,#1b2425);padding:12px;font-family:\"Plus Jakarta Sans Variable\",var(--hoard-font-sans, sans-serif);}.ds-nav-item{display:flex;align-items:center;gap:10px;height:40px;padding:0 12px;border-radius:8px;cursor:pointer;color:var(--hoard-text-muted,#b4bdbe);font-size:14px;border:none;background:transparent;text-align:left;width:100%;font-family:inherit}.ds-nav-item:hover,.ds-nav-item.ds-current{background:var(--hoard-elevated,#242f30);color:var(--hoard-text,#e1ebec)}.ds-current svg{color:var(--hoard-accent,#45bccb)}.ds-nav-item:focus-visible{outline:auto}"
+    },
+    {
+      "name": "Warning badge",
+      "kind": "chip",
+      "refersTo": "warning-badge",
+      "description": "A semantic noninteractive status badge, not an eyebrow heading.",
+      "html": "<span class=\"ds-badge\">Unavailable</span>",
+      "css": ".ds-badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:600;background:var(--warn-soft,rgba(212,168,67,.16));color:var(--warn,#d4a843);font-family:\"Plus Jakarta Sans Variable\",var(--hoard-font-sans, sans-serif);}"
+    },
+    {
+      "name": "Library card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "A flat bordered container in the default dark library.",
+      "html": "<div class=\"ds-card\"><div class=\"ds-card-sample\">Photo-library content</div></div>",
+      "css": ".ds-card{background:var(--bg-elevated,#1b2425);color:var(--text,#e1ebec);border:1px solid var(--border,#354243);border-radius:var(--radius,10px);box-shadow:none;font-family:\"Plus Jakarta Sans Variable\",var(--hoard-font-sans, sans-serif);}.ds-card:hover{border-color:var(--hoard-border-hover,#57696b)}.ds-card-sample{padding:10px 12px;font-size:13px}"
+    },
+    {
+      "name": "Image-editor actions",
+      "kind": "custom",
+      "refersTo": "image-action",
+      "description": "The scoped lightbox action extension, with full-width 44px-minimum buttons and a native exposure range.",
+      "html": "<section class=\"ds-actions\" aria-label=\"Daguerre image editors\"><button class=\"ds-action\">Create layered copy</button><label class=\"ds-exposure\">Exposure · +0.7 EV<input type=\"range\" min=\"-3\" max=\"3\" step=\"0.1\" value=\"0.7\"></label><button class=\"ds-action\">Develop copy</button><p class=\"ds-note\">The indexed original stays untouched. The result is saved under Daguerre data.</p><button class=\"ds-action\">Open full editor</button><a class=\"ds-link\" href=\"#project\">Download editable project</a></section>",
+      "css": ".ds-actions{padding-top:14px;border-top:1px solid var(--border,#354243);background:var(--bg-elevated,#1b2425);color:var(--text,#e1ebec);font-family:\"Plus Jakarta Sans Variable\",var(--hoard-font-sans, sans-serif);}.ds-action{display:inline-flex;align-items:center;gap:8px;padding:9px 16px;border-radius:var(--hoard-radius,8px);border:1px solid var(--border,#354243);background:var(--bg-elevated,#1b2425);color:var(--text,#e1ebec);cursor:pointer;font-weight:600;font-size:13.5px;min-height:36px;font-family:\"Plus Jakarta Sans Variable\",var(--hoard-font-sans, sans-serif);min-height:44px;width:100%;justify-content:center;margin-top:12px}.ds-action:hover:not(:disabled){background:var(--hoard-elevated,#242f30);border-color:var(--hoard-border-hover,#57696b);}.ds-action:focus-visible{outline:2px solid var(--accent,#45bccb);outline-offset:1px;}.ds-action:disabled{opacity:.5;cursor:not-allowed}.ds-exposure{display:block;margin-top:14px;color:var(--text-muted,#b4bdbe);font-size:12px}.ds-exposure input{display:block;width:100%;margin:8px 0 2px;accent-color:var(--accent,#45bccb)}.ds-note{color:var(--text-muted,#b4bdbe);font-size:12px}.ds-link{background:none;border:none;padding:0;color:var(--accent-dark,#65c7d4);cursor:pointer;font-size:12px;display:inline-flex;align-items:center;gap:4px}.ds-link:hover{text-decoration:underline}.ds-link:focus-visible{outline:auto}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Local Photo Library",
+    "overview": "Daguerre uses a compact photo-library interface: dark teal surfaces by default, an optional light palette, one teal accent and a quiet sans-serif reading voice. Photographs carry the visual weight; the sidebar, thumbnail grid and metadata panel provide continuity around them. This records the incumbent interface rather than introducing a new visual identity.\n\nThe image-editor extension belongs to the existing lightbox. Its copy creation, development, preview, download and full-editor controls use the same buttons, fields and panel surfaces. The complete incorporated desktop editors are separate native egui interfaces; their interfaces remain visually intact apart from Daguerre branding. Their internal tokens are not specified by this browser design system.",
+    "keyCharacteristics": [
+      "Photo-led library with compact navigation and metadata.",
+      "Dark teal tonal layers with an optional light-surface theme.",
+      "Plus Jakarta Sans for browser reading and controls.",
+      "Existing lightbox actions extended with copy creation and result controls."
+    ],
+    "rules": [
+      {
+        "name": "The Source Theme Rule",
+        "body": "Resolve colors through the existing theme variables and their final overrides; do not substitute a new palette when extending the library.",
+        "section": "colors"
+      },
+      {
+        "name": "The Flat Library Rule",
+        "body": "Default library cards use tonal layering and borders; preserve the light-theme and photographic shadow exceptions already present.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Copy Workflow Rule",
+        "body": "Keep copy creation, result preview, editable download and full-editor opening explicit, with the indexed original-preservation note beside the actions.",
+        "section": "components"
+      }
+    ],
+    "dos": [
+      "**Do** extend the existing theme, sidebar, grid and lightbox vocabulary.",
+      "**Do** preserve the independently scrollable details panel and the image-editor action group's (44px) minimum button height.",
+      "**Do** use contained previews for editing results and keep copy/result/editor actions explicit.",
+      "**Do** preserve the optional light theme and the native desktop editors' complete incorporated interfaces."
+    ],
+    "donts": [
+      "**Don't** introduce a new visual world for the image-editor extension.",
+      "**Don't** present a created copy as a modification of the indexed original.",
+      "**Don't** promote inherited uppercase section labels or unresolved typography/motion findings into rules for new surfaces.",
+      "**Don't** interpret the scoped image-action visual review as a universal interface audit or a restyle of native egui editors."
+    ]
+  }
+}

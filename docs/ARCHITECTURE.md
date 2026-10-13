@@ -55,7 +55,7 @@
   Reuses the preview renderer and contact-sheet renderer, preserves repeats,
   reads current original bytes for the fingerprint, and reports omitted files.
   Identical exports reuse their directory; thumbnails and originals are not edited.
-- `craft_engines.py` -- local PhotoCraft/LightCraft discovery, live MCP
+- `craft_engines.py` -- owned Daguerre Layers/Daguerre Develop executables, live MCP
   schema and tool proxy, isolated child processes, and real editable artifact
   workflows. Imported originals are copied below `data/` first.
 - `compositor.py` -- bounded read-only `.comp` package preflight and immutable
@@ -161,8 +161,8 @@ a per-cache-directory singleton, loaded once per process with
 (`/api/model/download`), after which the library is re-embedded.
 
 No `multiprocessing`. Subprocesses are limited to `explorer /select,` on
-Windows for "Open in Explorer" and explicitly configured local PhotoCraft or
-LightCraft CLIs, each launched with isolated application data and file paths.
+Windows for "Open in Explorer" and explicitly configured local Daguerre Layers or
+Daguerre Develop CLIs, each launched with isolated application data and file paths.
 
 ## HTTP surface
 
@@ -174,8 +174,8 @@ LightCraft CLIs, each launched with isolated application data and file paths.
   audited); `/api/settings` carries `xmp_sidecars`.
 - `/api/exports/{id}/{filename}` -- locally serves the gallery, source manifest
   and contact-sheet files of an export (only these three filenames).
-- `/api/craft/status` -- local executable discovery; `/api/craft/artifacts/{filename}`
-  serves only generated ID-named raster outputs and `.pcraft` documents.
+- `/api/craft/status` -- owned executable status; `/api/craft/artifacts/{filename}`
+  serves only generated ID-named raster outputs and `.dglayers` documents.
 - UI routes (not audited): `/api/photos`, `/api/photos/{id}`,
   `/thumbnail`, `/preview` (large JPEG of the original, EXIF-rotated,
   also for HEIC/TIFF), `/open`, `/caption`, `/api/search` (auto-translates
@@ -272,3 +272,7 @@ chat/embeddings-text model any of Hoard Link's capabilities cover.
   "the owner configured this" from "nothing was ever saved", so a fresh
   install benefits from Faustus/loopback resolution instead of being
   pinned to the built-in Ollama address forever.
+
+## Incorporated native image engines
+
+`native/layers` and `native/develop` contain complete detached Rust engines and desktop editors with their own crates, formats and resource namespaces. `scripts/build_engines.py` builds owned executables in `native/bin`; `CraftEngines` selects only these paths. No external app, repository or CLI discovery remains. The public historical keys and tool names remain aliases. New layered bundles use `.dglayers`; historical format readers and one-way catalog/preferences copy preserve original data. Full engine schemas and operations remain discoverable, and generated copies open in full owned editors with native tools connected to the live editor.

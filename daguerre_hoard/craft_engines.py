@@ -1,4 +1,4 @@
-"""Local PhotoCraft and LightCraft MCP engines for Daguerre.
+"""Incorporated layered-image and development engines owned by Daguerre.
 
 The adapters keep each engine's own MCP catalogue and schemas discoverable.
 Every child runs in a Daguerre-owned workspace; registered photo roots are
@@ -12,6 +12,7 @@ import json
 import os
 import re
 import shutil
+import socket
 import threading
 import uuid
 from pathlib import Path
@@ -19,14 +20,28 @@ from typing import Any
 
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
+from .hoard_link import proc
+from .hoard_link.atomic import write_json_atomic
 
 
-ENGINES = ("photocraft", "lightcraft")
+ENGINES = ("photocraft", "lightcraft")  # Historical public keys remain aliases.
+ENGINE_NAMES = {"layers": "photocraft", "develop": "lightcraft", "photocraft": "photocraft", "lightcraft": "lightcraft"}
+OWN_NAMES = {"photocraft": "layers", "lightcraft": "develop"}
+ROOT = Path(__file__).resolve().parents[1]
 _APPDATA_KEYS = ("APPDATA", "LOCALAPPDATA")
 
 
 class CraftEngineError(ValueError):
     """A safe, actionable engine configuration or invocation error."""
+
+
+class _EditorProcess:
+    """A GUI that outlived its HTTP host; supports the same liveness check as Popen."""
+    def __init__(self, pid: int):
+        self.pid = pid
+
+    def poll(self):
+        return None if proc.pid_alive(self.pid) else 0
 
 
 def _inside(path: Path, parent: Path) -> bool:
@@ -61,50 +76,86 @@ class CraftEngines:
         self.outputs.mkdir(parents=True, exist_ok=True)
         self.runtime.mkdir(parents=True, exist_ok=True)
         self._locks = {name: threading.Lock() for name in ENGINES}
+        self._editors: dict[str, Any] = {}
+        self._editor_file = self.runtime / "editors.json"
+        self._restore_editors()
 
-    def _config(self) -> dict[str, str]:
-        if not self.config_path.exists():
-            return {}
+    def _restore_editors(self) -> None:
         try:
-            data = json.loads(self.config_path.read_text(encoding="utf-8-sig"))
-        except (OSError, json.JSONDecodeError) as exc:
-            raise CraftEngineError(f"Cannot read {self.config_path}: {exc}") from None
-        if not isinstance(data, dict) or set(data) - set(ENGINES):
-            raise CraftEngineError(f"{self.config_path} must be a JSON object with only {', '.join(ENGINES)} paths")
-        if any(not isinstance(value, str) for value in data.values()):
-            raise CraftEngineError("Craft executable paths must be strings")
-        return data
+            records = json.loads(self._editor_file.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            return
+        if not isinstance(records, dict):
+            return
+        for name in ("layers", "develop"):
+            record = records.get(name)
+            if not isinstance(record, dict):
+                continue
+            binary = ROOT / "native/bin" / ("daguerre-" + name + (".exe" if os.name == "nt" else ""))
+            pid, port = record.get("pid"), record.get("port")
+            if record.get("binary") == str(binary) and isinstance(pid, int) and isinstance(port, int) and 0 < port < 65536 and proc.pid_alive(pid):
+                self._editors[name] = {"process": _EditorProcess(pid), "port": port, "token_file": self.runtime / "layers-control-token"}
 
-    def _bundle_dirs(self) -> list[Path]:
-        dirs = [self.data_dir / "craft-apps", self.data_dir / "craft-bundles"]
-        extra = os.environ.get("DAGUERRE_CRAFT_BUNDLES", "")
-        dirs.extend(Path(p).expanduser() for p in extra.split(os.pathsep) if p.strip())
-        return dirs
+    def _save_editors(self) -> None:
+        records = {}
+        for name, editor in self._editors.items():
+            if editor["process"].poll() is None:
+                binary = ROOT / "native/bin" / ("daguerre-" + name + (".exe" if os.name == "nt" else ""))
+                records[name] = {"pid": editor["process"].pid, "port": editor["port"], "binary": str(binary)}
+        write_json_atomic(self._editor_file, records)
+
+    def open_editor(self, artifact_id: str, engine: str) -> dict[str, Any]:
+        """Open the incorporated full editor on a previously generated owned copy."""
+        self._validate_engine(engine)
+        engine = ENGINE_NAMES[engine]
+        if not re.fullmatch(r"[0-9a-f]{32}", artifact_id):
+            raise CraftEngineError("artifact_id must identify a generated Daguerre copy")
+        name = OWN_NAMES[engine]
+        gui = ROOT / "native/bin" / ("daguerre-" + name + (".exe" if os.name == "nt" else ""))
+        if not gui.is_file():
+            raise CraftEngineError("Daguerre editor is not installed")
+        if name == "layers":
+            path = self.workspace / "exports" / (artifact_id + ".dglayers")
+            legacy = path.with_suffix(".pcraft")
+            if not path.exists() and legacy.is_file():
+                shutil.copy2(legacy, path)
+            args = [str(gui), "--automation-read-root", str(self.workspace), "--automation-write-root", str(self.workspace), str(path)]
+        else:
+            copies = sorted((self.workspace / "lightcraft-input").glob(artifact_id + ".*"))
+            if not copies:
+                raise CraftEngineError("Generated development copy is missing")
+            path = copies[0]
+            self._server_params(engine)  # migrate/create the owned catalog before launching the editor
+            args = [str(gui), "--library", str(self.runtime / "develop-library"), "--no-demo", str(path)]
+        if not path.is_file():
+            raise CraftEngineError("Generated editable copy is missing")
+        key = name
+        previous = self._editors.get(key)
+        process = previous["process"] if previous else None
+        if process is None or process.poll() is not None:
+            params = self._server_params(engine)
+            with socket.socket() as reservation:
+                reservation.bind(("127.0.0.1", 0))
+                port = reservation.getsockname()[1]
+            args.extend(["--control", str(port)])
+            token_file = self.runtime / "layers-control-token"
+            if name == "layers":
+                args.extend(["--control-token-file", str(token_file)])
+            process = proc.popen(args, env=params.env, cwd=str(self.workspace), detached=True)
+            self._editors[key] = {"process": process, "port": port, "token_file": token_file}
+            self._save_editors()
+        elif name == "layers":
+            result = self.call("layers", [{"tool": "doc_open", "arguments": {"path": path.relative_to(self.workspace).as_posix()}}])
+            if any(row["is_error"] for row in result["calls"]):
+                raise CraftEngineError("The open layered editor could not load this copy")
+        return {"engine": name, "artifact_id": artifact_id, "path": str(path), "executable": str(gui), "pid": process.pid, "original_modified": False}
 
     def executable(self, engine: str) -> Path | None:
-        if engine not in ENGINES:
-            raise CraftEngineError(f"engine must be one of: {', '.join(ENGINES)}")
-        config = self._config()
-        configured = config.get(engine) or os.environ.get(f"DAGUERRE_{engine.upper()}_CLI")
-        if configured:
-            path = Path(configured).expanduser()
-            if path.is_file():
-                return path.resolve()
-            return None
-        cli_name = f"{engine}-cli.exe" if os.name == "nt" else f"{engine}-cli"
-        found = shutil.which(cli_name)
-        if found:
-            return Path(found).resolve()
-        for root in self._bundle_dirs():
-            direct = root / cli_name
-            if direct.is_file():
-                return direct.resolve()
-            if root.is_dir():
-                for candidate in sorted(root.glob(f"*-windows-*-portable/{cli_name}")):
-                    return candidate.resolve()
-                for candidate in sorted(root.glob(f"*/{cli_name}")):
-                    return candidate.resolve()
-        return None
+        self._validate_engine(engine)
+        canonical = ENGINE_NAMES[engine]
+        filename = "daguerre-" + OWN_NAMES[canonical] + "-cli" + (".exe" if os.name == "nt" else "")
+        path = ROOT / "native/bin" / filename
+        return path if path.is_file() else None
 
     def status(self) -> dict[str, Any]:
         engines = {}
@@ -115,16 +166,20 @@ class CraftEngines:
                 "executable": str(exe) if exe else None,
                 "configuration_file": str(self.config_path),
                 "workspace": str(self.workspace),
-                "capability": "full upstream MCP tools can be listed and called" if exe else "not configured",
+                "name": "Daguerre " + OWN_NAMES[name],
+                "owned_engine": OWN_NAMES[name],
+                "capability": "complete incorporated engine tools and editor" if exe else "not installed",
             }
-        return {"engines": engines, "outputs_dir": str(self.outputs)}
+        engines.update({OWN_NAMES[name]: value for name, value in list(engines.items())})
+        return {"engines": engines, "outputs_dir": str(self.outputs), "source": "native"}
 
     def _server_params(self, engine: str) -> StdioServerParameters:
+        self._validate_engine(engine)
+        engine = ENGINE_NAMES[engine]
         exe = self.executable(engine)
         if exe is None:
             raise CraftEngineError(
-                f"{engine} CLI not found. Configure it in {self.config_path}, "
-                f"set DAGUERRE_{engine.upper()}_CLI, or put it under data/craft-apps."
+                f"Daguerre {OWN_NAMES[engine]} engine is not installed from this repository."
             )
         env = dict(os.environ)
         for key in _APPDATA_KEYS:
@@ -132,14 +187,34 @@ class CraftEngines:
             appdata.mkdir(parents=True, exist_ok=True)
             env[key] = str(appdata)
         if engine == "photocraft":
+            config = self.runtime / "layers-config"
+            historical = self.runtime / engine / "appdata" / "Photocraft"
+            if not config.exists() and historical.is_dir():
+                shutil.copytree(historical, config)
+            config.mkdir(parents=True, exist_ok=True)
+            env["DAGUERRE_LAYERS_CONFIG_DIR"] = str(config)
             args = [
                 "mcp", "--automation-read-root", str(self.workspace),
                 "--automation-write-root", str(self.workspace),
             ]
         else:
-            library = self.runtime / "lightcraft-library"
+            old_preferences = self.runtime / engine / "appdata" / "LightCraft"
+            own_preferences = self.runtime / engine / "appdata" / "Daguerre Develop"
+            if not own_preferences.exists() and old_preferences.is_dir():
+                shutil.copytree(old_preferences, own_preferences)
+            library = self.runtime / "develop-library"
+            historical = self.runtime / "lightcraft-library"
+            if not library.exists() and historical.is_dir():
+                shutil.copytree(historical, library)  # one-way import; historical bytes stay intact
             library.mkdir(parents=True, exist_ok=True)
             args = ["mcp", "--library", str(library)]
+        editor = self._editors.get(OWN_NAMES[engine])
+        if editor and editor["process"].poll() is None:
+            address = f"127.0.0.1:{editor['port']}"
+            if engine == "photocraft":
+                args = ["mcp", "--bridge", address, "--control-token-file", str(editor["token_file"])]
+            else:
+                args = ["mcp", "--connect", address]
         return StdioServerParameters(command=str(exe), args=args, env=env, cwd=str(self.workspace))
 
     async def _request(self, engine: str, calls: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -162,18 +237,19 @@ class CraftEngines:
 
     def tools(self, engine: str) -> dict[str, Any]:
         self._validate_engine(engine)
+        engine = ENGINE_NAMES[engine]
         with self._locks[engine]:
             return asyncio.run(self._request(engine, [{"tool": "__list_tools__"}]))[0]
 
     @staticmethod
     def _validate_engine(engine: str) -> None:
-        if engine not in ENGINES:
-            raise CraftEngineError(f"engine must be one of: {', '.join(ENGINES)}")
+        if engine not in ENGINE_NAMES:
+            raise CraftEngineError("engine must be layers or develop (historical photocraft/lightcraft aliases accepted)")
 
     def _guard_arguments(self, engine: str, arguments: Any) -> None:
         """Confine path arguments to the disposable, app-owned workspace."""
         if engine == "photocraft":
-            # PhotoCraft's own MCP server enforces explicit read/write roots.
+            # Daguerre Layers's own MCP server enforces explicit read/write roots.
             return
         def visit(value: Any, key: str = "") -> None:
             if isinstance(value, dict):
@@ -187,16 +263,17 @@ class CraftEngines:
                 looks_like_path = any(part in key for part in ("path", "file", "folder", "dir"))
                 if candidate.is_absolute():
                     if not (_inside(candidate, self.workspace) or _inside(candidate, self.outputs)):
-                        raise CraftEngineError("LightCraft MCP file paths must stay inside Daguerre's isolated craft-workspace")
+                        raise CraftEngineError("Daguerre Develop MCP file paths must stay inside Daguerre's isolated craft-workspace")
                 elif looks_like_path:
                     if ".." in candidate.parts:
-                        raise CraftEngineError("relative LightCraft paths cannot contain '..'")
+                        raise CraftEngineError("relative Daguerre Develop paths cannot contain '..'")
                     if not _inside(self.workspace / candidate, self.workspace):
-                        raise CraftEngineError("LightCraft MCP file paths must stay inside Daguerre's isolated craft-workspace")
+                        raise CraftEngineError("Daguerre Develop MCP file paths must stay inside Daguerre's isolated craft-workspace")
         visit(arguments)
 
     def call(self, engine: str, calls: list[dict[str, Any]]) -> dict[str, Any]:
         self._validate_engine(engine)
+        engine = ENGINE_NAMES[engine]
         if not isinstance(calls, list) or not calls or len(calls) > 32:
             raise CraftEngineError("calls must contain 1 to 32 {tool, arguments} objects")
         clean: list[dict[str, Any]] = []
@@ -210,7 +287,7 @@ class CraftEngines:
             clean.append({"tool": call["tool"], "arguments": arguments})
         with self._locks[engine]:
             result = asyncio.run(self._request(engine, clean))
-        return {"engine": engine, "calls": result, "workspace": str(self.workspace)}
+        return {"engine": OWN_NAMES[engine], "calls": result, "workspace": str(self.workspace)}
 
     def create_layered_document(self, name: str, width: int, height: int, background: str, source: Path | None = None) -> dict[str, Any]:
         if not isinstance(name, str) or not name.strip() or len(name) > 100:
@@ -220,10 +297,10 @@ class CraftEngines:
         if not isinstance(background, str) or not re.fullmatch(r"#[0-9a-fA-F]{6}", background):
             raise CraftEngineError("background must be a six-digit #RRGGBB color")
         artifact_id = uuid.uuid4().hex
-        path = self.workspace / "exports" / f"{artifact_id}.pcraft"
+        path = self.workspace / "exports" / f"{artifact_id}.dglayers"
         preview = self.workspace / "exports" / f"{artifact_id}.png"
         path.parent.mkdir(parents=True, exist_ok=True)
-        native_rel = f"exports/{artifact_id}.pcraft"
+        native_rel = f"exports/{artifact_id}.dglayers"
         preview_rel = f"exports/{artifact_id}.png"
         calls = []
         if source is not None:
@@ -244,19 +321,19 @@ class CraftEngines:
         ])
         result = self.call("photocraft", calls)
         if len(result["calls"]) != len(calls) or any(x["is_error"] for x in result["calls"]):
-            raise CraftEngineError("PhotoCraft did not complete document creation; inspect returned MCP call errors")
+            raise CraftEngineError("Daguerre Layers did not complete document creation; inspect returned MCP call errors")
         if not path.is_file() or not preview.is_file():
-            raise CraftEngineError("PhotoCraft reported success but the native document or PNG export is missing")
-        return {"id": artifact_id, "engine": "photocraft", "native_path": str(path), "preview_path": str(preview), "preview_url": f"http://127.0.0.1:{self.port}/api/craft/artifacts/{artifact_id}.png", "native_format": ".pcraft", "editable_layers": True, "calls": result["calls"]}
+            raise CraftEngineError("Daguerre Layers reported success but the native document or PNG export is missing")
+        return {"id": artifact_id, "engine": "layers", "native_path": str(path), "preview_path": str(preview), "preview_url": f"http://127.0.0.1:{self.port}/api/craft/artifacts/{artifact_id}.png", "native_format": ".dglayers", "editable_layers": True, "calls": result["calls"]}
 
     def create_layered_photo(self, source: Path) -> dict[str, Any]:
-        """Open a disposable photo copy in PhotoCraft and save an editable project."""
+        """Open a disposable photo copy in Daguerre Layers and save an editable project."""
         try:
             from PIL import Image
             with Image.open(source) as image:
                 width, height = image.size
         except Exception as exc:
-            raise CraftEngineError(f"PhotoCraft cannot read this image for a layered project: {exc}") from None
+            raise CraftEngineError(f"Daguerre Layers cannot read this image for a layered project: {exc}") from None
         return self.create_layered_document(source.stem[:100] or "Photo", width, height, "#000000", source)
 
     def import_compositor(self, source_path: str, preflight_only: bool = False) -> dict[str, Any]:
@@ -270,7 +347,7 @@ class CraftEngines:
             return report
         exe = self.executable("photocraft")
         if exe is None:
-            raise CraftEngineError("PhotoCraft CLI is required; configure it before importing")
+            raise CraftEngineError("Daguerre layered engine must be installed before importing")
         artifact_id = uuid.uuid4().hex
         intake = self.workspace / "compositor-input" / artifact_id / "original.comp"
         intake.mkdir(parents=True)
@@ -279,7 +356,7 @@ class CraftEngines:
             destination.parent.mkdir(parents=True, exist_ok=True)
             destination.write_bytes(data)
         self.workspace.joinpath("exports").mkdir(exist_ok=True)
-        native_rel, preview_rel = f"exports/{artifact_id}.pcraft", f"exports/{artifact_id}.png"
+        native_rel, preview_rel = f"exports/{artifact_id}.dglayers", f"exports/{artifact_id}.png"
         native, preview = self.workspace / native_rel, self.workspace / preview_rel
         readback_rel = f"compositor-input/{artifact_id}/readback.png"
         readback = self.workspace / readback_rel
@@ -305,11 +382,11 @@ class CraftEngines:
         def run_native(sequence):
             result = asyncio.run(self._request("photocraft", sequence))
             if len(result) != len(sequence) or any(c["is_error"] for c in result):
-                raise CraftEngineError("PhotoCraft import failed: " + json.dumps(result[-1] if result else {}))
+                raise CraftEngineError("Daguerre Layers import failed: " + json.dumps(result[-1] if result else {}))
             return result
         def payload(call):
             return json.loads(next(c["text"] for c in call["content"] if c.get("type") == "text"))
-        report.update({"id": artifact_id, "source_copy": str(intake), "engine": "photocraft", "engine_executable": str(exe),
+        report.update({"id": artifact_id, "source_copy": str(intake), "engine": "layers", "engine_executable": str(exe),
                        "engine_sha256": hashlib.sha256(exe.read_bytes()).hexdigest()})
         receipt = self.workspace / "exports" / f"{artifact_id}.json"
         try:
@@ -323,7 +400,7 @@ class CraftEngines:
                     starter = native_layers.pop(0)
                     cleanup.append(command("layer.delete", {"layer": starter["id"]}))
                 if len(native_layers) != len(manifest["layers"]):
-                    raise CraftEngineError("PhotoCraft layer count differs from the source; import was not published")
+                    raise CraftEngineError("Daguerre Layers layer count differs from the source; import was not published")
                 for layer_report, native_layer in zip(report["layers"], native_layers):
                     layer_report["native_id"] = native_layer["id"]
                 readback_calls = [{"tool": "doc_open", "arguments": {"path": native_rel}}, *cleanup,
@@ -348,7 +425,7 @@ class CraftEngines:
                     raise CraftEngineError("PNG export changed after native save/reopen")
             report.update({"status": "imported", "editable_layers": True, "native_path": str(native), "preview_path": str(preview),
                            "preview_url": f"http://127.0.0.1:{self.port}/api/craft/artifacts/{artifact_id}.png",
-                           "native_url": f"http://127.0.0.1:{self.port}/api/craft/artifacts/{artifact_id}.pcraft",
+                           "native_url": f"http://127.0.0.1:{self.port}/api/craft/artifacts/{artifact_id}.dglayers",
                            "readback_path": str(readback), "readback": readback_state,
                            "native_sha256": hashlib.sha256(native.read_bytes()).hexdigest(),
                            "preview_sha256": hashlib.sha256(preview.read_bytes()).hexdigest(),
@@ -378,7 +455,7 @@ class CraftEngines:
         intake = self.workspace / "lightcraft-input" / f"{artifact_id}{source.suffix.lower()}"
         output = self.outputs / f"{artifact_id}.{output_format.lower()}"
         intake.parent.mkdir(parents=True, exist_ok=True)
-        # Editing always begins from a copy. LightCraft only receives this copy,
+        # Editing always begins from a copy. Daguerre Develop only receives this copy,
         # and its persistent library is confined to Daguerre data/.
         shutil.copy2(source, intake)
         calls = [
@@ -391,7 +468,7 @@ class CraftEngines:
         ]
         result = self.call("lightcraft", calls)
         if len(result["calls"]) != len(calls) or any(x["is_error"] for x in result["calls"]):
-            raise CraftEngineError("LightCraft did not complete the develop/export workflow; inspect returned MCP call errors")
+            raise CraftEngineError("Daguerre Develop did not complete the develop/export workflow; inspect returned MCP call errors")
         if not output.is_file():
-            raise CraftEngineError("LightCraft reported success but the exported image is missing")
-        return {"id": artifact_id, "engine": "lightcraft", "source_copy": str(intake), "output_path": str(output), "output_url": f"http://127.0.0.1:{self.port}/api/craft/artifacts/{artifact_id}.{output_format.lower()}", "original_modified": False, "exposure_ev": exposure, "format": output_format.lower(), "calls": result["calls"]}
+            raise CraftEngineError("Daguerre Develop reported success but the exported image is missing")
+        return {"id": artifact_id, "engine": "develop", "source_copy": str(intake), "output_path": str(output), "output_url": f"http://127.0.0.1:{self.port}/api/craft/artifacts/{artifact_id}.{output_format.lower()}", "original_modified": False, "exposure_ev": exposure, "format": output_format.lower(), "calls": result["calls"]}

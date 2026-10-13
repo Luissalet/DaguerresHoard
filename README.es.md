@@ -3,7 +3,7 @@
 # Daguerre's Hoard
 
 La importación editable de paquetes `.comp` dispone de un subconjunto raster
-verificado: capas separadas en PhotoCraft `.pcraft`, nombres, visibilidad,
+verificado: capas separadas en Daguerre Layers `.dglayers`, nombres, visibilidad,
 opacidad y desplazamientos enteros, con informe por capa, hashes de los
 originales, reapertura nativa y vista PNG. El contenido no compatible detiene
 la importación antes de escribir. Grupos, máscaras, ajustes, texto, efectos,
@@ -82,7 +82,7 @@ está en [docs/USABILITY_REPORT.md](docs/USABILITY_REPORT.md)):
 | Lugares y tiempo | Geocodificación inversa sin conexión (tabla integrada de 10 ciudades o GeoNames `cities1000` bajo petición, donde cada barrio lleva la ciudad a la que pertenece: «Alfama, Lisbon, Portugal»), países y ciudades con recuentos, cronología por año y mes, «un día como hoy» | Sin mapas con teselas, para no hacer peticiones de red por una vista. La tabla integrada no ubica nada a más de 50 km de sus 10 ciudades |
 | Descripciones | Opcionales, con un modelo de visión local que encuentra el backend compartido (ver más abajo), por foto o en lote en segundo plano, guardado en un índice de texto completo para la búsqueda híbrida | Desactivado por defecto; nunca se genera durante el indexado |
 | Álbumes | Los creas tú o el agente, desde el visor o con una herramienta; el agente solo puede añadir | Sin álbumes anidados |
-| Valoraciones, etiquetas, palabras clave y recetas de retoque | Por foto: de 0 a 5 estrellas (o descartada), una etiqueta, palabras clave y una pequeña receta de revelado no destructiva, guardadas en Daguerre y, si lo activas, también como un `.xmp` estándar junto a la foto; los `.xmp` que ya existan (y el XMP incrustado en JPEG/TIFF/PNG/WebP) se leen en cada escaneo. Detalles más abajo | Daguerre solo renderiza la exposición de una receta (con LightCraft); el resto son datos para los reveladores RAW. La escritura de `.xmp` está desactivada por defecto |
+| Valoraciones, etiquetas, palabras clave y recetas de retoque | Por foto: de 0 a 5 estrellas (o descartada), una etiqueta, palabras clave y una pequeña receta de revelado no destructiva, guardadas en Daguerre y, si lo activas, también como un `.xmp` estándar junto a la foto; los `.xmp` que ya existan (y el XMP incrustado en JPEG/TIFF/PNG/WebP) se leen en cada escaneo. Detalles más abajo | Daguerre solo renderiza la exposición de una receta (con Daguerre Develop); el resto son datos para los reveladores RAW. La escritura de `.xmp` está desactivada por defecto |
 | Interfaz | Interfaz React de escritorio: cuadrícula de miniaturas con carga continua, visor con zoom y desplazamiento sobre una vista previa grande (1600 px) del original, panel EXIF, fotos parecidas, inglés y español, tema claro y oscuro | Las secciones de la barra lateral no tienen URL propia |
 | Integración con el asistente | `faustus-plugin.json`, 22 herramientas MCP por stdio y cada llamada del agente registrada en «Actividad del asistente» | El agente puede añadir una carpeta, pero no quitarla |
 | Modelos compartidos | Las descripciones y la traducción de búsquedas usan el modelo que ya tenga en marcha Faustus, o un Ollama/llama.cpp/servidor local compatible con OpenAI (Ajustes -> Modelos compartidos muestra qué se resolvió y por qué, con un ajuste manual) | La búsqueda de imágenes (CLIP) siempre es local: no es un modelo de chat que cubra el backend compartido |
@@ -422,10 +422,6 @@ Notas de diseño de los recorridos por los casos de uso:
 
 [MIT](LICENSE).
 
-## Motores locales PhotoCraft y LightCraft
+## Motores de imagen incorporados
 
-Daguerre descubre y expone los catálogos MCP completos de PhotoCraft y
-LightCraft instalados localmente, con flujos no destructivos para revelar
-fotos y crear documentos raster editables por capas. Consulta la
-[guía de integración](docs/CRAFT-ENGINES.es.md) para configurar rutas,
-conocer los límites y ejecutar pruebas reales aisladas.
+Daguerre contiene los motores completos de capas y revelado y sus editores de escritorio, compilados desde fuente detached con nombres y formatos propios. La vista de detalle crea copias, las revela, exporta resultados y abre el editor completo. Sus30 herramientas MCP conservan los22 nombres anteriores; los proyectos históricos son importables y los originales permanecen intactos. Consulta [la guía](docs/CRAFT-ENGINES.es.md) para compilación, formatos, procedencia y alcance verificado.

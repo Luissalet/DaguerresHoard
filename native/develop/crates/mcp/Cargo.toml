@@ -1,0 +1,16 @@
+[package]
+name = "daguerre-develop-mcp"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Daguerre Develop MCP server (L5): JSON-RPC 2.0 over stdio, driving a running app or a headless session"
+
+[lints]
+workspace = true
+
+[dependencies]
+daguerre-develop-engine = { workspace = true }
+daguerre-develop-codecs = { workspace = true }
+daguerre-develop-raster = { workspace = true }
+serde_json = { workspace = true }
+log = { workspace = true }

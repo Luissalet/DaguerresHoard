@@ -1,0 +1,23 @@
+[package]
+name = "daguerre-develop-raster"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Daguerre Develop raster (L0)"
+
+[lints]
+workspace = true
+
+[dependencies]
+serde = { workspace = true }
+daguerre-develop-geom = { workspace = true }
+daguerre-develop-color = { workspace = true }
+rayon = { workspace = true, optional = true }
+
+[features]
+default = ["parallel"]
+parallel = ["dep:rayon"]
+
+[dev-dependencies]
+proptest = { workspace = true }
+libc = { workspace = true }

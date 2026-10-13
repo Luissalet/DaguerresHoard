@@ -1,0 +1,38 @@
+[package]
+name = "daguerre-layers-engine"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+daguerre-layers-geom = { workspace = true }
+daguerre-layers-color = { workspace = true }
+daguerre-layers-cms = { workspace = true }
+daguerre-layers-raster = { workspace = true }
+daguerre-layers-doc = { workspace = true }
+daguerre-layers-ops = { workspace = true }
+daguerre-layers-compose = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+rayon = { workspace = true }
+daguerre-layers-paint = { workspace = true }
+daguerre-layers-algo = { workspace = true }
+daguerre-layers-text = { workspace = true }
+daguerre-layers-vector = { workspace = true }
+daguerre-layers-io = { workspace = true }
+daguerre-layers-psd = { workspace = true }
+daguerre-layers-format = { workspace = true }
+daguerre-layers-plugins = { workspace = true }
+blake3 = { version = "1.8", default-features = false, features = ["pure"] }
+daguerre-layers-codecs = { workspace = true }
+flate2 = { workspace = true }
+
+[dev-dependencies]
+# Synthetic camera raw files for the open tests.
+daguerre-layers-raw = { workspace = true, features = ["testgen"] }
+# WebAssembly text -> binary for plug-in test modules (Apache-2.0 WITH LLVM-exception).
+wat = "1.228"

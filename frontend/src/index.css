@@ -1187,6 +1187,10 @@ table.activity-table td {
   border-top: 1px solid var(--border);
 }
 
+.craft-actions .btn {
+  min-height: 44px;
+}
+
 .edits-panel {
   padding-top: 14px;
   border-top: 1px solid var(--border);

@@ -1,6 +1,6 @@
 # MCP tools
 
-Daguerre's Hoard exposes 22 photo-library and local Craft-engine tools over stdio
+Daguerre's Hoard exposes 30 photo-library and local Craft-engine tools over stdio
 (`daguerre_hoard/mcp_server.py`, a standalone script: stdlib + `httpx` + `mcp`).
 Every tool calls the app's
 own `/api/agent/<tool>` endpoint and returns exactly what that endpoint
@@ -74,12 +74,12 @@ system proxy settings for these calls.
 | `photos_edits` | yes | yes | rating, label, keywords, recipe and `.xmp` sidecar state of one photo |
 | `photos_set_edits` | no (Daguerre's data; the `.xmp` only if the owner enabled it) | yes | set rating, label, keywords or recipe settings |
 | `photos_sidecar` | no (Daguerre's data; the `.xmp` only if the owner enabled it) | yes | `read` or `write` the photo's `.xmp` now |
-| `craft_engines` | yes | yes | configured PhotoCraft/LightCraft executable status |
-| `craft_tools` | yes | yes | live upstream MCP tools and schemas for one engine |
+| `craft_engines` | yes | yes | incorporated engine availability |
+| `craft_tools` | yes | yes | live incorporated engine MCP tools and schemas for one engine |
 | `craft_call` | no (isolated workspace) | yes | batch calls to the complete native MCP surface |
-| `craft_develop_photo` | no (derived image + develop library) | yes | non-destructive LightCraft exposure edit by Daguerre photo id |
-| `craft_create_layered_document` | no (native document + preview) | yes | editable PhotoCraft `.pcraft` plus PNG |
-| `craft_create_layered_photo` | no (native project + preview) | yes | open an indexed photo copy in PhotoCraft and keep its overlay editable |
+| `craft_develop_photo` | no (derived image + develop library) | yes | non-destructive Daguerre Develop exposure edit by Daguerre photo id |
+| `craft_create_layered_document` | no (native document + preview) | yes | editable Daguerre Layers `.dglayers` plus PNG |
+| `craft_create_layered_photo` | no (native project + preview) | yes | open an indexed photo copy in Daguerre Layers and keep its overlay editable |
 
 See [Local Craft engines](CRAFT-ENGINES.md) for portable discovery, file
 boundaries, artifact workflows and opt-in real-binary tests.
@@ -299,7 +299,7 @@ strict ungrouped raster subset (8-bit unprofiled RGB/RGBA PNG, Normal blend,
 opacity, visibility, names, native size and integer offsets); rejects groups,
 masks, adjustments, text, effects, shapes, guides and unsupported transforms.
 Check `status`: `ready`, `blocked`, `imported` or `failed`. Only `imported`
-provides editable `.pcraft`, PNG, native readback and JSON receipt. Original
+provides editable `.dglayers`, PNG, native readback and JSON receipt. Original
 manifest/assets stay unchanged; UUID mappings and omitted source selection
 are recorded. Full limits and verification are in [CRAFT-ENGINES](CRAFT-ENGINES.md#import-a-compositor-package).
 
@@ -322,3 +322,7 @@ Default result sizes are 10-12 items, at most 50; contact sheets show at
 most 20 photos and weigh at most 200 KB; `photos_show` returns at most 4
 images of at most 200 KB each. Vector search is brute-force cosine over a
 memory-mapped float32 matrix, fine to about 200k photos.
+
+## Preferred incorporated-engine tools
+
+The seven `image_*` names mirror their `craft_*` counterparts: `image_engines`, `image_tools`, `image_call`, `image_develop_photo`, `image_create_layered_document`, `image_create_layered_photo`, `image_import_compositor`. Both name sets use the same implementation. `image_open_editor(artifact_id, engine)` opens the complete own desktop editor for a generated copy. Engine keys are `layers` and `develop`; historical keys remain aliases. All30 tools are discoverable through stdio and normal agent API. See [owned engines](OWNED-ENGINES.md).

@@ -393,8 +393,8 @@ export default function Lightbox({ photos, index, onClose, onIndexChange, t, pla
           <button
             className="btn btn-block"
             onClick={() => runCraft("photo")}
-            disabled={craftBusy || !craftStatus?.engines.photocraft?.available}
-            title={!craftStatus?.engines.photocraft?.available ? t.craft_unavailable : undefined}
+            disabled={craftBusy || !craftStatus?.engines.layers?.available}
+            title={!craftStatus?.engines.layers?.available ? t.craft_unavailable : undefined}
           >
             {craftBusy ? t.craft_working : t.craft_photo_editable}
           </button>
@@ -405,8 +405,8 @@ export default function Lightbox({ photos, index, onClose, onIndexChange, t, pla
           <button
             className="btn btn-block"
             onClick={() => runCraft("develop")}
-            disabled={craftBusy || !craftStatus?.engines.lightcraft?.available}
-            title={!craftStatus?.engines.lightcraft?.available ? t.craft_unavailable : undefined}
+            disabled={craftBusy || !craftStatus?.engines.develop?.available}
+            title={!craftStatus?.engines.develop?.available ? t.craft_unavailable : undefined}
           >
             {craftBusy ? t.craft_working : t.craft_develop}
           </button>
@@ -414,6 +414,7 @@ export default function Lightbox({ photos, index, onClose, onIndexChange, t, pla
           {craftError && <p className="error-text small">{t.craft_failed}: {craftError}</p>}
           {craftResult && (
             <div className="craft-result">
+              <button className="btn btn-block" onClick={() => api.imageOpenEditor(craftResult.id, craftResult.engine).catch((err) => setCraftError(errorText(err)))}>{t.craft_open_editor}</button>
               {craftResult.output_url && <img className="craft-result-preview" src={craftResult.output_url} alt={t.craft_view_export} />}
               {craftResult.preview_url && <img className="craft-result-preview" src={craftResult.preview_url} alt={t.craft_view_export} />}
               {craftResult.native_format && <a className="link-btn" href={`/api/craft/artifacts/${craftResult.id}${craftResult.native_format}`} download>{t.craft_open_project}</a>}

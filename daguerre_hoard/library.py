@@ -1185,6 +1185,10 @@ class Library(VideoMixin, EditsMixin):
         """Run a batch of native MCP calls inside Daguerre's isolated workspace."""
         return self.craft_engines.call(engine, calls)
 
+    def image_open_editor(self, artifact_id: str, engine: str) -> dict:
+        """Open a generated copy in the complete incorporated desktop editor."""
+        return self.craft_engines.open_editor(artifact_id, engine)
+
     def craft_create_layered_document(self, name: str, width: int, height: int, background: str) -> dict:
         """Create, save and export an editable PhotoCraft raster document."""
         return self.craft_engines.create_layered_document(name, width, height, background)

@@ -105,14 +105,15 @@ def test_native_failure_retains_intake_receipt_and_source(tmp_path, monkeypatch)
     assert hashes(source) == before == hashes(Path(result["source_copy"]))
     assert Path(result["receipt_path"]).is_file()
     assert not list((engines.workspace / "exports").glob("*.pcraft"))
+    assert not list((engines.workspace / "exports").glob("*.dglayers"))
     assert not list((engines.workspace / "exports").glob("*.png"))
 
 
 @pytest.mark.craft_integration
 @pytest.mark.parametrize("variant", [0, 5])
 def test_real_native_import_readback_layers_and_original_bytes(tmp_path, variant):
-    if not os.environ.get("DAGUERRE_CRAFT_BUNDLES"):
-        pytest.skip("configure native bundles for actual PhotoCraft integration")
+    if os.environ.get("DAGUERRE_NATIVE_TESTS") != "1":
+        pytest.skip("enable incorporated Daguerre engine tests")
     evidence = os.environ.get("DAGUERRE_COMPOSITOR_EVIDENCE")
     work = Path(evidence) / f"variant-{variant}" if evidence else tmp_path
     source = work / "source.comp"
@@ -150,8 +151,8 @@ def test_real_native_import_readback_layers_and_original_bytes(tmp_path, variant
 
 @pytest.mark.craft_integration
 def test_real_transparent_margins_and_blank_layers_report_native_representation(tmp_path):
-    if not os.environ.get("DAGUERRE_CRAFT_BUNDLES"):
-        pytest.skip("configure native bundles for actual PhotoCraft integration")
+    if os.environ.get("DAGUERRE_NATIVE_TESTS") != "1":
+        pytest.skip("enable incorporated Daguerre engine tests")
     evidence = os.environ.get("DAGUERRE_COMPOSITOR_EVIDENCE")
     work = Path(evidence) / "transparent-and-blank" if evidence else tmp_path
     source = work / "source.comp"

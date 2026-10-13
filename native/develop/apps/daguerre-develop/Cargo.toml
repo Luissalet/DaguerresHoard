@@ -1,0 +1,31 @@
+[package]
+name = "daguerre-develop"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish = false
+default-run = "daguerre-develop"
+
+[lints]
+workspace = true
+
+[dependencies]
+daguerre-develop-engine = { workspace = true }
+daguerre-develop-sysmem = { workspace = true }
+daguerre-develop-ui-egui = { workspace = true }
+daguerre-develop-codecs = { workspace = true }
+daguerre-develop-raster = { workspace = true }
+eframe = { workspace = true, features = ["default_fonts", "wgpu", "accesskit", "wayland", "x11"] }
+egui = { workspace = true }
+serde_json = { workspace = true }
+log = { workspace = true }
+
+[build-dependencies]
+# Icon + VERSIONINFO for daguerre-develop.exe; build.rs only uses it when targeting Windows.
+winresource = "0.1"
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+rfd = { workspace = true }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+muda = { workspace = true }

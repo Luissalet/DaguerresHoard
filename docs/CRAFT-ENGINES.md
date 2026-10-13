@@ -1,88 +1,22 @@
-# Local Craft engines
+# Daguerre image engines
 
-Daguerre can launch the portable PhotoCraft and LightCraft command-line
-engines locally. The engines keep their native formats and their own MCP
-tools. Daguerre supplies photo-library context, local discovery, audit logs,
-and safe output locations; it does not claim full feature parity with either
-editor.
+Daguerre incorporates the complete layered-image and development engines and desktop editors as detached Rust source. The owned binaries, model, formats and MCP resources evolve here. Original photos remain read-only; workflows import copies into configured Daguerre data.
 
-## Install and configure
+## Build and use
 
-Keep the upstream release bundles outside the repository. Daguerre discovers
-`photocraft-cli.exe` and `lightcraft-cli.exe` in either `data/craft-apps/` or
-`data/craft-bundles/`, including one portable release directory below those
-folders. A shared portable bundle folder can be selected with
-`DAGUERRE_CRAFT_BUNDLES`. For explicit paths, create `data/craft-engines.json`:
+See [owned engines](OWNED-ENGINES.md) for pinned provenance, licenses, builds and migration. Run `python scripts/build_engines.py` to build both engine/editor pairs; `--debug` selects the development profile. Runtime selects only `native/bin/daguerre-layers-cli` and `daguerre-develop-cli`. Historic external executable paths, PATH discovery and portable bundles no longer select an engine.
 
-```json
-{
-  "photocraft": "D:/Apps/photocraft-cli.exe",
-  "lightcraft": "D:/Apps/lightcraft-cli.exe"
-}
-```
+## Complete engine catalogues
 
-The JSON paths take precedence over `DAGUERRE_PHOTOCRAFT_CLI` and
-`DAGUERRE_LIGHTCRAFT_CLI`; those environment variables take precedence over
-automatic discovery and `PATH`. `/api/craft/status` and the `craft_engines`
-MCP tool show availability and the resolved paths. App data, isolated
-workspaces, LightCraft's library, and generated files stay below Daguerre's
-configured `data/` directory.
+`image_engines` reports owned executables. `image_tools(engine="layers"|"develop")` discovers the complete inner schemas and `image_call` executes a batch in the headless session or the running owned editor. Historic `photocraft`/`lightcraft` keys and `craft_*` tools remain aliases. The incorporated source retains the historical 18 layered-engine tools and 243 development tools; runtime discovery is the authority, and catalogue size is distinct from testing every operation.
 
-## Full upstream MCP surface
+## Photo workflows
 
-Use `craft_tools(engine)` to start the selected headless engine briefly and
-read its live MCP tool names, descriptions, and JSON schemas. On the inspected
-Windows x64 releases, PhotoCraft v0.2.0 advertised 18 MCP tools and LightCraft
-v0.2.1 advertised 243. These are release-specific catalog sizes, not counts
-for every release. Use `craft_call(engine, calls)` to send 1–32 native MCP
-calls in one session. Each call is `{ "tool": "upstream_name", "arguments":
-{...} }`; a sequence shares its live editor session, and every actual
-upstream result and failure is returned. The app's own catalog remains live
-and schemas are not reimplemented or frozen in Daguerre.
+`image_create_layered_document` creates a `.dglayers` project with editable background and overlay, plus PNG preview. `image_create_layered_photo(photo_id)` imports a copy of an indexed photo. `image_develop_photo(photo_id, exposure, output_format, long_edge)` imports a copy into the persistent owned development catalog and exports a derivative. Library indexing, metadata, search, albums and XMP recipes remain available.
 
-PhotoCraft's child is launched with its own explicit read and write roots at
-`data/craft-workspace/`, so its file tools cannot reach a registered photo
-root. LightCraft has no equivalent documented root switch; Daguerre therefore
-rejects absolute file paths outside its workspace and generated output folder,
-and rejects `..` path traversal. Put files to process in the workspace first.
-The high-level photo workflow makes a copy there automatically.
+The lightbox offers the same workflows, editable project download and an Open full editor button. `image_open_editor(artifact_id, engine)` opens the corresponding complete desktop editor on an owned copy. Native tools connect to that editor while it runs; when it closes, headless execution resumes. New layered files use `.dglayers`; historical `.pcraft` and development libraries remain importable without rewriting their originals. Flat exports are derivatives, not editable replacements for originals.
 
-## Integrated workflows
-
-### Develop an indexed photo
-
-Call `craft_develop_photo(photo_id, exposure, output_format="png",
-long_edge=0)`. `photo_id` comes from Daguerre search; exposure is -5 to +5 EV.
-Daguerre copies the original bytes to its private workspace, imports that copy
-into LightCraft's persistent local library, applies `light.exposure`, and
-exports a derivative under `data/craft-outputs/`. The result includes the
-LightCraft calls, local path, preview URL, and `original_modified: false`.
-Source photos remain read-only.
-The photo lightbox also exposes this operation with an exposure slider and
-shows the exported derivative when it completes.
-
-### Open an editable photo copy
-
-`craft_create_layered_photo(photo_id)` copies the selected indexed image into
-the PhotoCraft read root, opens it with the scoped `doc_open` MCP tool, adds an
-editable pixel overlay, saves a `.pcraft` project, and exports a PNG preview.
-The lightbox offers the same action and links the native project for download.
-The workflow uses PhotoCraft's document-scoped relative path interface; it
-does not call ambient-path commands. The source file is never given to
-PhotoCraft directly.
-
-### Create an editable layered raster document
-
-Call `craft_create_layered_document(name, width=512, height=384,
-background="#315c7e")`. It creates a native `.pcraft` document with an editable
-background and pixel overlay, then exports a PNG preview. Both files remain in
-`data/craft-workspace/exports/`; the preview is served under
-`/api/craft/artifacts/<random-id>.png`.
-
-The normal local UI endpoints are `POST /api/craft/from-photo` and
-`POST /api/craft/develop`; both are also available through authenticated,
-audited `/api/agent/*` endpoints and the corresponding MCP tools. The separate
-Compositor `.comp` package import has a strict raster subset, described below.
+Preferred local routes use `/api/image-engine/status`, `/from-photo`, `/develop`, `/import-compositor`, and `/editor`. Preferred agent routes are `/api/agent/image_*`. All original routes remain available. Both HTTP and MCP call the same library implementation; generated outputs and editor preferences stay under configured Daguerre data.
 
 ### Import a Compositor package
 
@@ -90,7 +24,7 @@ Compositor `.comp` package import has a strict raster subset, described below.
 MCP, audited `POST /api/agent/craft_import_compositor`, and local
 `POST /api/craft/import-compositor`. Select an existing `.comp` directory;
 compressed archives are unsupported. `preflight_only=true` reads and validates
-without starting PhotoCraft or writing an intake. Read `status` before using
+without starting Daguerre Layers or writing an intake. Read `status` before using
 the result: `ready` is a successful preflight, `blocked` rejects unsupported
 content, `imported` includes artifacts, and `failed` includes a runtime error
 receipt. A blocked package creates no native project and never falls back to
@@ -109,10 +43,10 @@ whole import with per-layer/property reasons. Future schemas are rejected.
 Daguerre snapshots the exact manifest and referenced PNG bytes into its private
 workspace, retaining SHA-256 hashes and source UUID provenance. The original
 package is read only. Ancillary package files such as QuickLook are not copied.
-PhotoCraft receives scoped `doc_open` paths, then native copy/paste-in-place,
+Daguerre Layers receives scoped `doc_open` paths, then native copy/paste-in-place,
 property and integer translation commands in one headless session. Separate
 layers stay editable. Native IDs replace UUIDs; the receipt records the mapping.
-Source active selection is omitted because PhotoCraft reopens with its default
+Source active selection is omitted because Daguerre Layers reopens with its default
 selection. Undo and viewport state are not imported.
 Fully transparent PNG assets are rejected (blank layers without an asset are
 supported). Native copy/paste trims fully transparent margins; the preflight
@@ -120,11 +54,11 @@ explicitly reports this representation change, retains the complete original
 PNG, and verifies the visible content's resulting bounds. Blank-layer source
 rectangles are retained only in provenance and reported as transformed.
 
-The importer saves `.pcraft`, reopens it, checks layer order/names/visibility/
+The importer saves `.dglayers`, reopens it, checks layer order/names/visibility/
 opacity/type and dimensions, and compares SHA-256 of PNG exports before and
 after reopen. It returns native/preview/download paths, engine executable hash,
 source hashes, native readback and all actual MCP calls. The JSON receipt is
-served under `/api/craft/artifacts/<id>.json`; `.pcraft` and PNG use the same ID.
+served under `/api/craft/artifacts/<id>.json`; `.dglayers` and PNG use the same ID.
 A runtime failure deletes unpublished native/preview outputs and retains the
 input snapshot and failure receipt for diagnosis.
 
@@ -143,7 +77,7 @@ fields, future versions and unsupported editable content before native launch.
 
 | Reference capability | Import status | Evidence / gap |
 | --- | --- | --- |
-| Raster PNG, layer order/name/visibility/opacity | Implemented subset | Native `.pcraft` reopen, synthetic 3-layer fixtures, source SHA-256 |
+| Raster PNG, layer order/name/visibility/opacity | Implemented subset | Native `.dglayers` reopen, synthetic 3-layer fixtures, source SHA-256 |
 | Integer raster placement and document resolution | Implemented | Positive/negative native bounds, 144 ppi; source-over pixel checks |
 | RGBA margins and empty layers | Transformed explicitly | Native visible bounds verified; full source frame retained in snapshot |
 | Other blends, scale/rotate/flip, fractional placement | Blocked | Negative preflight; renderer equivalence unverified |
@@ -163,26 +97,10 @@ interchange improvement, not an established replacement or superiority claim.
 
 ## Scope and verification
 
-The integrated workflows exercise real native MCP calls and preserve the
-PhotoCraft document or LightCraft develop library. The LightCraft PNG/JPEG/etc.
-is a rendered derivative; it is not an editable substitute for the RAW/photo
-source. Daguerre does not yet offer PhotoCraft's complete UI, PSD/PSB import
-and export matrix, batch/droplet workflows, every LightCraft catalog/develop
-operation, masks, merge, preset management, or UI automation as first-class
-Daguerre screens. They remain accessible through the upstream live tool
-catalogue subject to the isolated file boundary. Feature parity and superiority
-have not been established.
+Both complete engines and desktop UIs are incorporated, including their existing codec, development, layered document and automation implementations. Specific runtime tests are documented separately; no claim certifies every RAW variant, command or export combination. The Compositor raster subset and unsupported-property reporting above are retained.
 
-The opt-in `craft_integration` tests launch configured local executables with
-disposable data and synthetic images. Set `DAGUERRE_CRAFT_BUNDLES` to the
-directory holding the portable release folders, then run
-`pytest -m craft_integration`. They verify editable layer presence, real export,
-exposure effect, and original-byte preservation. Do not point tests or imports
-at a personal photo library.
+After building, enable `DAGUERRE_NATIVE_TESTS=1` and run `pytest -m craft_integration` for actual incorporated engines with private synthetic data. The normal suite excludes the real CLIP model. Do not place synthetic test data in a personal photo library.
 
-## Licenses
+## Licenses and provenance
 
-The inspected PhotoCraft and LightCraft release bundles include MIT and Apache
-license files for their code. Review bundled fonts, models, presets, sample
-media, and other assets separately before redistribution; this integration
-does not copy Craft binaries or bundled assets into Daguerre.
+`native/layers` and `native/develop` retain original MIT/Apache licenses, NOTICE and historical ASSETS attribution. Fonts and the spelling dictionary retain their own license texts. Application icons come from the existing Hoard. PROVENANCE.json fixes original revisions and per-file source hashes; no origin repository or executable is a runtime dependency.

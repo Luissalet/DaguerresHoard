@@ -1,0 +1,16 @@
+[package]
+name = "daguerre-develop-tiff"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Daguerre Develop TIFF/IFD reader and writer (L0)"
+
+[lints]
+workspace = true
+
+[dependencies]
+serde = { workspace = true }
+thiserror = { workspace = true }
+
+[dev-dependencies]
+proptest = { workspace = true }

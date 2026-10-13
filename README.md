@@ -62,7 +62,7 @@ real MCP stdio by a script that plays a small local model
 ## What is implemented
 
 - **Editable Compositor import:** `.comp` directories containing a verified
-  raster subset can become separate PhotoCraft `.pcraft` pixel layers through
+  raster subset can become separate Daguerre Layers `.dglayers` pixel layers through
   `craft_import_compositor`. Includes a per-layer report, original-byte hashes,
   native save/reopen checks and PNG previews. Unsupported content blocks import
   before writing; groups, masks, adjustments and complex transforms remain gaps.
@@ -78,9 +78,9 @@ real MCP stdio by a script that plays a small local model
 | Places and time | Offline reverse geocoding (bundled 10-city table, or GeoNames `cities1000` on request, where a neighbourhood is labelled with the city it belongs to: "Alfama, Lisbon, Portugal"), countries and cities with photo counts, timeline by year and month, "on this day" | No map tiles, to avoid any network request for a view. The bundled table places nothing more than 50 km from its 10 cities |
 | Captions | Optional, from a local vision model found through the shared backend (see below), per photo or as a background batch, stored in a full-text index for hybrid search | Off by default; never generated during indexing |
 | Albums | Created by you or the agent from the lightbox or by tool call; the agent can only add | No nested albums |
-| Ratings, labels, keywords, retouch recipes | Per photo: 0-5 stars (or rejected), a label, keywords and a small non-destructive develop recipe, stored in Daguerre and, if you turn it on, kept as a standard `.xmp` sidecar next to the photo; existing sidecars (and XMP embedded in JPEG/TIFF/PNG/WebP) are read on every scan. Details below | Daguerre renders only the exposure of a recipe (through LightCraft); the rest is data for RAW developers. Sidecar writing is off by default |
+| Ratings, labels, keywords, retouch recipes | Per photo: 0-5 stars (or rejected), a label, keywords and a small non-destructive develop recipe, stored in Daguerre and, if you turn it on, kept as a standard `.xmp` sidecar next to the photo; existing sidecars (and XMP embedded in JPEG/TIFF/PNG/WebP) are read on every scan. Details below | Daguerre renders only the exposure of a recipe (through Daguerre Develop); the rest is data for RAW developers. Sidecar writing is off by default |
 | Interface | React desktop-style UI: thumbnail grid with infinite scroll, lightbox with zoom and pan on a large (1600 px) preview of the original, EXIF panel, similar strip, English and Spanish, light and dark | Sidebar sections are not deep-linkable URLs |
-| Assistant integration | `faustus-plugin.json`, 22 MCP tools over stdio, every agent call audited in "Assistant activity" | The agent can add a folder but not remove one |
+| Assistant integration | `faustus-plugin.json`, 30 MCP tools over stdio, every agent call audited in "Assistant activity" | The agent can add a folder but not remove one |
 | Shared models | Captions and query translation share whatever model server Faustus or a local Ollama/llama.cpp/OpenAI-compatible server already has running (Settings -> Shared models shows what resolved and why, with a manual override) | Image search itself (CLIP) is always local, never shared: it is not a chat model the shared backend covers |
 
 ## Shared models
@@ -392,9 +392,6 @@ Design notes from the use-case walkthroughs: [docs/USE_CASES.md](docs/USE_CASES.
 
 [MIT](LICENSE).
 
-## Local PhotoCraft and LightCraft engines
+## Incorporated image engines
 
-Daguerre can discover and call the full upstream MCP surfaces of local
-PhotoCraft and LightCraft releases, and offers non-destructive exposure and
-editable layered-document workflows. See [the integration guide](docs/CRAFT-ENGINES.md)
-for configuration, file boundaries and current limits.
+Daguerre contains complete layered-image and development engines and desktop editors, built from detached source with own names and formats. The photo lightbox creates copies, develops them, exports results and opens the full editor. Thirty public MCP tools preserve all22 previous names; historical projects remain importable and originals untouched. See [the engine guide](docs/CRAFT-ENGINES.md) for builds, formats, provenance and verified scope.

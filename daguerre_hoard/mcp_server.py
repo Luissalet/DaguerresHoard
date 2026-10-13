@@ -499,41 +499,39 @@ def photos_sidecar(photo_id: str, action: Literal["read", "write"] = "read") -> 
 
 @mcp.tool(annotations=READ_ONLY)
 def craft_engines() -> list:
-    """Show configured PhotoCraft and LightCraft executables and isolated workspaces.
+    """Show Daguerre's incorporated layered-image and development engines.
 
-    Returns availability, resolved CLI path, configuration file and output directory.
-    It never starts an editor. Configure `photocraft` and `lightcraft` in
-    `data/craft-engines.json`, use `DAGUERRE_CRAFT_BUNDLES`, or place portable
-    bundles in Daguerre's `data/craft-apps` directory.
-    Keywords: Craft apps, creative engines, PhotoCraft, LightCraft, motores creativos, aplicaciones de edición
+    Returns owned executable availability, full engine identity and output directory.
+    Historic external executable configuration is preserved as data and ignored.
+    Keywords: Daguerre image editors, layers, development, motores de imagen, capas, revelado
     """
     return [_text(_call("craft_engines", {}))]
 
 
 @mcp.tool(annotations=READ_ONLY)
-def craft_tools(engine: Literal["photocraft", "lightcraft"]) -> list:
+def craft_tools(engine: Literal["layers", "develop", "photocraft", "lightcraft"]) -> list:
     """List the full live MCP tool catalogue and JSON schemas from a Craft engine.
 
-    `engine` is `photocraft` or `lightcraft`. This starts that headless engine
+    `engine` is `layers` or `develop`; old names remain aliases. This starts that headless engine
     briefly and returns its actual upstream tool names, descriptions and schemas;
     it does not use a reduced feature catalogue. Use craft_call to invoke tools.
-    Keywords: PhotoCraft tools, LightCraft tools, MCP schema, list commands, herramientas, esquemas, listar comandos
+    Keywords: Daguerre Layers tools, Daguerre Develop tools, MCP schema, list commands, herramientas, esquemas, listar comandos
     """
     return [_text(_call("craft_tools", {"engine": engine}))]
 
 
 @mcp.tool(annotations=CRAFT_WRITE)
-def craft_call(engine: Literal["photocraft", "lightcraft"], calls: list[dict]) -> list:
+def craft_call(engine: Literal["layers", "develop", "photocraft", "lightcraft"], calls: list[dict]) -> list:
     """Call one or more native MCP tools in one isolated Craft engine session.
 
     Read the live schema with craft_tools first. Each call is
-    `{tool: "upstream_tool_name", arguments: {...}}`; batches preserve the
-    editor session across calls. Up to 32 calls are accepted. PhotoCraft read
-    and write roots and LightCraft file paths are confined to Daguerre data;
+    `{tool: "engine_tool_name", arguments: {...}}`; batches preserve the
+    editor session across calls. Up to 32 calls are accepted. Daguerre Layers read
+    and write roots and Daguerre Develop file paths are confined to Daguerre data;
     registered originals are not made writable. Results contain each native
     MCP response and error. For common flows use craft_develop_photo or
-    craft_create_layered_document or craft_create_layered_photo. This exposes the upstream tool surface,
-    not a claim that every upstream feature has been parity tested here.
+    craft_create_layered_document or craft_create_layered_photo. This exposes the complete incorporated tool surface,
+    not a claim that every engine feature has been parity tested here.
     Keywords: edit image, native MCP, photo development, layers, editar imagen, MCP nativo, revelar foto, capas
     """
     return [_text(_call("craft_call", {"engine": engine, "calls": calls}))]
@@ -541,10 +539,10 @@ def craft_call(engine: Literal["photocraft", "lightcraft"], calls: list[dict]) -
 
 @mcp.tool(annotations=CRAFT_WRITE)
 def craft_develop_photo(photo_id: str, exposure: float, output_format: Literal["png", "jpg", "tif", "webp", "avif"] = "png", long_edge: int = 0) -> list:
-    """Develop an indexed photo with LightCraft and export a derivative, preserving the original.
+    """Develop an indexed photo with Daguerre Develop and export a derivative, preserving the original.
 
     `photo_id` comes from Daguerre search; `exposure` is -5 to +5 EV.
-    LightCraft imports a Daguerre-owned copy into its local library, records
+    Daguerre Develop imports a Daguerre-owned copy into its local library, records
     the editable develop state there, and writes an export under Daguerre data.
     Returns native call results, derivative path and `original_modified:false`.
     `long_edge=0` preserves full output size. The original photo is read only.
@@ -557,25 +555,25 @@ def craft_develop_photo(photo_id: str, exposure: float, output_format: Literal["
 
 @mcp.tool(annotations=CRAFT_WRITE)
 def craft_create_layered_photo(photo_id: str) -> list:
-    """Open a copy of an indexed photo in PhotoCraft and save an editable project.
+    """Open a copy of an indexed photo in Daguerre Layers and save an editable project.
 
     Daguerre copies the photo into its confined workspace, opens it through
-    PhotoCraft's scoped doc_open tool, adds an editable overlay, saves `.pcraft`,
+    Daguerre Layers's scoped doc_open tool, adds an editable overlay, saves `.pcraft`,
     and exports a PNG preview. The indexed original remains untouched.
-    Keywords: open photo in editor, editable photo, PhotoCraft project, abrir foto, foto editable, proyecto PhotoCraft
+    Keywords: open photo in editor, editable photo, Daguerre Layers project, abrir foto, foto editable, proyecto Daguerre Layers
     """
     return [_text(_call("craft_create_layered_photo", {"photo_id": photo_id}))]
 
 
 @mcp.tool(annotations=CRAFT_WRITE)
 def craft_create_layered_document(name: str = "Daguerre canvas", width: int = 512, height: int = 384, background: str = "#315c7e") -> list:
-    """Create an editable PhotoCraft layered document and export a PNG preview.
+    """Create an editable Daguerre Layers layered document and export a PNG preview.
 
     Saves a native `.pcraft` document with a background and editable overlay
     layer, plus a PNG, under Daguerre data. Width and height are 16–8192;
     background is a six-digit #RRGGBB color. Returns both artifact paths and
     upstream tool results. This is a proven starter workflow, not full PSD
-    or PhotoCraft feature parity.
+    or Daguerre Layers feature parity.
     Keywords: layered image, raster document, editable layers, export PNG, imagen por capas, documento raster, capas editables
     """
     return [_text(_call("craft_create_layered_document", {
@@ -585,10 +583,10 @@ def craft_create_layered_document(name: str = "Daguerre canvas", width: int = 51
 
 @mcp.tool(annotations=CRAFT_WRITE)
 def craft_import_compositor(source_path: str, preflight_only: bool = False) -> list:
-    """Import a Compositor .comp directory as editable PhotoCraft pixel layers.
+    """Import a Compositor .comp directory as editable Daguerre Layers pixel layers.
 
     source_path explicitly selects a local package. preflight_only returns a
-    per-layer report without writing or starting PhotoCraft. Unsupported content
+    per-layer report without writing or starting Daguerre Layers. Unsupported content
     returns status=blocked without import: groups, masks, adjustments, text,
     effects, shapes, non-Normal blending, scaling, rotation and fractional offsets.
     Supports schema 1–11, sRGB 8-bit RGB/RGBA PNG, 1–128 layers, canvas/image
@@ -603,6 +601,78 @@ def craft_import_compositor(source_path: str, preflight_only: bool = False) -> l
 
 def main() -> None:
     mcp.run(transport="stdio")
+
+
+
+
+@mcp.tool(annotations=CRAFT_WRITE)
+def image_open_editor(artifact_id: str, engine: Literal["layers", "develop"]) -> list:
+    """Open a generated editable copy in Daguerre's full incorporated desktop editor.
+
+    First create a layered copy or develop a copy and use its artifact id.
+    Originals remain read-only. Returns editor PID and owned path.
+    Keywords: full editor, layers, develop, abrir editor, capas, revelado
+    """
+    return [_text(_call("image_open_editor", {"artifact_id": artifact_id, "engine": engine}))]
+
+# Preferred product tools use the same library routes and preserve historical names.
+@mcp.tool(annotations=READ_ONLY)
+def image_engines() -> list:
+    """Show incorporated Daguerre image engines, owned executable paths and availability.
+    Keywords: image engines, layers, development, motores de imagen, capas, revelado
+    """
+    return [_text(_call("image_engines", {}))]
+
+
+@mcp.tool(annotations=READ_ONLY)
+def image_tools(engine: Literal["layers", "develop"]) -> list:
+    """Discover the complete live tool schemas of an incorporated Daguerre engine.
+    Keywords: native tools, image schemas, herramientas de imagen, catálogo
+    """
+    return [_text(_call("image_tools", {"engine": engine}))]
+
+
+@mcp.tool(annotations=CRAFT_WRITE)
+def image_call(engine: Literal["layers", "develop"], calls: list[dict]) -> list:
+    """Run native operations together in one incorporated engine or live editor session.
+
+    Discover schemas with image_tools. Calls contain tool and arguments; originals are
+    copied into Daguerre data before editing. Returns each result and failure.
+    Keywords: image operations, layers, develop, editar imagen, capas, revelar
+    """
+    return [_text(_call("image_call", {"engine": engine, "calls": calls}))]
+
+
+@mcp.tool(annotations=CRAFT_WRITE)
+def image_develop_photo(photo_id: str, exposure: float, output_format: Literal["png", "jpg", "tif", "webp", "avif"] = "png", long_edge: int = 0) -> list:
+    """Develop an indexed photo copy and export a derivative; keep the original intact.
+    Keywords: develop copy, exposure, export image, revelar copia, exposición, exportar
+    """
+    return [_text(_call("image_develop_photo", {"photo_id": photo_id, "exposure": exposure, "output_format": output_format, "long_edge": long_edge}))]
+
+
+@mcp.tool(annotations=CRAFT_WRITE)
+def image_create_layered_photo(photo_id: str) -> list:
+    """Create an editable .dglayers copy of an indexed photo, with overlay and preview.
+    Keywords: layered copy, editable photo, copia por capas, fotografía editable
+    """
+    return [_text(_call("image_create_layered_photo", {"photo_id": photo_id}))]
+
+
+@mcp.tool(annotations=CRAFT_WRITE)
+def image_create_layered_document(name: str = "Daguerre canvas", width: int = 512, height: int = 384, background: str = "#315c7e") -> list:
+    """Create a reusable layered document and PNG preview in Daguerre data.
+    Keywords: create canvas, layers, raster document, crear lienzo, capas, documento raster
+    """
+    return [_text(_call("image_create_layered_document", {"name": name, "width": width, "height": height, "background": background}))]
+
+
+@mcp.tool(annotations=CRAFT_WRITE)
+def image_import_compositor(source_path: str, preflight_only: bool = False) -> list:
+    """Inspect or import a Compositor raster package without changing its source files.
+    Keywords: compositor, raster layers, import package, importar paquete, capas raster
+    """
+    return [_text(_call("image_import_compositor", {"source_path": source_path, "preflight_only": preflight_only}))]
 
 
 if __name__ == "__main__":

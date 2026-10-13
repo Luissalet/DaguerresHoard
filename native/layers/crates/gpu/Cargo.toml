@@ -1,0 +1,29 @@
+[package]
+name = "daguerre-layers-gpu"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+half = "2"
+daguerre-layers-geom = { workspace = true }
+daguerre-layers-color = { workspace = true }
+daguerre-layers-raster = { workspace = true }
+daguerre-layers-doc = { workspace = true }
+daguerre-layers-compose = { workspace = true }
+# Same major version as eframe's wgpu so the app's device can be shared.
+wgpu = { version = "30", default-features = false, features = ["std", "wgsl"] }
+log = { workspace = true }
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+# Effect distance fields are computed in parallel bands.
+rayon = { workspace = true }
+
+[dev-dependencies]
+wgpu = { version = "30" }
+pollster = "1"
+# Shape layers in the effect parity tests.
+daguerre-layers-vector = { workspace = true }

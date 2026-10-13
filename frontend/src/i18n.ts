@@ -112,6 +112,7 @@ export interface Dict {
   craft_working: string;
   craft_unavailable: string;
   craft_open_project: string;
+  craft_open_editor: string;
   craft_view_export: string;
   craft_original_safe: string;
   craft_failed: string;
@@ -315,13 +316,14 @@ export const dict: Record<Lang, Dict> = {
     filter_from: "From",
     filter_to: "To",
     add_to_album: "Add to album",
-    craft_tools: "Local craft tools",
-    craft_photo_editable: "Open editable copy in PhotoCraft",
-    craft_develop: "Develop copy with LightCraft",
+    craft_tools: "Daguerre image editors",
+    craft_photo_editable: "Create layered copy",
+    craft_develop: "Develop copy",
     craft_exposure: "Exposure",
     craft_working: "Working…",
-    craft_unavailable: "Configure this local engine in Daguerre settings first.",
+    craft_unavailable: "The image engine is unavailable.",
     craft_open_project: "Download editable project",
+    craft_open_editor: "Open full editor",
     craft_view_export: "View exported image",
     craft_original_safe: "The indexed original stays untouched. The result is saved under Daguerre data.",
     craft_failed: "Craft operation failed",
@@ -527,13 +529,14 @@ export const dict: Record<Lang, Dict> = {
     filter_from: "Desde",
     filter_to: "Hasta",
     add_to_album: "Añadir a álbum",
-    craft_tools: "Herramientas Craft locales",
-    craft_photo_editable: "Abrir copia editable en PhotoCraft",
-    craft_develop: "Revelar copia con LightCraft",
+    craft_tools: "Editores de imagen de Daguerre",
+    craft_photo_editable: "Crear copia por capas",
+    craft_develop: "Revelar copia",
     craft_exposure: "Exposición",
     craft_working: "Procesando…",
-    craft_unavailable: "Configura primero este motor local en Daguerre.",
+    craft_unavailable: "El motor de imagen no está disponible.",
     craft_open_project: "Descargar proyecto editable",
+    craft_open_editor: "Abrir editor completo",
     craft_view_export: "Ver imagen exportada",
     craft_original_safe: "El original indexado permanece intacto. El resultado se guarda en los datos de Daguerre.",
     craft_failed: "La operación Craft ha fallado",

@@ -11,25 +11,25 @@ from PIL import Image
 from daguerre_hoard.craft_engines import CraftEngineError, CraftEngines
 
 
-def test_portable_bundle_discovery_and_explicit_config(tmp_path, monkeypatch):
-    bundle_root = tmp_path / "portable"
-    photo = bundle_root / "photocraft-0.2.0-windows-x64-portable" / "photocraft-cli.exe"
-    light = bundle_root / "lightcraft-0.2.1-windows-x64-portable" / "lightcraft-cli.exe"
-    photo.parent.mkdir(parents=True)
-    light.parent.mkdir(parents=True)
-    photo.write_bytes(b"test executable")
-    light.write_bytes(b"test executable")
-    monkeypatch.setenv("DAGUERRE_CRAFT_BUNDLES", str(bundle_root))
+def test_only_incorporated_executables_are_selected(tmp_path, monkeypatch):
+    from daguerre_hoard import craft_engines
+    monkeypatch.setattr(craft_engines, "ROOT", tmp_path / "repo")
+    monkeypatch.setattr(craft_engines.shutil, "which", lambda name: (_ for _ in ()).throw(AssertionError("external executable discovery")))
+    monkeypatch.setenv("DAGUERRE_CRAFT_BUNDLES", str(tmp_path / "absent-bundle"))
+    monkeypatch.setenv("DAGUERRE_PHOTOCRAFT_CLI", "X:/absent/external.exe")
+    monkeypatch.setenv("DAGUERRE_LIGHTCRAFT_CLI", "X:/absent/external.exe")
     engines = CraftEngines(tmp_path / "data")
-    if os.name == "nt":
-        assert engines.executable("photocraft") == photo.resolve()
-        assert engines.executable("lightcraft") == light.resolve()
     config_photo = tmp_path / "custom-photo-cli.exe"
     config_photo.write_bytes(b"configured executable")
     engines.config_path.write_text(json.dumps({"photocraft": str(config_photo)}), encoding="utf-8")
-    assert engines.executable("photocraft") == config_photo.resolve()
-    if os.name == "nt":  # the portable bundles are Windows builds; elsewhere only the explicit config counts
-        assert engines.executable("lightcraft") == light.resolve()
+    assert engines.executable("layers") is None  # the external config cannot satisfy the owned engine
+    own = tmp_path / "repo/native/bin"
+    own.mkdir(parents=True)
+    photo = own / ("daguerre-layers-cli.exe" if os.name == "nt" else "daguerre-layers-cli")
+    photo.write_bytes(b"owned fixture")
+    assert engines.executable("layers") == engines.executable("photocraft") == photo
+    assert engines.executable("develop") is None
+    assert json.loads(engines.config_path.read_text())["photocraft"] == str(config_photo)
 
 
 def test_lightcraft_file_arguments_are_confined_to_daguerre_owned_paths(tmp_path):
@@ -48,23 +48,22 @@ def test_lightcraft_file_arguments_are_confined_to_daguerre_owned_paths(tmp_path
         engines._guard_arguments("lightcraft", {"path": "../original.png"})
 
 
-def test_photocraft_session_uses_enforced_read_write_roots(tmp_path):
+def test_photocraft_session_uses_enforced_read_write_roots(tmp_path, monkeypatch):
     engines = CraftEngines(tmp_path / "data")
     cli = tmp_path / "photocraft-cli.exe"
     cli.write_bytes(b"fixture")
-    engines.config_path.write_text(json.dumps({"photocraft": str(cli)}), encoding="utf-8")
+    monkeypatch.setattr(engines, "executable", lambda engine: cli)
     params = engines._server_params("photocraft")
     assert params.command == str(cli.resolve())
     assert params.args == ["mcp", "--automation-read-root", str(engines.workspace), "--automation-write-root", str(engines.workspace)]
 
 
 def _configured_engines(tmp_path: Path) -> CraftEngines | None:
-    root = os.environ.get("DAGUERRE_CRAFT_BUNDLES")
-    if not root:
-        pytest.skip("set DAGUERRE_CRAFT_BUNDLES to run real Craft artifact integration tests")
+    if os.environ.get("DAGUERRE_NATIVE_TESTS") != "1":
+        pytest.skip("set DAGUERRE_NATIVE_TESTS=1 to run actual incorporated engines")
     engines = CraftEngines(tmp_path / "data")
     if not all(engines.executable(name) for name in ("photocraft", "lightcraft")):
-        pytest.skip("both portable PhotoCraft and LightCraft CLI executables are required")
+        pytest.fail("both incorporated Daguerre engines must be built")
     return engines
 
 

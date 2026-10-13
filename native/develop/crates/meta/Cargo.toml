@@ -1,0 +1,19 @@
+[package]
+name = "daguerre-develop-meta"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Daguerre Develop metadata: EXIF, XMP, IPTC (L1)"
+
+[lints]
+workspace = true
+
+[dependencies]
+daguerre-develop-tiff = { workspace = true }
+daguerre-develop-geom = { workspace = true }
+serde = { workspace = true }
+quick-xml = { workspace = true }
+
+[dev-dependencies]
+proptest = { workspace = true }
+serde_json = { workspace = true }
