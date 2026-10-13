@@ -154,16 +154,18 @@
       "incorporated_sha256": "918fcaadfda8bd9bb9b2c55ec992e11e69f1b04fa988b2f8f055a7d0840115e2"
     },
     {
-      "source": null,
+      "source": "assets/dict/LICENSE-SCOWL.txt",
       "target": "assets/dict/LICENSE-SCOWL.txt",
-      "origin": "Daguerre artwork, documentation or supporting resource",
-      "incorporated_sha256": "e2a852424fe4ee684225a6a8a34c73f8944f11ad825b7fc3a58ddcee617ed23d"
+      "origin": "Pinned source spelling dictionary; SCOWL attribution and license retained",
+      "incorporated_sha256": "e2a852424fe4ee684225a6a8a34c73f8944f11ad825b7fc3a58ddcee617ed23d",
+      "source_sha256": "e2a852424fe4ee684225a6a8a34c73f8944f11ad825b7fc3a58ddcee617ed23d"
     },
     {
-      "source": null,
+      "source": "assets/dict/en_US-scowl-50.txt.gz",
       "target": "assets/dict/en_US-scowl-50.txt.gz",
-      "origin": "Daguerre artwork, documentation or supporting resource",
-      "incorporated_sha256": "e96762435fc49ac1746b68a5073ccca3a9c77cb812f815d11c3439eadc9b51bc"
+      "origin": "Pinned source spelling dictionary; SCOWL attribution and license retained",
+      "incorporated_sha256": "e96762435fc49ac1746b68a5073ccca3a9c77cb812f815d11c3439eadc9b51bc",
+      "source_sha256": "e96762435fc49ac1746b68a5073ccca3a9c77cb812f815d11c3439eadc9b51bc"
     },
     {
       "source": "assets/fonts/Inter-Medium.ttf",
