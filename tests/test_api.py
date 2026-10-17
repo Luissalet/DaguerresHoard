@@ -42,6 +42,25 @@ def test_health(client):
     assert body["status"] == "ok"
 
 
+def test_reference_matching_ui_and_agent_share_outputs_preserve_originals(client, tmp_path):
+    from tests.test_reference_matching import series
+    lib = client.app.state.library
+    paths, ids, _, _ = series(lib, tmp_path)
+    before = [p.read_bytes() for p in paths]
+    args = {'reference_id': ids[0], 'ids': [ids[1]], 'strength': 1}
+    ui = client.post('/api/photos/match-reference', json=args)
+    assert ui.status_code == 200, ui.text
+    assert not any(x['tool'] == 'photos_match_reference' for x in lib.recent_agent_calls())
+    agent = client.post('/api/agent/photos_match_reference', json=args)
+    assert agent.status_code == 200, agent.text
+    out = agent.json()
+    assert client.get(out['photos'][0]['output_url']).headers['content-type'] == 'image/png'
+    assert client.get(out['manifest_url']).json() == out
+    assert client.get('/api/reference-matches/' + out['id'] + '/daguerre.db').status_code == 404
+    assert any(x['tool'] == 'photos_match_reference' for x in lib.recent_agent_calls())
+    assert [p.read_bytes() for p in paths] == before
+
+
 def test_craft_engine_discovery_and_artifact_routes_are_confined(client, tmp_path):
     status = client.get("/api/craft/status")
     assert status.status_code == 200

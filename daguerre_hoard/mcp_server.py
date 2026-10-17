@@ -424,6 +424,23 @@ def photos_export(ids: list[str], title: str = "Photo selection") -> list:
     return [_text(_call("photos_export", {"ids": ids, "title": title}))]
 
 
+@mcp.tool(annotations=ADDITIVE)
+def photos_match_reference(reference_id: str, ids: list[str], strength: float = 1.0, long_edge: int = 1600) -> list:
+    """Match global exposure and colour of 1-20 photos to an indexed reference (write).
+
+    Use comparable scenes. Produces new PNG derivatives under Daguerre data,
+    preserving originals, alpha and existing retouch recipes. Inputs are original
+    pixels; stored edits are not rendered. strength 0-1; long_edge 256-4096.
+    Returns per-photo output_url, measured before/after statistics, channel gains,
+    original fingerprints, omissions and a reproducible manifest_url. No local
+    tone masks or semantic look matching; very dark/transparent images can fail.
+    Keywords: match reference, batch colour, exposure, white balance, photo series,
+    igualar referencia, exposición, balance de blancos, serie fotográfica
+    """
+    return [_text(_call("photos_match_reference", {"reference_id": reference_id, "ids": ids,
+                  "strength": strength, "long_edge": long_edge}))]
+
+
 @mcp.tool(annotations=READ_ONLY)
 def photos_edits(photo_id: str) -> list:
     """Rating, label, keywords and develop recipe of one photo, and its .xmp sidecar state. Valoración y receta de revelado.

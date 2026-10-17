@@ -1,6 +1,17 @@
 export type Lang = "en" | "es";
 
 export interface Dict {
+  match_title: string;
+  match_reference: string;
+  match_choose: string;
+  match_use_this: string;
+  match_strength: string;
+  match_batch: string;
+  match_note: string;
+  match_create: string;
+  match_result: string;
+  match_parameters: string;
+  match_omitted: string;
   appName: string;
   nav_library: string;
   nav_search: string;
@@ -316,6 +327,17 @@ export const dict: Record<Lang, Dict> = {
     filter_from: "From",
     filter_to: "To",
     add_to_album: "Add to album",
+    match_title: "Match a photo series",
+    match_reference: "Reference photo",
+    match_choose: "Choose from these photos",
+    match_use_this: "Use this photo as reference",
+    match_strength: "Strength",
+    match_batch: "Match these photos (up to 20)",
+    match_note: "Global exposure and colour for comparable scenes. Creates PNG copies from original pixels; saved retouch recipes stay separate.",
+    match_create: "Create matched copies",
+    match_result: "Matched copy",
+    match_parameters: "Saved matching parameters",
+    match_omitted: "Photos omitted",
     craft_tools: "Daguerre image editors",
     craft_photo_editable: "Create layered copy",
     craft_develop: "Develop copy",
@@ -529,6 +551,17 @@ export const dict: Record<Lang, Dict> = {
     filter_from: "Desde",
     filter_to: "Hasta",
     add_to_album: "Añadir a álbum",
+    match_title: "Igualar una serie fotográfica",
+    match_reference: "Foto de referencia",
+    match_choose: "Elige entre estas fotos",
+    match_use_this: "Usar esta foto como referencia",
+    match_strength: "Intensidad",
+    match_batch: "Igualar estas fotos (hasta 20)",
+    match_note: "Exposición y color globales para escenas comparables. Crea copias PNG desde el original; las recetas de retoque guardadas permanecen aparte.",
+    match_create: "Crear copias igualadas",
+    match_result: "Copia igualada",
+    match_parameters: "Parámetros de igualación guardados",
+    match_omitted: "Fotos omitidas",
     craft_tools: "Editores de imagen de Daguerre",
     craft_photo_editable: "Crear copia por capas",
     craft_develop: "Revelar copia",

@@ -5,6 +5,7 @@ import { missingReason, useBackend } from "../backendStatus";
 import type { Dict } from "../i18n";
 import { useCopilotForm, useCopilotOpen, useCopilotRefresh } from "../copilot-hooks";
 import EditsPanel from "./EditsPanel";
+import ReferenceMatch from "./ReferenceMatch";
 import FrameStrip from "./FrameStrip";
 import { frameAsPhoto, type Album, type Photo, type PhotoDetail, type VideoDetail } from "../types";
 
@@ -387,6 +388,7 @@ export default function Lightbox({ photos, index, onClose, onIndexChange, t, pla
         )}
 
         {!photo.video_id && <EditsPanel photoId={photo.id} t={t} onExposure={setCraftExposure} />}
+        {!photo.video_id && <ReferenceMatch photo={photo} photos={photos} t={t} />}
 
         <section className="side-section craft-actions">
           <div className="side-label">{t.craft_tools}</div>

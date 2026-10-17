@@ -1173,6 +1173,11 @@ class Library(VideoMixin, EditsMixin):
 
         return create(self, ids, title)
 
+    def match_photos(self, reference_id: str, ids: list[str], strength: float = 1.0, long_edge: int = 1600) -> dict:
+        """Match global exposure/colour to a reference in new owned PNG derivatives."""
+        from .reference_matching import create
+        return create(self, reference_id, ids, strength, long_edge)
+
     def craft_status(self) -> dict:
         """Discover configured PhotoCraft and LightCraft local executables."""
         return self.craft_engines.status()

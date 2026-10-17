@@ -5,6 +5,13 @@ description: Find, look at, organise and export the owner's local photos with Da
 
 # Finding photos with Daguerre
 
+For exposure/colour consistency across comparable photos, use
+`photos_match_reference(reference_id, ids, strength=1, long_edge=1600)` after
+finding their stable IDs. It creates new PNG derivatives and a saved manifest,
+with measured statistics, parameters and omission reasons. Inputs are original
+pixels; saved retouch recipes are not rendered. It preserves originals and
+recipes and performs global matching, without local masks or semantic style.
+
 Daguerre never modifies, moves or deletes an original photo. `photos_add_folder`
 and `photos_album` add library information; `photos_set_edits` stores ratings,
 labels, keywords and retouch recipes in Daguerre and, only if the owner turned on

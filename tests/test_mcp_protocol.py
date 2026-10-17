@@ -98,7 +98,7 @@ async def test_mcp_adapter_over_stdio(running_app, tmp_path):
             assert names == {
                 "photos_search", "photos_similar", "photos_show", "photos_describe",
                 "photos_duplicates", "photos_timeline", "photos_library", "videos_list", "videos_describe",
-                "photos_add_folder", "photos_album", "photos_export", "craft_engines",
+                "photos_add_folder", "photos_album", "photos_export", "photos_match_reference", "craft_engines",
                 "photos_edits", "photos_set_edits", "photos_sidecar",
                 "craft_tools", "craft_call", "craft_develop_photo", "craft_create_layered_document", "craft_create_layered_photo", "craft_import_compositor",
                 "image_engines", "image_tools", "image_call", "image_develop_photo", "image_create_layered_document", "image_create_layered_photo", "image_import_compositor", "image_open_editor",
@@ -109,7 +109,7 @@ async def test_mcp_adapter_over_stdio(running_app, tmp_path):
                 assert tool.annotations.destructiveHint is False, tool.name
             read_only = {t.name for t in tools.tools if t.annotations.readOnlyHint}
             assert read_only == names - {
-                "photos_add_folder", "photos_album", "photos_export", "craft_call",
+                "photos_add_folder", "photos_album", "photos_export", "photos_match_reference", "craft_call",
                 "photos_set_edits", "photos_sidecar",
                 "craft_develop_photo", "craft_create_layered_document", "craft_create_layered_photo", "craft_import_compositor",
                 "image_call", "image_develop_photo", "image_create_layered_document", "image_create_layered_photo", "image_import_compositor", "image_open_editor",
@@ -182,6 +182,12 @@ async def test_mcp_adapter_over_stdio(running_app, tmp_path):
 
             repeated = await session.call_tool("photos_export", {"ids": [photo_id, photo_id], "title": "Ordered pair"})
             assert json.loads(repeated.content[0].text)["id"] == export["id"]
+
+            matched = await session.call_tool('photos_match_reference', {'reference_id': photo_id, 'ids': [photo_id]})
+            assert matched.isError is not True and [c.type for c in matched.content] == ['text']
+            match = json.loads(matched.content[0].text)
+            assert match['original_modified'] is False and match['photos'][0]['id'] == photo_id
+            assert httpx.get(running_app + match['photos'][0]['output_url'], timeout=2).headers['content-type'] == 'image/png'
 
             timeline = await session.call_tool("photos_timeline", {})
             assert "years" in json.loads(timeline.content[0].text)

@@ -1,6 +1,6 @@
 # MCP tools
 
-Daguerre's Hoard exposes 30 photo-library and local Craft-engine tools over stdio
+Daguerre's Hoard exposes 31 photo-library and local Craft-engine tools over stdio
 (`daguerre_hoard/mcp_server.py`, a standalone script: stdlib + `httpx` + `mcp`).
 Every tool calls the app's
 own `/api/agent/<tool>` endpoint and returns exactly what that endpoint
@@ -15,6 +15,14 @@ duration, result or error). The app's own interface uses separate routes,
 so the owner's clicks never appear there.
 
 ## Connecting
+
+`photos_match_reference(reference_id, ids, strength=1, long_edge=1600)` creates
+owned PNG derivatives with global exposure/colour matched to a reference from
+the indexed library. Use 1–20 comparable photos, strength 0–1 and long edge
+256–4096. Original pixels are the inputs; stored retouch recipes stay separate.
+The response includes output URLs, original fingerprints, per-photo parameters,
+measured before/after statistics and omissions. No local tone or semantic style
+matching is implied. See [the capability and limits](REFERENCE_MATCHING.md).
 
 ```json
 {

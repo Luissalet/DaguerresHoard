@@ -77,6 +77,13 @@ class ExportBody(BaseModel):
     title: str = "Photo selection"
 
 
+class ReferenceMatchBody(BaseModel):
+    reference_id: str
+    ids: list[str]
+    strength: float = 1.0
+    long_edge: int = 1600
+
+
 class PhotoIdBody(BaseModel):
     photo_id: str
 
@@ -671,6 +678,26 @@ def create_app(data_dir: Path, static_dir: Path | None = None, port: int = 8814)
     @app.post("/api/agent/photos_export", dependencies=agent_auth)
     def agent_export(body: ExportBody):
         return run(lambda: lib.export_photos(body.ids, body.title), tool="photos_export", args=body.model_dump())
+
+    @app.post("/api/photos/match-reference")
+    def match_reference(body: ReferenceMatchBody):
+        return run(lambda: lib.match_photos(body.reference_id, body.ids, body.strength, body.long_edge))
+
+    @app.post("/api/agent/photos_match_reference", dependencies=agent_auth)
+    def agent_match_reference(body: ReferenceMatchBody):
+        return run(lambda: lib.match_photos(body.reference_id, body.ids, body.strength, body.long_edge),
+                   tool="photos_match_reference", args=body.model_dump())
+
+    @app.get("/api/reference-matches/{match_id}/{filename}")
+    def reference_match_file(match_id: str, filename: str):
+        import re
+        if not ID_RE.fullmatch(match_id) or not re.fullmatch(r"(?:manifest\.json|(?:[1-9]|1[0-9]|20)\.png)", filename):
+            raise ApiError(404, "not_found", "Reference match file not found")
+        folder = (settings.data_dir / "reference-matches").resolve()
+        path = (folder / match_id / filename).resolve()
+        if not path.is_relative_to(folder) or not path.is_file():
+            raise ApiError(404, "not_found", "Reference match file not found")
+        return FileResponse(path)
 
     @app.post("/api/agent/image_tools", dependencies=agent_auth)
     @app.post("/api/agent/craft_tools", dependencies=agent_auth)

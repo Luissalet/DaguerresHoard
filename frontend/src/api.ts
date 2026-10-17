@@ -63,6 +63,13 @@ export interface CraftArtifact {
   original_modified?: boolean;
 }
 
+export interface ReferenceMatchResult {
+  id: string;
+  manifest_url: string;
+  photos: { n: number; id: string; path: string; output_url: string }[];
+  omitted: { id: string; reason: string }[];
+}
+
 function qs(params: Params): string {
   const q = new URLSearchParams();
   for (const [k, v] of Object.entries(params)) if (v !== undefined && v !== "") q.set(k, String(v));
@@ -70,6 +77,7 @@ function qs(params: Params): string {
 }
 
 export const api = {
+  matchReference: (reference_id: string, ids: string[], strength: number) => post<ReferenceMatchResult>("/api/photos/match-reference", { reference_id, ids, strength }),
   craftStatus: () => request<CraftEngineStatus>("/api/image-engine/status"),
   craftFromPhoto: (photo_id: string) => post<CraftArtifact>("/api/image-engine/from-photo", { photo_id }),
   craftDevelop: (photo_id: string, exposure: number) => post<CraftArtifact>("/api/image-engine/develop", { photo_id, exposure, output_format: "png" }),

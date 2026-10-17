@@ -1,0 +1,7 @@
+.reference-match { display: grid; gap: 12px; padding-top: 14px; border-top: 1px solid var(--border); }
+.reference-match label { display: grid; gap: 8px; min-width: 0; }
+.reference-match .reference-match__batch { display: flex; align-items: center; min-height: 44px; }
+.reference-match select { width: 100%; min-width: 0; }
+.reference-match button, .reference-match select, .reference-match .link-btn { min-height: 44px; }
+.reference-match .link-btn { display: inline-flex; align-items: center; }
+.reference-match .craft-result { overflow-wrap: anywhere; min-width: 0; }

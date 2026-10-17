@@ -83,6 +83,11 @@
 
 ## Data model
 
+`reference_matching.py` implements `Library.match_photos`: robust log-linear RGB
+matching on sRGB original pixels. UI and agent API/MCP share it. PNG derivatives
+and a manifest live under `data/reference-matches/<id>`; originals, indexed
+metadata and stored XMP/retouch recipes are read without writes.
+
 `data/daguerre.db` (SQLite, WAL): `roots`, `photos` (one row per file; `id`
 is a random 32-hex id that survives moves), `photos_fts` (FTS5 over
 captions), `albums` / `album_photos`, `photo_edits` (rating, label, keywords,

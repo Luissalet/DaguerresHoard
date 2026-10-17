@@ -2,6 +2,10 @@
 
 # Daguerre's Hoard
 
+The photo lightbox also [matches exposure and colour to a reference](docs/REFERENCE_MATCHING.md),
+creating PNG copies of the current photo or a series. UI, HTTP and MCP share the
+same operation and saved parameters; originals and retouch recipes stay intact.
+
 ### Do you still have the photo of the dog on the beach from last summer?
 
 *Named after Louis Daguerre, whose 1839 daguerreotype was the first practical photograph.*

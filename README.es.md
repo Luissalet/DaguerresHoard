@@ -2,6 +2,10 @@
 
 # Daguerre's Hoard
 
+El visor permite [igualar exposición y color a una referencia](docs/REFERENCE_MATCHING.md),
+creando copias PNG de una foto o una serie. Interfaz, HTTP y MCP comparten la
+operación y los parámetros guardados; originales y recetas permanecen intactos.
+
 La importación editable de paquetes `.comp` dispone de un subconjunto raster
 verificado: capas separadas en Daguerre Layers `.dglayers`, nombres, visibilidad,
 opacidad y desplazamientos enteros, con informe por capa, hashes de los
