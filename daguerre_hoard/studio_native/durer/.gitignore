@@ -1,0 +1,15 @@
+.venv/
+__pycache__/
+.pytest_cache/
+*.egg-info/
+data/
+local-config.json
+*.pyc
+.env
+.env.*
+*.log
+native-craft-bundles/
+artifacts/
+native/target/
+native/bin/
+.impeccable/review/

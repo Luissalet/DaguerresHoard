@@ -1,0 +1,2 @@
+# Preserve the incorporated license text byte-for-byte, including upstream spaces.
+native/assets/fonts/OFL-*.txt -whitespace
