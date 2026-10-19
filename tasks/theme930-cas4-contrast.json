@@ -1,0 +1,19 @@
+{
+  "method": "WCAG relative luminance of owner palette; computed DOM/CUA belongs to root",
+  "themes": {
+    "dark": {
+      "panel": "#1b2425",
+      "ink": "#e1ebec",
+      "muted": "#b4bdbe",
+      "ink_ratio": 13.047,
+      "muted_ratio": 8.27
+    },
+    "light": {
+      "panel": "#ffffff",
+      "ink": "#17262a",
+      "muted": "#5b6d70",
+      "ink_ratio": 15.589,
+      "muted_ratio": 5.432
+    }
+  }
+}

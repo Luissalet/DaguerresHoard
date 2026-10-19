@@ -1,2 +1,30 @@
 @font-face{font-family:Cinzel;src:url('/studio-assets/fonts/cinzel-latin-400-normal.woff2') format('woff2');font-display:swap}@font-face{font-family:'Source Sans 3';src:url('/studio-assets/fonts/source-sans-3-latin-400-normal.woff2') format('woff2');font-display:swap}
 .studio-home{--bg:#141c1c;--panel:#1b2425;--border:#354243;--ink:#e1ebec;--muted:#b4bdbe;--accent:#45bccb;margin:0;background:var(--bg);color:var(--ink);font:16px 'Source Sans 3',sans-serif}.studio-home[data-theme=light],html[data-theme=light] .studio-home{--bg:#f6f8f8;--panel:#fff;--border:#dde5e6;--ink:#17262a;--muted:#5b6d70;--accent:#0d7c80}.studio-home *{box-sizing:border-box}.studio-home header{display:flex;align-items:center;gap:16px;padding:22px 5vw;border-bottom:1px solid var(--border)}.studio-home h1,.studio-home h2,.studio-home h3{font-family:Cinzel,serif}.studio-home h1{font-size:22px;margin-right:auto}.studio-home header img{width:48px;height:48px}.studio-home main{max-width:1140px;margin:auto;padding:28px}.studio-home section{margin-bottom:32px}.studio-home button,.studio-home input{font:inherit;border:1px solid var(--border);border-radius:8px;padding:10px;background:var(--panel);color:var(--ink)}.studio-home button{cursor:pointer}.studio-home button:hover{border-color:var(--accent)}.studio-home label{display:inline-flex;align-items:center;gap:8px}.studio-home a{color:var(--accent)}#modules>div{display:flex;gap:20px;align-items:center;flex-wrap:wrap;padding:18px 0;border-bottom:1px solid var(--border)}#modules strong{min-width:210px}.studio-work{display:grid;grid-template-columns:240px 1fr;gap:32px;margin-top:24px}#projects{display:flex;gap:8px;flex-direction:column}#project>a{display:block;margin:10px 0}#error{color:#e2685a}.studio-owner{height:42px;display:flex;align-items:center;gap:24px;padding:0 20px;background:#141c1c;color:#e1ebec;border-bottom:1px solid #354243;font:14px 'Source Sans 3',sans-serif}.studio-owner a{display:flex;gap:6px;align-items:center;color:#e1ebec;text-decoration:none}.studio-owner img{width:24px;height:24px}@media(max-width:700px){.studio-work{grid-template-columns:1fr}#modules>div{gap:12px}.studio-home main{padding:20px}}
+
+/* Native vector surfaces contain legacy hard-white backgrounds. Keep these
+   selectors stronger than the native sheet, which loads after the owner sheet. */
+html[data-theme] body:has(#inputForm) :is(.modal-card, .project-card, .panel, .canvas-shell, .icon-button) {
+  background: var(--panel);
+  color: var(--ink);
+  border-color: var(--line);
+}
+html[data-theme=light] body:has(#inputForm) :is(.modal-card, .project-card, .panel, .canvas-shell, .icon-button) {
+  --panel: #fff;
+  --ink: #17262a;
+  --muted: #5b6d70;
+  --line: #dde5e6;
+  color-scheme: light;
+}
+html[data-theme=dark] body:has(#inputForm) :is(.modal-card, .panel, .canvas-shell) { color-scheme: dark; }
+html[data-theme] body:has(#inputForm) :is(.modal-card, .inspector, .workspace-actions) :is(input, select, textarea, option),
+html[data-theme] body:has(#inputForm) .catalog-search {
+  background: var(--panel);
+  color: var(--ink);
+  border-color: var(--line);
+}
+html[data-theme] body:has(#inputForm) :is(.modal-card, .inspector) :is(input, textarea)::placeholder {
+  color: var(--muted);
+  opacity: 1;
+}
+html[data-theme] body:has(#inputForm) .catalog-item pre { background: var(--paper); color: var(--ink); }
+html[data-theme] body:has(#inputForm) .tool:not(:hover):not(.active) { color: var(--muted); }

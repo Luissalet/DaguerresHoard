@@ -1,0 +1,1 @@
+{"result": "PASS", "target": "D:\\LocalAI\\installed-qa\\daguerre-fisiones930-cas4", "catalogue": 95, "modules": "OFF/OFF", "CSS_bytes": 3438, "CSS_sha256": "6fdfc922413bb76d51a43426d9f621ff88e3d519a506dd31612d3b2f354e9fdf", "profile_created": false, "visual_CUA": "pending root"}

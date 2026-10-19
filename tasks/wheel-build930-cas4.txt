@@ -1,0 +1,746 @@
+* Getting build dependencies for wheel...
+running egg_info
+writing daguerres_hoard.egg-info\PKG-INFO
+writing dependency_links to daguerres_hoard.egg-info\dependency_links.txt
+writing entry points to daguerres_hoard.egg-info\entry_points.txt
+writing requirements to daguerres_hoard.egg-info\requires.txt
+writing top-level names to daguerres_hoard.egg-info\top_level.txt
+reading manifest file 'daguerres_hoard.egg-info\SOURCES.txt'
+adding license file 'LICENSE'
+writing manifest file 'daguerres_hoard.egg-info\SOURCES.txt'
+WARNING `project.license` as a TOML table is deprecated
+!!
+
+        ********************************************************************************
+        Please use a simple string containing a SPDX expression for `project.license`. You can also use `project.license-files`. (Both options available on setuptools>=77.0.0).
+
+        By 2027-Feb-18, you need to update your project and remove deprecated calls
+        or your builds will no longer be supported.
+
+        See https://packaging.python.org/en/latest/guides/writing-pyproject-toml/#license for details.
+        ********************************************************************************
+
+!!
+* Building wheel...
+running bdist_wheel
+running build
+running build_py
+running egg_info
+writing daguerres_hoard.egg-info\PKG-INFO
+writing dependency_links to daguerres_hoard.egg-info\dependency_links.txt
+writing entry points to daguerres_hoard.egg-info\entry_points.txt
+writing requirements to daguerres_hoard.egg-info\requires.txt
+writing top-level names to daguerres_hoard.egg-info\top_level.txt
+reading manifest file 'daguerres_hoard.egg-info\SOURCES.txt'
+adding license file 'LICENSE'
+writing manifest file 'daguerres_hoard.egg-info\SOURCES.txt'
+copying daguerre_hoard\studio_ui\studio.css -> build\lib\daguerre_hoard\studio_ui
+installing to build\bdist.win-amd64\wheel
+running install
+running install_lib
+creating build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib
+creating build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard
+copying build\lib\daguerre_hoard\api.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard
+copying build\lib\daguerre_hoard\backend.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard
+copying build\lib\daguerre_hoard\cancellation.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard
+copying build\lib\daguerre_hoard\captions.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard
+copying build\lib\daguerre_hoard\compositor.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard
+copying build\lib\daguerre_hoard\config.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard
+copying build\lib\daguerre_hoard\contact_sheet.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard
+copying build\lib\daguerre_hoard\craft_engines.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard
+creating build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\data
+copying build\lib\daguerre_hoard\data\cities_fixture.tsv -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\data
+copying build\lib\daguerre_hoard\data\country_names.tsv -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\data
+copying build\lib\daguerre_hoard\data\__init__.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\data
+copying build\lib\daguerre_hoard\db.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard
+copying build\lib\daguerre_hoard\demo.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard
+copying build\lib\daguerre_hoard\duplicates.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard
+copying build\lib\daguerre_hoard\edits.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard
+copying build\lib\daguerre_hoard\embeddings.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard
+copying build\lib\daguerre_hoard\formats.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard
+copying build\lib\daguerre_hoard\geocode.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard
+copying build\lib\daguerre_hoard\global_model.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard
+copying build\lib\daguerre_hoard\hashing.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard
+creating build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link
+copying build\lib\daguerre_hoard\hoard_link\agentkit.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link
+copying build\lib\daguerre_hoard\hoard_link\agent_journal.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link
+copying build\lib\daguerre_hoard\hoard_link\appconfig.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link
+copying build\lib\daguerre_hoard\hoard_link\artifacts.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link
+copying build\lib\daguerre_hoard\hoard_link\atomic.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link
+copying build\lib\daguerre_hoard\hoard_link\bizdays.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link
+copying build\lib\daguerre_hoard\hoard_link\bridge.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link
+copying build\lib\daguerre_hoard\hoard_link\browser_lane.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link
+copying build\lib\daguerre_hoard\hoard_link\config.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link
+copying build\lib\daguerre_hoard\hoard_link\copilot.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link
+copying build\lib\daguerre_hoard\hoard_link\copilot_launcher.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link
+copying build\lib\daguerre_hoard\hoard_link\copilot_stdlib.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link
+copying build\lib\daguerre_hoard\hoard_link\dates.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link
+creating build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link\docs
+copying build\lib\daguerre_hoard\hoard_link\docs\archives.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link\docs
+copying build\lib\daguerre_hoard\hoard_link\docs\chunking.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link\docs
+copying build\lib\daguerre_hoard\hoard_link\docs\citations.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link\docs
+copying build\lib\daguerre_hoard\hoard_link\docs\imaging.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link\docs
+copying build\lib\daguerre_hoard\hoard_link\docs\pageranges.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link\docs
+copying build\lib\daguerre_hoard\hoard_link\docs\readers_lite.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link\docs
+copying build\lib\daguerre_hoard\hoard_link\docs\sniff.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link\docs
+copying build\lib\daguerre_hoard\hoard_link\docs\textclean.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link\docs
+copying build\lib\daguerre_hoard\hoard_link\docs\textsearch.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link\docs
+copying build\lib\daguerre_hoard\hoard_link\docs\vecmath.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link\docs
+copying build\lib\daguerre_hoard\hoard_link\docs\__init__.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link\docs
+copying build\lib\daguerre_hoard\hoard_link\errors.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link
+copying build\lib\daguerre_hoard\hoard_link\family.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link
+copying build\lib\daguerre_hoard\hoard_link\fam_agenda.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link
+copying build\lib\daguerre_hoard\hoard_link\fam_docs.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link
+copying build\lib\daguerre_hoard\hoard_link\fam_embed.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link
+copying build\lib\daguerre_hoard\hoard_link\fam_mail.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link
+copying build\lib\daguerre_hoard\hoard_link\fam_media.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link
+copying build\lib\daguerre_hoard\hoard_link\fam_notify.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link
+copying build\lib\daguerre_hoard\hoard_link\fam_refs.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link
+copying build\lib\daguerre_hoard\hoard_link\fam_resources.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link
+copying build\lib\daguerre_hoard\hoard_link\fam_web.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link
+copying build\lib\daguerre_hoard\hoard_link\fam_workspace.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link
+copying build\lib\daguerre_hoard\hoard_link\gpu.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link
+copying build\lib\daguerre_hoard\hoard_link\guard.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link
+copying build\lib\daguerre_hoard\hoard_link\ics.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link
+copying build\lib\daguerre_hoard\hoard_link\idcheck.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link
+copying build\lib\daguerre_hoard\hoard_link\ids.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link
+copying build\lib\daguerre_hoard\hoard_link\lanes.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link
+copying build\lib\daguerre_hoard\hoard_link\launch.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link
+copying build\lib\daguerre_hoard\hoard_link\lease.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link
+copying build\lib\daguerre_hoard\hoard_link\LICENSE -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link
+copying build\lib\daguerre_hoard\hoard_link\link.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link
+copying build\lib\daguerre_hoard\hoard_link\livefeed.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link
+copying build\lib\daguerre_hoard\hoard_link\mail_helper.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link
+creating build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link\media
+copying build\lib\daguerre_hoard\hoard_link\media\bins.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link\media
+copying build\lib\daguerre_hoard\hoard_link\media\ffmpeg.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link\media
+copying build\lib\daguerre_hoard\hoard_link\media\stt.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link\media
+copying build\lib\daguerre_hoard\hoard_link\media\subs.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link\media
+copying build\lib\daguerre_hoard\hoard_link\media\__init__.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link\media
+copying build\lib\daguerre_hoard\hoard_link\merchants.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link
+copying build\lib\daguerre_hoard\hoard_link\money.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link
+copying build\lib\daguerre_hoard\hoard_link\net.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link
+copying build\lib\daguerre_hoard\hoard_link\notify_channels.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link
+copying build\lib\daguerre_hoard\hoard_link\paths.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link
+copying build\lib\daguerre_hoard\hoard_link\proc.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link
+copying build\lib\daguerre_hoard\hoard_link\reasoning.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link
+copying build\lib\daguerre_hoard\hoard_link\routes.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link
+copying build\lib\daguerre_hoard\hoard_link\service.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link
+copying build\lib\daguerre_hoard\hoard_link\service_contracts.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link
+copying build\lib\daguerre_hoard\hoard_link\since.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link
+copying build\lib\daguerre_hoard\hoard_link\sqlkit.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link
+copying build\lib\daguerre_hoard\hoard_link\text.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link
+copying build\lib\daguerre_hoard\hoard_link\tokens.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link
+copying build\lib\daguerre_hoard\hoard_link\tracking.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link
+copying build\lib\daguerre_hoard\hoard_link\types.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link
+creating build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link\ui
+copying build\lib\daguerre_hoard\hoard_link\ui\hoard-theme.css -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link\ui
+copying build\lib\daguerre_hoard\hoard_link\VENDORED.txt -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link
+copying build\lib\daguerre_hoard\hoard_link\waiting.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link
+creating build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link\web
+copying build\lib\daguerre_hoard\hoard_link\web\blocks.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link\web
+copying build\lib\daguerre_hoard\hoard_link\web\browser.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link\web
+copying build\lib\daguerre_hoard\hoard_link\web\feeds.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link\web
+copying build\lib\daguerre_hoard\hoard_link\web\fetch.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link\web
+copying build\lib\daguerre_hoard\hoard_link\web\htmltext.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link\web
+copying build\lib\daguerre_hoard\hoard_link\web\meta.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link\web
+copying build\lib\daguerre_hoard\hoard_link\web\robots.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link\web
+copying build\lib\daguerre_hoard\hoard_link\web\safety.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link\web
+copying build\lib\daguerre_hoard\hoard_link\web\search.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link\web
+copying build\lib\daguerre_hoard\hoard_link\web\urls.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link\web
+copying build\lib\daguerre_hoard\hoard_link\web\watch.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link\web
+copying build\lib\daguerre_hoard\hoard_link\web\__init__.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link\web
+copying build\lib\daguerre_hoard\hoard_link\_comfy.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link
+creating build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link\_data
+copying build\lib\daguerre_hoard\hoard_link\_data\family-services.json -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link\_data
+copying build\lib\daguerre_hoard\hoard_link\_data\merchants.json -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link\_data
+copying build\lib\daguerre_hoard\hoard_link\_famsvc.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link
+copying build\lib\daguerre_hoard\hoard_link\_faustus.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link
+copying build\lib\daguerre_hoard\hoard_link\_hubclient.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link
+copying build\lib\daguerre_hoard\hoard_link\_probes.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link
+copying build\lib\daguerre_hoard\hoard_link\_sync.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link
+copying build\lib\daguerre_hoard\hoard_link\__init__.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\hoard_link
+copying build\lib\daguerre_hoard\jobs.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard
+copying build\lib\daguerre_hoard\lang.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard
+copying build\lib\daguerre_hoard\library.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard
+copying build\lib\daguerre_hoard\mcp_server.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard
+copying build\lib\daguerre_hoard\metadata.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard
+copying build\lib\daguerre_hoard\native_gui.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard
+copying build\lib\daguerre_hoard\phash.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard
+copying build\lib\daguerre_hoard\photo-catalog.json -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard
+copying build\lib\daguerre_hoard\reference_matching.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard
+creating build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\resources
+copying build\lib\daguerre_hoard\resources\app-icon.png -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\resources
+creating build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\resources\frontend
+creating build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\resources\frontend\dist
+copying build\lib\daguerre_hoard\resources\frontend\dist\app-icon.png -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\resources\frontend\dist
+creating build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\resources\frontend\dist\assets
+copying build\lib\daguerre_hoard\resources\frontend\dist\assets\cinzel-latin-400-normal-C8jUSQqm.woff -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\resources\frontend\dist\assets
+copying build\lib\daguerre_hoard\resources\frontend\dist\assets\cinzel-latin-400-normal-DnUIPmzd.woff2 -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\resources\frontend\dist\assets
+copying build\lib\daguerre_hoard\resources\frontend\dist\assets\cinzel-latin-700-normal-C-gK7hA8.woff -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\resources\frontend\dist\assets
+copying build\lib\daguerre_hoard\resources\frontend\dist\assets\cinzel-latin-700-normal-Dkw14w9r.woff2 -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\resources\frontend\dist\assets
+copying build\lib\daguerre_hoard\resources\frontend\dist\assets\cinzel-latin-ext-400-normal-DJ0Lq8y-.woff -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\resources\frontend\dist\assets
+copying build\lib\daguerre_hoard\resources\frontend\dist\assets\cinzel-latin-ext-400-normal-XQK_CSAr.woff2 -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\resources\frontend\dist\assets
+copying build\lib\daguerre_hoard\resources\frontend\dist\assets\cinzel-latin-ext-700-normal-C24KFjuG.woff2 -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\resources\frontend\dist\assets
+copying build\lib\daguerre_hoard\resources\frontend\dist\assets\cinzel-latin-ext-700-normal-CORa-yIv.woff -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\resources\frontend\dist\assets
+copying build\lib\daguerre_hoard\resources\frontend\dist\assets\index-BWDjhvda.css -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\resources\frontend\dist\assets
+copying build\lib\daguerre_hoard\resources\frontend\dist\assets\index-D5iWzPra.js -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\resources\frontend\dist\assets
+copying build\lib\daguerre_hoard\resources\frontend\dist\assets\source-sans-3-cyrillic-400-normal-DjhbW-4D.woff2 -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\resources\frontend\dist\assets
+copying build\lib\daguerre_hoard\resources\frontend\dist\assets\source-sans-3-cyrillic-400-normal-DkNBMcYd.woff -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\resources\frontend\dist\assets
+copying build\lib\daguerre_hoard\resources\frontend\dist\assets\source-sans-3-cyrillic-700-normal-CIuudVLB.woff2 -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\resources\frontend\dist\assets
+copying build\lib\daguerre_hoard\resources\frontend\dist\assets\source-sans-3-cyrillic-700-normal-D_p3L75o.woff -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\resources\frontend\dist\assets
+copying build\lib\daguerre_hoard\resources\frontend\dist\assets\source-sans-3-cyrillic-ext-400-normal-BqOlcezh.woff -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\resources\frontend\dist\assets
+copying build\lib\daguerre_hoard\resources\frontend\dist\assets\source-sans-3-cyrillic-ext-400-normal-BwJdxs7r.woff2 -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\resources\frontend\dist\assets
+copying build\lib\daguerre_hoard\resources\frontend\dist\assets\source-sans-3-cyrillic-ext-700-normal-BhUSqjb8.woff2 -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\resources\frontend\dist\assets
+copying build\lib\daguerre_hoard\resources\frontend\dist\assets\source-sans-3-cyrillic-ext-700-normal-COA7LiPB.woff -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\resources\frontend\dist\assets
+copying build\lib\daguerre_hoard\resources\frontend\dist\assets\source-sans-3-greek-400-normal-DyO2Yfz5.woff -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\resources\frontend\dist\assets
+copying build\lib\daguerre_hoard\resources\frontend\dist\assets\source-sans-3-greek-400-normal-DZReXJla.woff2 -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\resources\frontend\dist\assets
+copying build\lib\daguerre_hoard\resources\frontend\dist\assets\source-sans-3-greek-700-normal-C-sAg5NG.woff -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\resources\frontend\dist\assets
+copying build\lib\daguerre_hoard\resources\frontend\dist\assets\source-sans-3-greek-700-normal-C8Tp2qRF.woff2 -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\resources\frontend\dist\assets
+copying build\lib\daguerre_hoard\resources\frontend\dist\assets\source-sans-3-greek-ext-400-normal-CN4VBqpr.woff -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\resources\frontend\dist\assets
+copying build\lib\daguerre_hoard\resources\frontend\dist\assets\source-sans-3-greek-ext-400-normal-CpIwTHMM.woff2 -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\resources\frontend\dist\assets
+copying build\lib\daguerre_hoard\resources\frontend\dist\assets\source-sans-3-greek-ext-700-normal-Dd6uIcuy.woff2 -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\resources\frontend\dist\assets
+copying build\lib\daguerre_hoard\resources\frontend\dist\assets\source-sans-3-greek-ext-700-normal-KTP46hTS.woff -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\resources\frontend\dist\assets
+copying build\lib\daguerre_hoard\resources\frontend\dist\assets\source-sans-3-latin-400-normal-DQi5PRDE.woff2 -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\resources\frontend\dist\assets
+copying build\lib\daguerre_hoard\resources\frontend\dist\assets\source-sans-3-latin-400-normal-RR2C27NP.woff -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\resources\frontend\dist\assets
+copying build\lib\daguerre_hoard\resources\frontend\dist\assets\source-sans-3-latin-700-normal-B-h9tW5h.woff -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\resources\frontend\dist\assets
+copying build\lib\daguerre_hoard\resources\frontend\dist\assets\source-sans-3-latin-700-normal-CkzU-mV9.woff2 -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\resources\frontend\dist\assets
+copying build\lib\daguerre_hoard\resources\frontend\dist\assets\source-sans-3-latin-ext-400-normal-D5P-Ud2J.woff -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\resources\frontend\dist\assets
+copying build\lib\daguerre_hoard\resources\frontend\dist\assets\source-sans-3-latin-ext-400-normal-UNsKFIBq.woff2 -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\resources\frontend\dist\assets
+copying build\lib\daguerre_hoard\resources\frontend\dist\assets\source-sans-3-latin-ext-700-normal-6Xi0A2be.woff2 -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\resources\frontend\dist\assets
+copying build\lib\daguerre_hoard\resources\frontend\dist\assets\source-sans-3-latin-ext-700-normal-C1ecyfgK.woff -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\resources\frontend\dist\assets
+copying build\lib\daguerre_hoard\resources\frontend\dist\assets\source-sans-3-vietnamese-400-normal-CwtaIDr2.woff2 -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\resources\frontend\dist\assets
+copying build\lib\daguerre_hoard\resources\frontend\dist\assets\source-sans-3-vietnamese-400-normal-eMQk7hmk.woff -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\resources\frontend\dist\assets
+copying build\lib\daguerre_hoard\resources\frontend\dist\assets\source-sans-3-vietnamese-700-normal-Bgamivog.woff2 -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\resources\frontend\dist\assets
+copying build\lib\daguerre_hoard\resources\frontend\dist\assets\source-sans-3-vietnamese-700-normal-W-J7ohm4.woff -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\resources\frontend\dist\assets
+copying build\lib\daguerre_hoard\resources\frontend\dist\favicon-192.png -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\resources\frontend\dist
+copying build\lib\daguerre_hoard\resources\frontend\dist\favicon.ico -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\resources\frontend\dist
+copying build\lib\daguerre_hoard\resources\frontend\dist\index.html -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\resources\frontend\dist
+copying build\lib\daguerre_hoard\resources\installed.json -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\resources
+copying build\lib\daguerre_hoard\resources\LICENSE -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\resources
+creating build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\resources\native
+creating build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\resources\native\bin
+copying build\lib\daguerre_hoard\resources\native\bin\build-all.json -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\resources\native\bin
+copying build\lib\daguerre_hoard\resources\native\bin\daguerre-develop-cli.exe -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\resources\native\bin
+copying build\lib\daguerre_hoard\resources\native\bin\daguerre-develop.exe -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\resources\native\bin
+copying build\lib\daguerre_hoard\resources\native\bin\daguerre-layers-cli.exe -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\resources\native\bin
+copying build\lib\daguerre_hoard\resources\native\bin\daguerre-layers.exe -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\resources\native\bin
+creating build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\resources\native\catalogs
+copying build\lib\daguerre_hoard\resources\native\catalogs\develop.json -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\resources\native\catalogs
+copying build\lib\daguerre_hoard\resources\native\catalogs\layers.json -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\resources\native\catalogs
+copying build\lib\daguerre_hoard\resources.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard
+copying build\lib\daguerre_hoard\runtime_entry.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard
+copying build\lib\daguerre_hoard\scanning.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard
+copying build\lib\daguerre_hoard\selection_export.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard
+copying build\lib\daguerre_hoard\studio-catalog.json -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard
+copying build\lib\daguerre_hoard\studio.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard
+copying build\lib\daguerre_hoard\studio_lifecycle.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard
+creating build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\studio_native
+creating build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\studio_native\durer
+creating build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\studio_native\durer\durer_hoard
+copying build\lib\daguerre_hoard\studio_native\durer\durer_hoard\agent_tools.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\studio_native\durer\durer_hoard
+copying build\lib\daguerre_hoard\studio_native\durer\durer_hoard\api.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\studio_native\durer\durer_hoard
+copying build\lib\daguerre_hoard\studio_native\durer\durer_hoard\config.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\studio_native\durer\durer_hoard
+copying build\lib\daguerre_hoard\studio_native\durer\durer_hoard\history.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\studio_native\durer\durer_hoard
+copying build\lib\daguerre_hoard\studio_native\durer\durer_hoard\mcp_server.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\studio_native\durer\durer_hoard
+copying build\lib\daguerre_hoard\studio_native\durer\durer_hoard\native.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\studio_native\durer\durer_hoard
+copying build\lib\daguerre_hoard\studio_native\durer\durer_hoard\sessions.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\studio_native\durer\durer_hoard
+creating build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\studio_native\durer\durer_hoard\static
+copying build\lib\daguerre_hoard\studio_native\durer\durer_hoard\static\app.js -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\studio_native\durer\durer_hoard\static
+copying build\lib\daguerre_hoard\studio_native\durer\durer_hoard\static\copilot.js -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\studio_native\durer\durer_hoard\static
+copying build\lib\daguerre_hoard\studio_native\durer\durer_hoard\static\icon.png -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\studio_native\durer\durer_hoard\static
+copying build\lib\daguerre_hoard\studio_native\durer\durer_hoard\static\icon.svg -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\studio_native\durer\durer_hoard\static
+copying build\lib\daguerre_hoard\studio_native\durer\durer_hoard\static\index.html -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\studio_native\durer\durer_hoard\static
+copying build\lib\daguerre_hoard\studio_native\durer\durer_hoard\static\style.css -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\studio_native\durer\durer_hoard\static
+copying build\lib\daguerre_hoard\studio_native\durer\durer_hoard\store.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\studio_native\durer\durer_hoard
+copying build\lib\daguerre_hoard\studio_native\durer\durer_hoard\thumbnails.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\studio_native\durer\durer_hoard
+copying build\lib\daguerre_hoard\studio_native\durer\durer_hoard\__init__.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\studio_native\durer\durer_hoard
+copying build\lib\daguerre_hoard\studio_native\durer\durer_hoard\__main__.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\studio_native\durer\durer_hoard
+copying build\lib\daguerre_hoard\studio_native\durer\INCORPORATION.json -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\studio_native\durer
+copying build\lib\daguerre_hoard\studio_native\durer\LICENSE -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\studio_native\durer
+copying build\lib\daguerre_hoard\studio_native\durer\mcp-catalog.json -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\studio_native\durer
+creating build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\studio_native\durer\native
+creating build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\studio_native\durer\native\bin
+copying build\lib\daguerre_hoard\studio_native\durer\native\bin\build.json -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\studio_native\durer\native\bin
+copying build\lib\daguerre_hoard\studio_native\durer\native\bin\durer-cli.exe -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\studio_native\durer\native\bin
+copying build\lib\daguerre_hoard\studio_native\durer\native\bin\durer.exe -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\studio_native\durer\native\bin
+copying build\lib\daguerre_hoard\studio_native\durer\native-catalog.json -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\studio_native\durer
+copying build\lib\daguerre_hoard\studio_native\durer\__init__.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\studio_native\durer
+copying build\lib\daguerre_hoard\studio_native\__init__.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\studio_native
+copying build\lib\daguerre_hoard\studio_projects.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard
+copying build\lib\daguerre_hoard\studio_response.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard
+creating build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\studio_ui
+copying build\lib\daguerre_hoard\studio_ui\api.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\studio_ui
+creating build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\studio_ui\fonts
+copying build\lib\daguerre_hoard\studio_ui\fonts\cinzel-latin-400-normal.woff2 -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\studio_ui\fonts
+copying build\lib\daguerre_hoard\studio_ui\fonts\cinzel-latin-700-normal.woff2 -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\studio_ui\fonts
+copying build\lib\daguerre_hoard\studio_ui\fonts\cinzel-LICENSE.txt -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\studio_ui\fonts
+copying build\lib\daguerre_hoard\studio_ui\fonts\source-sans-3-latin-400-normal.woff2 -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\studio_ui\fonts
+copying build\lib\daguerre_hoard\studio_ui\fonts\source-sans-3-latin-700-normal.woff2 -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\studio_ui\fonts
+copying build\lib\daguerre_hoard\studio_ui\fonts\source-sans-3-LICENSE.txt -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\studio_ui\fonts
+copying build\lib\daguerre_hoard\studio_ui\index.html -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\studio_ui
+copying build\lib\daguerre_hoard\studio_ui\native.js -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\studio_ui
+copying build\lib\daguerre_hoard\studio_ui\off.js -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\studio_ui
+copying build\lib\daguerre_hoard\studio_ui\studio.css -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\studio_ui
+copying build\lib\daguerre_hoard\studio_ui\studio.js -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\studio_ui
+copying build\lib\daguerre_hoard\studio_ui\__init__.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard\studio_ui
+copying build\lib\daguerre_hoard\thumbnails.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard
+copying build\lib\daguerre_hoard\videos.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard
+copying build\lib\daguerre_hoard\video_frames.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard
+copying build\lib\daguerre_hoard\xmp.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard
+copying build\lib\daguerre_hoard\__init__.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard
+copying build\lib\daguerre_hoard\__main__.py -> build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerre_hoard
+running install_egg_info
+Copying daguerres_hoard.egg-info to build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.data\purelib\daguerres_hoard-0.1.0-py3.13.egg-info
+running install_scripts
+creating build\bdist.win-amd64\wheel\daguerres_hoard-0.1.0.dist-info\WHEEL
+creating 'D:\\LocalAI\\worktrees\\daguerre-fisiones930\\dist\\.tmp-53ou6hy0\\daguerres_hoard-0.1.0-py3-none-win_amd64.whl' and adding 'build\\bdist.win-amd64\\wheel' to it
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/__init__.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/__main__.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/api.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/backend.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/cancellation.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/captions.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/compositor.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/config.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/contact_sheet.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/craft_engines.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/db.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/demo.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/duplicates.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/edits.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/embeddings.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/formats.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/geocode.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/global_model.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hashing.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/jobs.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/lang.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/library.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/mcp_server.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/metadata.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/native_gui.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/phash.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/photo-catalog.json'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/reference_matching.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/resources.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/runtime_entry.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/scanning.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/selection_export.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/studio-catalog.json'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/studio.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/studio_lifecycle.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/studio_projects.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/studio_response.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/thumbnails.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/video_frames.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/videos.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/xmp.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/data/__init__.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/data/cities_fixture.tsv'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/data/country_names.tsv'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/LICENSE'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/VENDORED.txt'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/__init__.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/_comfy.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/_famsvc.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/_faustus.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/_hubclient.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/_probes.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/_sync.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/agent_journal.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/agentkit.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/appconfig.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/artifacts.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/atomic.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/bizdays.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/bridge.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/browser_lane.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/config.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/copilot.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/copilot_launcher.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/copilot_stdlib.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/dates.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/errors.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/fam_agenda.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/fam_docs.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/fam_embed.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/fam_mail.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/fam_media.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/fam_notify.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/fam_refs.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/fam_resources.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/fam_web.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/fam_workspace.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/family.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/gpu.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/guard.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/ics.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/idcheck.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/ids.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/lanes.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/launch.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/lease.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/link.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/livefeed.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/mail_helper.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/merchants.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/money.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/net.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/notify_channels.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/paths.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/proc.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/reasoning.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/routes.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/service.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/service_contracts.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/since.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/sqlkit.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/text.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/tokens.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/tracking.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/types.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/waiting.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/_data/family-services.json'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/_data/merchants.json'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/docs/__init__.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/docs/archives.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/docs/chunking.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/docs/citations.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/docs/imaging.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/docs/pageranges.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/docs/readers_lite.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/docs/sniff.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/docs/textclean.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/docs/textsearch.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/docs/vecmath.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/media/__init__.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/media/bins.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/media/ffmpeg.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/media/stt.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/media/subs.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/ui/hoard-theme.css'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/web/__init__.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/web/blocks.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/web/browser.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/web/feeds.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/web/fetch.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/web/htmltext.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/web/meta.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/web/robots.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/web/safety.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/web/search.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/web/urls.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/hoard_link/web/watch.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/resources/LICENSE'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/resources/app-icon.png'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/resources/installed.json'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/resources/frontend/dist/app-icon.png'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/resources/frontend/dist/favicon-192.png'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/resources/frontend/dist/favicon.ico'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/resources/frontend/dist/index.html'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/resources/frontend/dist/assets/cinzel-latin-400-normal-C8jUSQqm.woff'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/resources/frontend/dist/assets/cinzel-latin-400-normal-DnUIPmzd.woff2'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/resources/frontend/dist/assets/cinzel-latin-700-normal-C-gK7hA8.woff'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/resources/frontend/dist/assets/cinzel-latin-700-normal-Dkw14w9r.woff2'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/resources/frontend/dist/assets/cinzel-latin-ext-400-normal-DJ0Lq8y-.woff'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/resources/frontend/dist/assets/cinzel-latin-ext-400-normal-XQK_CSAr.woff2'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/resources/frontend/dist/assets/cinzel-latin-ext-700-normal-C24KFjuG.woff2'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/resources/frontend/dist/assets/cinzel-latin-ext-700-normal-CORa-yIv.woff'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/resources/frontend/dist/assets/index-BWDjhvda.css'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/resources/frontend/dist/assets/index-D5iWzPra.js'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/resources/frontend/dist/assets/source-sans-3-cyrillic-400-normal-DjhbW-4D.woff2'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/resources/frontend/dist/assets/source-sans-3-cyrillic-400-normal-DkNBMcYd.woff'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/resources/frontend/dist/assets/source-sans-3-cyrillic-700-normal-CIuudVLB.woff2'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/resources/frontend/dist/assets/source-sans-3-cyrillic-700-normal-D_p3L75o.woff'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/resources/frontend/dist/assets/source-sans-3-cyrillic-ext-400-normal-BqOlcezh.woff'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/resources/frontend/dist/assets/source-sans-3-cyrillic-ext-400-normal-BwJdxs7r.woff2'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/resources/frontend/dist/assets/source-sans-3-cyrillic-ext-700-normal-BhUSqjb8.woff2'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/resources/frontend/dist/assets/source-sans-3-cyrillic-ext-700-normal-COA7LiPB.woff'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/resources/frontend/dist/assets/source-sans-3-greek-400-normal-DZReXJla.woff2'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/resources/frontend/dist/assets/source-sans-3-greek-400-normal-DyO2Yfz5.woff'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/resources/frontend/dist/assets/source-sans-3-greek-700-normal-C-sAg5NG.woff'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/resources/frontend/dist/assets/source-sans-3-greek-700-normal-C8Tp2qRF.woff2'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/resources/frontend/dist/assets/source-sans-3-greek-ext-400-normal-CN4VBqpr.woff'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/resources/frontend/dist/assets/source-sans-3-greek-ext-400-normal-CpIwTHMM.woff2'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/resources/frontend/dist/assets/source-sans-3-greek-ext-700-normal-Dd6uIcuy.woff2'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/resources/frontend/dist/assets/source-sans-3-greek-ext-700-normal-KTP46hTS.woff'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/resources/frontend/dist/assets/source-sans-3-latin-400-normal-DQi5PRDE.woff2'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/resources/frontend/dist/assets/source-sans-3-latin-400-normal-RR2C27NP.woff'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/resources/frontend/dist/assets/source-sans-3-latin-700-normal-B-h9tW5h.woff'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/resources/frontend/dist/assets/source-sans-3-latin-700-normal-CkzU-mV9.woff2'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/resources/frontend/dist/assets/source-sans-3-latin-ext-400-normal-D5P-Ud2J.woff'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/resources/frontend/dist/assets/source-sans-3-latin-ext-400-normal-UNsKFIBq.woff2'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/resources/frontend/dist/assets/source-sans-3-latin-ext-700-normal-6Xi0A2be.woff2'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/resources/frontend/dist/assets/source-sans-3-latin-ext-700-normal-C1ecyfgK.woff'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/resources/frontend/dist/assets/source-sans-3-vietnamese-400-normal-CwtaIDr2.woff2'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/resources/frontend/dist/assets/source-sans-3-vietnamese-400-normal-eMQk7hmk.woff'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/resources/frontend/dist/assets/source-sans-3-vietnamese-700-normal-Bgamivog.woff2'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/resources/frontend/dist/assets/source-sans-3-vietnamese-700-normal-W-J7ohm4.woff'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/resources/native/bin/build-all.json'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/resources/native/bin/daguerre-develop-cli.exe'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/resources/native/bin/daguerre-develop.exe'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/resources/native/bin/daguerre-layers-cli.exe'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/resources/native/bin/daguerre-layers.exe'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/resources/native/catalogs/develop.json'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/resources/native/catalogs/layers.json'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/studio_native/__init__.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/studio_native/durer/INCORPORATION.json'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/studio_native/durer/LICENSE'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/studio_native/durer/__init__.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/studio_native/durer/mcp-catalog.json'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/studio_native/durer/native-catalog.json'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/studio_native/durer/durer_hoard/__init__.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/studio_native/durer/durer_hoard/__main__.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/studio_native/durer/durer_hoard/agent_tools.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/studio_native/durer/durer_hoard/api.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/studio_native/durer/durer_hoard/config.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/studio_native/durer/durer_hoard/history.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/studio_native/durer/durer_hoard/mcp_server.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/studio_native/durer/durer_hoard/native.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/studio_native/durer/durer_hoard/sessions.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/studio_native/durer/durer_hoard/store.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/studio_native/durer/durer_hoard/thumbnails.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/studio_native/durer/durer_hoard/static/app.js'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/studio_native/durer/durer_hoard/static/copilot.js'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/studio_native/durer/durer_hoard/static/icon.png'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/studio_native/durer/durer_hoard/static/icon.svg'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/studio_native/durer/durer_hoard/static/index.html'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/studio_native/durer/durer_hoard/static/style.css'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/studio_native/durer/native/bin/build.json'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/studio_native/durer/native/bin/durer-cli.exe'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/studio_native/durer/native/bin/durer.exe'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/studio_ui/__init__.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/studio_ui/api.py'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/studio_ui/index.html'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/studio_ui/native.js'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/studio_ui/off.js'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/studio_ui/studio.css'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/studio_ui/studio.js'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/studio_ui/fonts/cinzel-LICENSE.txt'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/studio_ui/fonts/cinzel-latin-400-normal.woff2'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/studio_ui/fonts/cinzel-latin-700-normal.woff2'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/studio_ui/fonts/source-sans-3-LICENSE.txt'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/studio_ui/fonts/source-sans-3-latin-400-normal.woff2'
+adding 'daguerres_hoard-0.1.0.data/purelib/daguerre_hoard/studio_ui/fonts/source-sans-3-latin-700-normal.woff2'
+adding 'daguerres_hoard-0.1.0.dist-info/licenses/LICENSE'
+adding 'daguerres_hoard-0.1.0.dist-info/METADATA'
+adding 'daguerres_hoard-0.1.0.dist-info/WHEEL'
+adding 'daguerres_hoard-0.1.0.dist-info/entry_points.txt'
+adding 'daguerres_hoard-0.1.0.dist-info/top_level.txt'
+adding 'daguerres_hoard-0.1.0.dist-info/RECORD'
+removing build\bdist.win-amd64\wheel
+WARNING `project.license` as a TOML table is deprecated
+!!
+
+        ********************************************************************************
+        Please use a simple string containing a SPDX expression for `project.license`. You can also use `project.license-files`. (Both options available on setuptools>=77.0.0).
+
+        By 2027-Feb-18, you need to update your project and remove deprecated calls
+        or your builds will no longer be supported.
+
+        See https://packaging.python.org/en/latest/guides/writing-pyproject-toml/#license for details.
+        ********************************************************************************
+
+!!
+WARNING Package 'daguerre_hoard.hoard_link._data' is absent from the `packages` configuration.
+!!
+
+        ********************************************************************************
+        ############################
+        # Package would be ignored #
+        ############################
+        Python recognizes 'daguerre_hoard.hoard_link._data' as an importable package[^1],
+        but it is absent from setuptools' `packages` configuration.
+
+        This leads to an ambiguous overall configuration. If you want to distribute this
+        package, please make sure that 'daguerre_hoard.hoard_link._data' is explicitly added
+        to the `packages` configuration field.
+
+        Alternatively, you can also rely on setuptools' discovery methods
+        (for example by using `find_namespace_packages(...)`/`find_namespace:`
+        instead of `find_packages(...)`/`find:`).
+
+        You can read more about "package discovery" on setuptools documentation page:
+
+        - https://setuptools.pypa.io/en/latest/userguide/package_discovery.html
+
+        If you don't want 'daguerre_hoard.hoard_link._data' to be distributed and are
+        already explicitly excluding 'daguerre_hoard.hoard_link._data' via
+        `find_namespace_packages(...)/find_namespace` or `find_packages(...)/find`,
+        you can try to use `exclude_package_data`, or `include-package-data=False` in
+        combination with a more fine grained `package-data` configuration.
+
+        You can read more about "package data files" on setuptools documentation page:
+
+        - https://setuptools.pypa.io/en/latest/userguide/datafiles.html
+
+
+        [^1]: For Python, any directory (with suitable naming) can be imported,
+              even if it does not contain any `.py` files.
+              On the other hand, currently there is no concept of package data
+              directory, all directories are treated like packages.
+        ********************************************************************************
+
+!!
+WARNING Package 'daguerre_hoard.hoard_link.ui' is absent from the `packages` configuration.
+!!
+
+        ********************************************************************************
+        ############################
+        # Package would be ignored #
+        ############################
+        Python recognizes 'daguerre_hoard.hoard_link.ui' as an importable package[^1],
+        but it is absent from setuptools' `packages` configuration.
+
+        This leads to an ambiguous overall configuration. If you want to distribute this
+        package, please make sure that 'daguerre_hoard.hoard_link.ui' is explicitly added
+        to the `packages` configuration field.
+
+        Alternatively, you can also rely on setuptools' discovery methods
+        (for example by using `find_namespace_packages(...)`/`find_namespace:`
+        instead of `find_packages(...)`/`find:`).
+
+        You can read more about "package discovery" on setuptools documentation page:
+
+        - https://setuptools.pypa.io/en/latest/userguide/package_discovery.html
+
+        If you don't want 'daguerre_hoard.hoard_link.ui' to be distributed and are
+        already explicitly excluding 'daguerre_hoard.hoard_link.ui' via
+        `find_namespace_packages(...)/find_namespace` or `find_packages(...)/find`,
+        you can try to use `exclude_package_data`, or `include-package-data=False` in
+        combination with a more fine grained `package-data` configuration.
+
+        You can read more about "package data files" on setuptools documentation page:
+
+        - https://setuptools.pypa.io/en/latest/userguide/datafiles.html
+
+
+        [^1]: For Python, any directory (with suitable naming) can be imported,
+              even if it does not contain any `.py` files.
+              On the other hand, currently there is no concept of package data
+              directory, all directories are treated like packages.
+        ********************************************************************************
+
+!!
+WARNING Package 'daguerre_hoard.studio_native.durer.durer_hoard.static' is absent from the `packages` configuration.
+!!
+
+        ********************************************************************************
+        ############################
+        # Package would be ignored #
+        ############################
+        Python recognizes 'daguerre_hoard.studio_native.durer.durer_hoard.static' as an importable package[^1],
+        but it is absent from setuptools' `packages` configuration.
+
+        This leads to an ambiguous overall configuration. If you want to distribute this
+        package, please make sure that 'daguerre_hoard.studio_native.durer.durer_hoard.static' is explicitly added
+        to the `packages` configuration field.
+
+        Alternatively, you can also rely on setuptools' discovery methods
+        (for example by using `find_namespace_packages(...)`/`find_namespace:`
+        instead of `find_packages(...)`/`find:`).
+
+        You can read more about "package discovery" on setuptools documentation page:
+
+        - https://setuptools.pypa.io/en/latest/userguide/package_discovery.html
+
+        If you don't want 'daguerre_hoard.studio_native.durer.durer_hoard.static' to be distributed and are
+        already explicitly excluding 'daguerre_hoard.studio_native.durer.durer_hoard.static' via
+        `find_namespace_packages(...)/find_namespace` or `find_packages(...)/find`,
+        you can try to use `exclude_package_data`, or `include-package-data=False` in
+        combination with a more fine grained `package-data` configuration.
+
+        You can read more about "package data files" on setuptools documentation page:
+
+        - https://setuptools.pypa.io/en/latest/userguide/datafiles.html
+
+
+        [^1]: For Python, any directory (with suitable naming) can be imported,
+              even if it does not contain any `.py` files.
+              On the other hand, currently there is no concept of package data
+              directory, all directories are treated like packages.
+        ********************************************************************************
+
+!!
+WARNING Package 'daguerre_hoard.studio_native.durer.native.bin' is absent from the `packages` configuration.
+!!
+
+        ********************************************************************************
+        ############################
+        # Package would be ignored #
+        ############################
+        Python recognizes 'daguerre_hoard.studio_native.durer.native.bin' as an importable package[^1],
+        but it is absent from setuptools' `packages` configuration.
+
+        This leads to an ambiguous overall configuration. If you want to distribute this
+        package, please make sure that 'daguerre_hoard.studio_native.durer.native.bin' is explicitly added
+        to the `packages` configuration field.
+
+        Alternatively, you can also rely on setuptools' discovery methods
+        (for example by using `find_namespace_packages(...)`/`find_namespace:`
+        instead of `find_packages(...)`/`find:`).
+
+        You can read more about "package discovery" on setuptools documentation page:
+
+        - https://setuptools.pypa.io/en/latest/userguide/package_discovery.html
+
+        If you don't want 'daguerre_hoard.studio_native.durer.native.bin' to be distributed and are
+        already explicitly excluding 'daguerre_hoard.studio_native.durer.native.bin' via
+        `find_namespace_packages(...)/find_namespace` or `find_packages(...)/find`,
+        you can try to use `exclude_package_data`, or `include-package-data=False` in
+        combination with a more fine grained `package-data` configuration.
+
+        You can read more about "package data files" on setuptools documentation page:
+
+        - https://setuptools.pypa.io/en/latest/userguide/datafiles.html
+
+
+        [^1]: For Python, any directory (with suitable naming) can be imported,
+              even if it does not contain any `.py` files.
+              On the other hand, currently there is no concept of package data
+              directory, all directories are treated like packages.
+        ********************************************************************************
+
+!!
+WARNING Package 'daguerre_hoard.studio_ui.fonts' is absent from the `packages` configuration.
+!!
+
+        ********************************************************************************
+        ############################
+        # Package would be ignored #
+        ############################
+        Python recognizes 'daguerre_hoard.studio_ui.fonts' as an importable package[^1],
+        but it is absent from setuptools' `packages` configuration.
+
+        This leads to an ambiguous overall configuration. If you want to distribute this
+        package, please make sure that 'daguerre_hoard.studio_ui.fonts' is explicitly added
+        to the `packages` configuration field.
+
+        Alternatively, you can also rely on setuptools' discovery methods
+        (for example by using `find_namespace_packages(...)`/`find_namespace:`
+        instead of `find_packages(...)`/`find:`).
+
+        You can read more about "package discovery" on setuptools documentation page:
+
+        - https://setuptools.pypa.io/en/latest/userguide/package_discovery.html
+
+        If you don't want 'daguerre_hoard.studio_ui.fonts' to be distributed and are
+        already explicitly excluding 'daguerre_hoard.studio_ui.fonts' via
+        `find_namespace_packages(...)/find_namespace` or `find_packages(...)/find`,
+        you can try to use `exclude_package_data`, or `include-package-data=False` in
+        combination with a more fine grained `package-data` configuration.
+
+        You can read more about "package data files" on setuptools documentation page:
+
+        - https://setuptools.pypa.io/en/latest/userguide/datafiles.html
+
+
+        [^1]: For Python, any directory (with suitable naming) can be imported,
+              even if it does not contain any `.py` files.
+              On the other hand, currently there is no concept of package data
+              directory, all directories are treated like packages.
+        ********************************************************************************
+
+!!
+Successfully built daguerres_hoard-0.1.0-py3-none-win_amd64.whl
