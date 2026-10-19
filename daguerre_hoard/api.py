@@ -252,8 +252,8 @@ def _check_optional_url(field: str, value: str | None) -> None:
         raise ApiError(400, "invalid_argument", f"{field} must look like http://127.0.0.1:PORT")
 
 
-def create_app(data_dir: Path, static_dir: Path | None = None, port: int = 8814, *, automatic: bool = True) -> FastAPI:
-    settings = Settings(data_dir=data_dir, port=port)
+def create_app(data_dir: Path, static_dir: Path | None = None, port: int = 8814, *, automatic: bool = True, demo: bool = False) -> FastAPI:
+    settings = Settings(data_dir=data_dir, port=port, demo=demo)
     lib = Library(settings, automatic=automatic)
 
     # The per-tool routes run the assistant's tools: they need the same bearer token as POST /api/agent/call

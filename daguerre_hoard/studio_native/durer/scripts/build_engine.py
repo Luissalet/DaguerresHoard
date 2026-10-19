@@ -10,13 +10,15 @@ import subprocess
 ROOT = Path(__file__).resolve().parents[1]
 
 def main():
+    os.environ.setdefault('CARGO_BUILD_JOBS','2')
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--debug", action="store_true")
     args = parser.parse_args()
     command = ["cargo", "+1.95.0", "build", "--locked", "-p", "durer-cli", "-p", "durer"]
     if not args.debug:
         command.append("--release")
-    subprocess.run(command, cwd=ROOT / "native", check=True)
+    subprocess.run(command, cwd=ROOT / "native", check=True,
+        creationflags=subprocess.CREATE_NO_WINDOW if os.name=='nt' else 0)
     profile = "debug" if args.debug else "release"
     source = Path(os.environ.get("CARGO_TARGET_DIR", ROOT / "native/target")) / profile
     target = ROOT / "native/bin"

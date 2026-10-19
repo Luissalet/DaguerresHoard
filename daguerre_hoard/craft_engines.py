@@ -65,7 +65,7 @@ def _mcp_json(value: Any) -> Any:
 class CraftEngines:
     """Discover, configure and call the two local Craft MCP servers."""
 
-    def __init__(self, data_dir: Path, port: int = 8814):
+    def __init__(self, data_dir: Path, port: int = 8814, *, restore_editors: bool = True):
         self.data_dir = data_dir.resolve()
         self.port = port
         self.config_path = self.data_dir / "craft-engines.json"
@@ -78,7 +78,8 @@ class CraftEngines:
         self._locks = {name: threading.Lock() for name in ENGINES}
         self._editors: dict[str, Any] = {}
         self._editor_file = self.runtime / "editors.json"
-        self._restore_editors()
+        if restore_editors:
+            self._restore_editors()
 
     def _restore_editors(self) -> None:
         try:
@@ -156,6 +157,13 @@ class CraftEngines:
         filename = "daguerre-" + OWN_NAMES[canonical] + "-cli" + (".exe" if os.name == "nt" else "")
         path = ROOT / "native/bin" / filename
         return path if path.is_file() else None
+
+    def close(self) -> None:
+        from .native_gui import close_owned
+        for name,editor in list(self._editors.items()):
+            close_owned(editor['process'])
+            self._editors.pop(name,None)
+        self._save_editors()
 
     def status(self) -> dict[str, Any]:
         engines = {}
@@ -238,8 +246,9 @@ class CraftEngines:
     def tools(self, engine: str) -> dict[str, Any]:
         self._validate_engine(engine)
         engine = ENGINE_NAMES[engine]
-        with self._locks[engine]:
-            return asyncio.run(self._request(engine, [{"tool": "__list_tools__"}]))[0]
+        path=ROOT/'native'/'catalogs'/(OWN_NAMES[engine]+'.json')
+        if not path.is_file(): raise CraftEngineError('The static native catalogue has not been built.')
+        return json.loads(path.read_text(encoding='utf-8'))
 
     @staticmethod
     def _validate_engine(engine: str) -> None:

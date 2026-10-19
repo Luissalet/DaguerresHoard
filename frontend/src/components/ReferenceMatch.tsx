@@ -32,7 +32,7 @@ export default function ReferenceMatch({ photo, photos, t }: { photo: Photo; pho
       {candidates.map(p => <option key={p.id} value={p.id}>{fileName(p.path)}</option>)}
     </select></label>
     <button className="btn btn-block" disabled={busy} onClick={() => { setReference(photo.id); setResult(null); }}>{t.match_use_this}</button>
-    {reference && <img className="craft-result-preview" src={`/api/photos/${reference}/preview?size=256`} alt={t.match_reference} />}
+    {reference && <img className="craft-result-preview" src={`/photos/api/photos/${reference}/preview?size=256`} alt={t.match_reference} />}
     <label className="craft-exposure">{t.match_strength} · {Math.round(strength * 100)}%<input type="range" min="0" max="1" step="0.05" value={strength} disabled={busy} onChange={e => setStrength(Number(e.target.value))} /></label>
     <label className="reference-match__batch"><input type="checkbox" checked={batch} disabled={busy} onChange={e => { setBatch(e.target.checked); setResult(null); }} /> {t.match_batch}</label>
     <p className="muted small">{t.match_note}</p>

@@ -1,0 +1,2514 @@
+{
+  "tools": [
+    {
+      "name": "list_commands",
+      "description": "Every command (engine + UI when connected) with id, label, menu, shortcut, parameter doc and whether it is enabled now. Each id is also callable as tool `cmd_<id with . replaced by _>` or via run_command.",
+      "inputSchema": {
+        "properties": {
+          "filter": {
+            "description": "Only commands whose id or label contains this text (case-insensitive)",
+            "type": "string"
+          }
+        },
+        "required": [],
+        "type": "object"
+      },
+      "title": "List commands"
+    },
+    {
+      "name": "run_command",
+      "description": "Run any Daguerre Develop command by id with JSON params (see list_commands for ids and parameter docs), e.g. {command: \"photo.rate\", params: {rating: 4}}.",
+      "inputSchema": {
+        "properties": {
+          "command": {
+            "type": "string"
+          },
+          "params": {
+            "additionalProperties": true,
+            "description": "Command parameters",
+            "type": "object"
+          }
+        },
+        "required": [
+          "command"
+        ],
+        "type": "object"
+      },
+      "title": "Run command"
+    },
+    {
+      "name": "import",
+      "description": "Add image/raw files to the library. Folders are scanned recursively for photos; relative paths resolve against the server's working directory. The first imported photo becomes active. Returns the new photo ids.",
+      "inputSchema": {
+        "properties": {
+          "album": {
+            "description": "Also add to this album id",
+            "type": "integer"
+          },
+          "destination": {
+            "description": "Copy or move: destination folder",
+            "type": "string"
+          },
+          "mode": {
+            "description": "add (default) = reference the files in place; copy = copy them into `destination` (default: the library's Originals/); move = as copy, then each original and its XMP sidecars are removed from the source once the copy is verified and catalogued (duplicates and failures keep their sources; `kept` lists sources left in place and why; undo leaves the moved files at the destination)",
+            "enum": [
+              "add",
+              "copy",
+              "move"
+            ],
+            "type": "string"
+          },
+          "organize": {
+            "description": "Copy or move: folders inside the destination — date (YYYY/YYYY-MM-DD, default), month (YYYY/YYYY-MM), flat, or a folder template such as {date:%Y}/{date:%Y%m%d} (→ 2026/20260114; the template's / make the levels, tokens as for rename; relative, no ..). Dated by capture time, else the import time",
+            "type": "string"
+          },
+          "paths": {
+            "description": "Files and/or folders",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "rename": {
+            "description": "Copy or move: file-name template, e.g. {date:%Y%m%d_%H%M%S}_{seq:3} (run_command photo.renameTokens lists the tags); the extension is kept",
+            "type": "string"
+          }
+        },
+        "required": [
+          "paths"
+        ],
+        "type": "object"
+      },
+      "title": "Import photos"
+    },
+    {
+      "name": "query_photos",
+      "description": "List photos (id, file name, size, rating, flag, edited…). Without filter/sort: the current library view.",
+      "inputSchema": {
+        "properties": {
+          "filter": {
+            "additionalProperties": true,
+            "description": "Catalog Filter JSON (e.g. {\"minRating\": 3})",
+            "type": "object"
+          },
+          "limit": {
+            "description": "Default 200",
+            "type": "integer"
+          },
+          "offset": {
+            "type": "integer"
+          },
+          "sort": {
+            "additionalProperties": true,
+            "type": "object"
+          }
+        },
+        "required": [],
+        "type": "object"
+      },
+      "title": "Query photos"
+    },
+    {
+      "name": "select_photos",
+      "description": "Set the selection; the active photo (the one develop tools edit) is `active` or the first id.",
+      "inputSchema": {
+        "properties": {
+          "active": {
+            "type": "integer"
+          },
+          "ids": {
+            "description": "Photo ids",
+            "items": {
+              "type": "integer"
+            },
+            "type": "array"
+          },
+          "mode": {
+            "enum": [
+              "replace",
+              "add",
+              "toggle",
+              "range"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "ids"
+        ],
+        "type": "object"
+      },
+      "title": "Select photos"
+    },
+    {
+      "name": "list_controls",
+      "description": "Every develop slider (id like `light.exposure`, label, section, min, max, default, current value) for the active photo.",
+      "inputSchema": {
+        "properties": {
+          "section": {
+            "description": "Only this section (e.g. light, color, effects, detail)",
+            "type": "string"
+          }
+        },
+        "required": [],
+        "type": "object"
+      },
+      "title": "List develop controls"
+    },
+    {
+      "name": "get_develop",
+      "description": "The full develop settings JSON of a photo (white balance, light, color, curves, mixer, grading, effects, crop, masks, spots…).",
+      "inputSchema": {
+        "properties": {
+          "id": {
+            "description": "Photo id (default: the active photo). Makes that photo active first.",
+            "type": "integer"
+          }
+        },
+        "required": [],
+        "type": "object"
+      },
+      "title": "Get develop settings"
+    },
+    {
+      "name": "set_develop",
+      "description": "Edit a photo (one undo step each for values and settings). `values` sets sliders by control id (see list_controls), e.g. {\"light.exposure\": 0.7, \"light.contrast\": 20}. `settings` deep-merges a partial develop-settings JSON (as returned by get_develop).",
+      "inputSchema": {
+        "properties": {
+          "id": {
+            "description": "Photo id (default: the active photo). Makes that photo active first.",
+            "type": "integer"
+          },
+          "label": {
+            "description": "History label for `settings`",
+            "type": "string"
+          },
+          "settings": {
+            "additionalProperties": true,
+            "description": "Partial DevelopSettings JSON to merge",
+            "type": "object"
+          },
+          "values": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "description": "controlId → value",
+            "type": "object"
+          }
+        },
+        "required": [],
+        "type": "object"
+      },
+      "title": "Set develop settings"
+    },
+    {
+      "name": "apply_preset",
+      "description": "Apply a develop preset (ids from cmd_presets_list) to the selection or `ids`, at `amount` percent (0..200, default 100).",
+      "inputSchema": {
+        "properties": {
+          "amount": {
+            "type": "number"
+          },
+          "ids": {
+            "description": "Photo ids (default: selection)",
+            "items": {
+              "type": "integer"
+            },
+            "type": "array"
+          },
+          "preset": {
+            "description": "Preset id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "preset"
+        ],
+        "type": "object"
+      },
+      "title": "Apply preset"
+    },
+    {
+      "name": "crop",
+      "description": "Set the crop of the active photo: `rect` [x0,y0,x1,y1] in normalized coordinates (0..1, origin top-left) of the straightened frame, `angle` in degrees. `reset: true` clears it. Give at least one of them.",
+      "inputSchema": {
+        "properties": {
+          "angle": {
+            "type": "number"
+          },
+          "id": {
+            "description": "Photo id (default: the active photo). Makes that photo active first.",
+            "type": "integer"
+          },
+          "rect": {
+            "items": {
+              "type": "number"
+            },
+            "maxItems": 4,
+            "minItems": 4,
+            "type": "array"
+          },
+          "reset": {
+            "type": "boolean"
+          }
+        },
+        "required": [],
+        "type": "object"
+      },
+      "title": "Crop / straighten"
+    },
+    {
+      "name": "render_photo",
+      "description": "Render a photo with its current develop settings (cropped) and return it as an image so you can look at the result.",
+      "inputSchema": {
+        "properties": {
+          "format": {
+            "description": "Image encoding (default png; jpeg is smaller)",
+            "enum": [
+              "png",
+              "jpeg"
+            ],
+            "type": "string"
+          },
+          "id": {
+            "description": "Photo id (default: the active photo). Makes that photo active first.",
+            "type": "integer"
+          },
+          "path": {
+            "description": "Also save the rendered file here",
+            "type": "string"
+          },
+          "size": {
+            "description": "Long edge in pixels (default 1024, max 4096)",
+            "type": "integer"
+          }
+        },
+        "required": [],
+        "type": "object"
+      },
+      "title": "Render photo"
+    },
+    {
+      "name": "export",
+      "description": "Render and write photos. Give `path` (one photo; format from the extension unless `format` is set) or `dir` (batch, file names from `naming`).",
+      "inputSchema": {
+        "properties": {
+          "bitDepth": {
+            "description": "Bits per channel: PNG 8|16 (default 8), TIFF 8|16|32 (default 16; 32 = linear float with a linear profile), AVIF 8|10; JPEG/WebP are 8-bit",
+            "enum": [
+              8,
+              10,
+              16,
+              32
+            ],
+            "type": "integer"
+          },
+          "colorSpace": {
+            "description": "Output colour space (default sRGB; AVIF is always sRGB). adobeRgb = Adobe RGB (1998) compatible; the embedded ICC profile is generated from the published primaries",
+            "enum": [
+              "srgb",
+              "displayP3",
+              "adobeRgb",
+              "proPhoto",
+              "rec2020"
+            ],
+            "type": "string"
+          },
+          "dir": {
+            "type": "string"
+          },
+          "dontEnlarge": {
+            "description": "Never upscale past the photo's own size (default true)",
+            "type": "boolean"
+          },
+          "format": {
+            "description": "original = the file as is + an XMP sidecar with the edits; dng = raw photos as DNG with the edits embedded",
+            "enum": [
+              "jpeg",
+              "png",
+              "tiff",
+              "webp",
+              "avif",
+              "original",
+              "dng"
+            ],
+            "type": "string"
+          },
+          "height": {
+            "description": "Output height in px",
+            "type": "integer"
+          },
+          "id": {
+            "description": "Photo id (default: the active photo). Makes that photo active first.",
+            "type": "integer"
+          },
+          "ids": {
+            "description": "Photos to export (default: the given/active photo)",
+            "items": {
+              "type": "integer"
+            },
+            "type": "array"
+          },
+          "limitKb": {
+            "description": "JPEG: largest quality that fits this many KB",
+            "type": "integer"
+          },
+          "longEdge": {
+            "description": "Output long edge in px. When no size param is given: 3000; 0 = full size (cropped, native resolution)",
+            "type": "integer"
+          },
+          "megapixels": {
+            "description": "Output size in megapixels",
+            "type": "number"
+          },
+          "metadata": {
+            "enum": [
+              "all",
+              "allExceptCamera",
+              "copyright",
+              "none"
+            ],
+            "type": "string"
+          },
+          "naming": {
+            "description": "File-name template, e.g. {name}-{seq} or {date:%Y-%m-%d}_{title}_{seq:2} (tokens: {name} {num} {seq} {seq:N} {date} {date:%…} {folder} {camera} {lens} {iso} {rating} {title} {creator} {ext})",
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "percent": {
+            "description": "Output size as a percentage of full size",
+            "type": "number"
+          },
+          "ppi": {
+            "description": "Print resolution written into the file (default 240)",
+            "type": "integer"
+          },
+          "quality": {
+            "description": "JPEG/AVIF quality 1..100",
+            "type": "integer"
+          },
+          "removeLocation": {
+            "type": "boolean"
+          },
+          "sharpen": {
+            "enum": [
+              "none",
+              "screen",
+              "matte",
+              "glossy"
+            ],
+            "type": "string"
+          },
+          "sharpenAmount": {
+            "enum": [
+              "low",
+              "standard",
+              "high"
+            ],
+            "type": "string"
+          },
+          "shortEdge": {
+            "description": "Output short edge in px",
+            "type": "integer"
+          },
+          "startNumber": {
+            "description": "First {seq} value (default 1)",
+            "type": "integer"
+          },
+          "watermark": {
+            "description": "Text, or {text, vertical (boolean; defaults to false), size (fraction of short edge), opacity, anchor (topLeft|top|topRight|left|center|right|bottomLeft|bottom|bottomRight), inset, color [r,g,b], shadow}"
+          },
+          "width": {
+            "description": "Output width in px (with height: fit inside width × height, either orientation)",
+            "type": "integer"
+          }
+        },
+        "required": [],
+        "type": "object"
+      },
+      "title": "Export photo"
+    },
+    {
+      "name": "cmd_edit_undo",
+      "description": "Undo (command `edit.undo`). Params: {}. Menu: Edit. Shortcut: Cmd+Z.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Undo"
+    },
+    {
+      "name": "cmd_edit_redo",
+      "description": "Redo (command `edit.redo`). Params: {}. Menu: Edit. Shortcut: Cmd+Shift+Z.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Redo"
+    },
+    {
+      "name": "cmd_library_source",
+      "description": "Show Source (command `library.source`). Params: {kind: all|recentlyAdded|album|recentlyDeleted|picks|missing, id?: albumId}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Show Source"
+    },
+    {
+      "name": "cmd_library_filter",
+      "description": "Filter (command `library.filter`). Params: partial Filter: {text?, rating?, ratingOp?: atLeast|exactly|atMost, flag?: pick|reject|none|null, label?, kind?, merged?: hdr|panorama|hdrPanorama|any, edited?, date?, keyword?, camera?}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Filter"
+    },
+    {
+      "name": "cmd_library_clearFilter",
+      "description": "Clear Filters (command `library.clearFilter`). Params: {}. Menu: View.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Clear Filters"
+    },
+    {
+      "name": "cmd_library_sort",
+      "description": "Sort (command `library.sort`). Params: {key?: captureDate|importDate|editDate|fileName|rating|fileSize, ascending?: bool, group?: auto|none|day|month|year}. Menu: View › Sort.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Sort"
+    },
+    {
+      "name": "cmd_library_groups",
+      "description": "Date Groups (command `library.groups`). Params: {by?: day|month|year (default: the sort's grouping; auto = day)} → [{key, label, start, count}] date headers of the grid.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Date Groups"
+    },
+    {
+      "name": "cmd_library_select",
+      "description": "Select Photos (command `library.select`). Params: {ids: [id], active?: id, mode?: replace|add|toggle|range}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Select Photos"
+    },
+    {
+      "name": "cmd_library_selectAll",
+      "description": "Select All (command `library.selectAll`). Params: {}. Menu: Edit. Shortcut: Cmd+A.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Select All"
+    },
+    {
+      "name": "cmd_library_devices",
+      "description": "Cameras and Cards (command `library.devices`). Params: {} → [{name, path (its DCIM folder), root}] — mounted volumes with a DCIM folder.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Cameras and Cards"
+    },
+    {
+      "name": "cmd_photo_copyMetadata",
+      "description": "Copy Metadata (command `photo.copyMetadata`). Params: {} — title, caption, copyright (notice, status, usage terms, info URL), creator, location and keywords of the active photo. Menu: Photo.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Copy Metadata"
+    },
+    {
+      "name": "cmd_photo_pasteMetadata",
+      "description": "Paste Metadata (command `photo.pasteMetadata`). Params: {ids?, fields?: [title|caption|copyright|copyrightStatus|usageTerms|copyrightUrl|creator|location|keywords] (default: all copied)}. Menu: Photo.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Paste Metadata"
+    },
+    {
+      "name": "cmd_library_selectBy",
+      "description": "Select by Flag, Rating or Label (command `library.selectBy`). Params: {flag?: pick|reject|none, rating?: 0..5, ratingOp?: gte|eq|lte (default gte), label?: red|…|none, add?: bool (extend the selection)} — among the photos in view.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Select by Flag, Rating or Label"
+    },
+    {
+      "name": "cmd_library_selectNone",
+      "description": "Deselect All (command `library.selectNone`). Params: {}. Menu: Edit. Shortcut: Cmd+Shift+A.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Deselect All"
+    },
+    {
+      "name": "cmd_library_next",
+      "description": "Next Photo (command `library.next`). Params: {}. Shortcut: Right.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Next Photo"
+    },
+    {
+      "name": "cmd_library_previous",
+      "description": "Previous Photo (command `library.previous`). Params: {}. Shortcut: Left.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Previous Photo"
+    },
+    {
+      "name": "cmd_photo_rate",
+      "description": "Set Rating (command `photo.rate`). Params: {rating: 0..5, ids?, advance?: bool}. Menu: Photo › Set Rating.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Set Rating"
+    },
+    {
+      "name": "cmd_photo_flag",
+      "description": "Set Flag (command `photo.flag`). Params: {flag: pick|reject|none, ids?, advance?: bool}. Menu: Photo › Set Flag.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Set Flag"
+    },
+    {
+      "name": "cmd_photo_pick",
+      "description": "Flag as Pick (command `photo.pick`). Params: {ids?}. Menu: Photo › Set Flag. Shortcut: P.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Flag as Pick"
+    },
+    {
+      "name": "cmd_photo_reject",
+      "description": "Flag as Reject (command `photo.reject`). Params: {ids?}. Menu: Photo › Set Flag. Shortcut: X.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Flag as Reject"
+    },
+    {
+      "name": "cmd_photo_unflag",
+      "description": "Unflag (command `photo.unflag`). Params: {ids?}. Menu: Photo › Set Flag. Shortcut: U.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Unflag"
+    },
+    {
+      "name": "cmd_photo_label",
+      "description": "Set Color Label (command `photo.label`). Params: {label: red|yellow|green|blue|purple|none, ids?}. Menu: Photo › Set Color Label.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Set Color Label"
+    },
+    {
+      "name": "cmd_photo_rotateLeft",
+      "description": "Rotate Left (command `photo.rotateLeft`). Params: {ids?}. Menu: Photo. Shortcut: Cmd+[.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Rotate Left"
+    },
+    {
+      "name": "cmd_photo_rotateRight",
+      "description": "Rotate Right (command `photo.rotateRight`). Params: {ids?}. Menu: Photo. Shortcut: Cmd+].",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Rotate Right"
+    },
+    {
+      "name": "cmd_photo_flipHorizontal",
+      "description": "Flip Horizontal (command `photo.flipHorizontal`). Params: {ids?}. Menu: Photo.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Flip Horizontal"
+    },
+    {
+      "name": "cmd_photo_flipVertical",
+      "description": "Flip Vertical (command `photo.flipVertical`). Params: {ids?}. Menu: Photo.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Flip Vertical"
+    },
+    {
+      "name": "cmd_photo_delete",
+      "description": "Delete Photo (command `photo.delete`). Params: {ids?} — moves to Recently Deleted. Menu: Photo. Shortcut: Delete.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Delete Photo"
+    },
+    {
+      "name": "cmd_photo_restore",
+      "description": "Restore (command `photo.restore`). Params: {ids?}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Restore"
+    },
+    {
+      "name": "cmd_photo_deletePermanently",
+      "description": "Delete Permanently (command `photo.deletePermanently`). Params: {ids?}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Delete Permanently"
+    },
+    {
+      "name": "cmd_photo_setMeta",
+      "description": "Edit Info (command `photo.setMeta`). Params: {ids?, title?, caption?, altText?, extendedDescription?, copyright?, copyrightStatus?: unknown|copyrighted|publicDomain, usageTerms?, copyrightUrl?, creator?, location?, city?, state?, country?, gps?: \"lat, lon\" | [lat, lon] | null, keywords?: [..], addKeywords?: [..], removeKeywords?: [..]}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Edit Info"
+    },
+    {
+      "name": "cmd_album_create",
+      "description": "New Album (command `album.create`). Params: {name, parent?: folderId, folder?: bool, addSelected?: bool}. Menu: File.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "New Album"
+    },
+    {
+      "name": "cmd_album_createSmart",
+      "description": "New Smart Album… (command `album.createSmart`). Params: {name, rules?: partial Filter (rating, ratingOp, flag, label, kind, edited, keyword, camera, lens, dateFrom, dateTo, date, text, album, ruleSet: {match: all|any|none, rules: [{field, op, value} | {group: ruleSet}]} — see album.ruleFields), parent?: folderId} — without `rules`, saves the current view (source + filter).",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "New Smart Album…"
+    },
+    {
+      "name": "cmd_album_ruleFields",
+      "description": "Smart Album Rule Fields (command `album.ruleFields`). Params: {} → [{field, label, kind, ops: [{op, label}], choices?}] for ruleSet rules.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Smart Album Rule Fields"
+    },
+    {
+      "name": "cmd_album_setRules",
+      "description": "Edit Smart Album (command `album.setRules`). Params: {id, rules?: partial Filter merged onto the current rules (null clears a field), replace?: bool, fromView?: bool (use the current view)}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Edit Smart Album"
+    },
+    {
+      "name": "cmd_album_rename",
+      "description": "Rename Album (command `album.rename`). Params: {id, name}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Rename Album"
+    },
+    {
+      "name": "cmd_album_delete",
+      "description": "Delete Album (command `album.delete`). Params: {id}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Delete Album"
+    },
+    {
+      "name": "cmd_album_move",
+      "description": "Move Album (command `album.move`). Params: {id, parent?: folderId|null}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Move Album"
+    },
+    {
+      "name": "cmd_album_addPhotos",
+      "description": "Add to Album (command `album.addPhotos`). Params: {id: albumId, ids?: [photoIds]} (default: selection). Menu: Photo.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Add to Album"
+    },
+    {
+      "name": "cmd_album_toggleTarget",
+      "description": "Add to Target Album (command `album.toggleTarget`). Params: {ids?} — B: adds the photos to the target album (the Quick Collection unless one is set), or removes them when they're all in it → {album, added}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Add to Target Album"
+    },
+    {
+      "name": "cmd_album_setTarget",
+      "description": "Set as Target Album (command `album.setTarget`). Params: {id: albumId | null} (null = the Quick Collection).",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Set as Target Album"
+    },
+    {
+      "name": "cmd_album_clearQuick",
+      "description": "Clear Quick Collection (command `album.clearQuick`). Params: {}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Clear Quick Collection"
+    },
+    {
+      "name": "cmd_library_autoImport",
+      "description": "Auto Import Settings (command `library.autoImport`). Params: {folder?: path | null (off), copy?: bool (copy into the library's Originals, else add in place), album?: name | null} — a watched folder whose new photos are added as they arrive (library.autoImportScan; the app scans every few seconds) → the settings.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Auto Import Settings"
+    },
+    {
+      "name": "cmd_library_autoImportScan",
+      "description": "Auto Import Now (command `library.autoImportScan`). Params: {listing?: [[path, size]] (the folder as listed by the caller, e.g. on a worker thread), start?: bool (false: return the `library.import` params as `import` instead of importing)} — add the watched folder's new photos (files the library doesn't have yet; partial / still-copying files wait for the next scan) → {imported, folder, import?}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Auto Import Now"
+    },
+    {
+      "name": "cmd_album_removePhotos",
+      "description": "Remove from Album (command `album.removePhotos`). Params: {id: albumId, ids?}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Remove from Album"
+    },
+    {
+      "name": "cmd_album_setCover",
+      "description": "Set as Album Cover (command `album.setCover`). Params: {id: albumId, photo?: photoId}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Set as Album Cover"
+    },
+    {
+      "name": "cmd_library_importPreview",
+      "description": "Review Import (command `library.importPreview`). Params: {paths: [file or folder (recursive)]} → {candidates: [{path, name, format, kind, width, height, fileSize, captured, duplicate?: path|content, existing?, error?, previewOnly?: why a raw can only be shown from its embedded preview}], duplicates, scanned} — nothing is added.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Review Import"
+    },
+    {
+      "name": "cmd_library_import",
+      "description": "Import Photos (command `library.import`). Params: {paths: [file or folder (recursive)], mode?: add|copy|move (add = reference the files in place; copy = into the library's Originals/YYYY/YYYY-MM-DD/; move = as copy, then each original and its XMP sidecars are removed from the source — only after the copy is verified (a hard link on the same volume, else copied, synced and compared byte for byte) and its catalog record is saved; failed, duplicate and unchecked files keep their sources; a taken name gets -1, -2…; undo removes the photos from the library but leaves the files at the destination), destination?: folder for copies / moves, organize?: date (YYYY/YYYY-MM-DD) | month (YYYY/YYYY-MM) | flat | a folder template, e.g. `{date:%Y}/{date:%Y%m%d}` → 2026/20260114 (the template's `/` make the folders, each level expanded with the rename tokens and made a safe folder name: never outside the destination; must be relative, no `..`; a level with missing metadata is `unknown`) — dated by capture time, else the import time, rename?: file-name template for copies, original extension added (tokens: {name} {num} {seq} {seq:N} {date} {date:%Y%m%d} {folder} {camera} {lens} {iso} {rating} {title} {creator} {ext}; photo.renameTokens explains each; blank = keep names), renameStart?: 1, metadataPreset?: name, dng?: bool (copy raws as DNG; copy only), local?: bool (browsing: the photos stay out of the library, like library.browse; not with move), album?: albumId, albumName?: new album, preset?: presetId, keywords?: [..]} → {imported, duplicates, failed, moved?: [{from, to, sidecars?}], kept?: [{path, reason}] (move: sources left in place and why), album?}. Menu: File. Shortcut: Cmd+Shift+I.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Import Photos"
+    },
+    {
+      "name": "cmd_library_info",
+      "description": "Library Info (command `library.info`). Params: {}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Library Info"
+    },
+    {
+      "name": "cmd_library_compact",
+      "description": "Optimize Library (command `library.compact`). Params: {}. Menu: File.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Optimize Library"
+    },
+    {
+      "name": "cmd_library_clearPreviews",
+      "description": "Clear Preview Cache (command `library.clearPreviews`). Params: {}. Menu: File.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Clear Preview Cache"
+    },
+    {
+      "name": "cmd_develop_set",
+      "description": "Set Develop Values (command `develop.set`). Params: {control?: controlId, value?: number, values?: {controlId: number}, ids?: [photo]} — see develop.controls.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Set Develop Values"
+    },
+    {
+      "name": "cmd_develop_adjust",
+      "description": "Nudge Develop Value (command `develop.adjust`). Params: {control, delta}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Nudge Develop Value"
+    },
+    {
+      "name": "cmd_develop_merge",
+      "description": "Apply Settings JSON (command `develop.merge`). Params: {settings: partial DevelopSettings JSON, label?}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Apply Settings JSON"
+    },
+    {
+      "name": "cmd_develop_reset",
+      "description": "Reset Edits (command `develop.reset`). Params: {ids?}. Menu: Photo. Shortcut: Cmd+Shift+R.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Reset Edits"
+    },
+    {
+      "name": "cmd_develop_resetSection",
+      "description": "Reset Section (command `develop.resetSection`). Params: {section: light|curve|color|mixer|grading|effects|vignette|grain|detail|optics|geometry}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Reset Section"
+    },
+    {
+      "name": "cmd_develop_resetControl",
+      "description": "Reset Control (command `develop.resetControl`). Params: {control}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Reset Control"
+    },
+    {
+      "name": "cmd_develop_sectionEnabled",
+      "description": "Toggle Section (command `develop.sectionEnabled`). Params: {section: string, enabled: bool}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Toggle Section"
+    },
+    {
+      "name": "cmd_develop_autoBwMix",
+      "description": "Auto B&W Mix (command `develop.autoBwMix`). Params: {} — sets the black & white mix from the photo's colours (and switches to B&W).",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Auto B&W Mix"
+    },
+    {
+      "name": "cmd_develop_auto",
+      "description": "Auto Settings (command `develop.auto`). Params: {}. Menu: Photo. Shortcut: Shift+A.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Auto Settings"
+    },
+    {
+      "name": "cmd_develop_wb",
+      "description": "White Balance (command `develop.wb`). Params: {mode: asShot|auto|daylight|cloudy|shade|tungsten|fluorescent|flash|custom, temp?, tint?}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "White Balance"
+    },
+    {
+      "name": "cmd_develop_wbPick",
+      "description": "White Balance Selector (command `develop.wbPick`). Params: {x, y} normalized image coords of a neutral point. Shortcut: W.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "White Balance Selector"
+    },
+    {
+      "name": "cmd_develop_treatment",
+      "description": "Black & White (command `develop.treatment`). Params: {bw?: bool} (toggles when omitted). Menu: Photo. Shortcut: V.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Black & White"
+    },
+    {
+      "name": "cmd_develop_profile",
+      "description": "Set Profile (command `develop.profile`). Params: {id: profile id (see profiles.list), amount?: 0..200}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Set Profile"
+    },
+    {
+      "name": "cmd_profile_favorite",
+      "description": "Favorite Profile (command `profile.favorite`). Params: {id, favorite?: bool} (toggles when omitted).",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Favorite Profile"
+    },
+    {
+      "name": "cmd_develop_curve",
+      "description": "Set Point Curve (command `develop.curve`). Params: {channel: master|red|green|blue, points: [[x,y],...] in 0..1}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Set Point Curve"
+    },
+    {
+      "name": "cmd_crop_set",
+      "description": "Set Crop (command `crop.set`). Params: {rect?: [x0,y0,x1,y1] normalized in the straightened frame, angle?: degrees}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Set Crop"
+    },
+    {
+      "name": "cmd_crop_straighten",
+      "description": "Straighten (command `crop.straighten`). Params: {angle: degrees -45..45} — keeps the largest crop of the current aspect.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Straighten"
+    },
+    {
+      "name": "cmd_crop_autoStraighten",
+      "description": "Auto Straighten (command `crop.autoStraighten`). Params: {} — level the horizon (or plumb lines) with the crop angle.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Auto Straighten"
+    },
+    {
+      "name": "cmd_crop_aspect",
+      "description": "Crop Aspect (command `crop.aspect`). Params: {aspect: \"original\"|\"free\"|\"current\" (lock the crop's present shape)|\"toggle\" (lock ↔ free)|\"1x1\"|\"4x5\"|\"8.5x11\"|\"5x7\"|\"2x3\"|\"4x3\"|\"16x9\"|\"16x10\"|[w,h]}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Crop Aspect"
+    },
+    {
+      "name": "cmd_crop_rotateAspect",
+      "description": "Rotate Crop Aspect (command `crop.rotateAspect`). Params: {}. Shortcut: X.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Rotate Crop Aspect"
+    },
+    {
+      "name": "cmd_crop_reset",
+      "description": "Reset Crop (command `crop.reset`). Params: {}. Shortcut: Cmd+Alt+R.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Reset Crop"
+    },
+    {
+      "name": "cmd_geometry_upright",
+      "description": "Upright (command `geometry.upright`). Params: {mode: off|auto|guided|level|vertical|full} — analyses the photo (line segments → vanishing points) and stores the correction; run again to update after lens changes.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Upright"
+    },
+    {
+      "name": "cmd_geometry_guides",
+      "description": "Guided Upright Guides (command `geometry.guides`). Params: {guides: [[x0,y0,x1,y1], …] (≤ 4, normalized coords of the lens-corrected image), add?: bool (append one guide, dropping the oldest beyond 4)} — switches Upright to Guided.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Guided Upright Guides"
+    },
+    {
+      "name": "cmd_develop_copy",
+      "description": "Copy Edit Settings (command `develop.copy`). Params: {groups?: [settingsGroup]} (default: all but crop, masks, remove). Menu: Edit. Shortcut: Cmd+C.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Copy Edit Settings"
+    },
+    {
+      "name": "cmd_develop_pastePrevious",
+      "description": "Paste Settings from Previous (command `develop.pastePrevious`). Params: {ids?, groups?: [settingsGroup] (default: the copy groups)} — from the photo that was active before this one. Menu: Edit. Shortcut: Cmd+Alt+V.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Paste Settings from Previous"
+    },
+    {
+      "name": "cmd_develop_paste",
+      "description": "Paste Edit Settings (command `develop.paste`). Params: {ids?, groups?: [settingsGroup] (paste only these of the copied groups)}. Menu: Edit. Shortcut: Cmd+V.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Paste Edit Settings"
+    },
+    {
+      "name": "cmd_develop_sync",
+      "description": "Sync Settings (command `develop.sync`). Params: {groups?} — copy the active photo's settings to all selected photos.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Sync Settings"
+    },
+    {
+      "name": "cmd_develop_quickAdjust",
+      "description": "Quick Develop (command `develop.quickAdjust`). Params: {control: develop control id, delta, ids?} — add `delta` to the control on every target photo (each from its own value; Quick Develop) in one undo step → {changed}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Quick Develop"
+    },
+    {
+      "name": "cmd_develop_matchExposure",
+      "description": "Match Total Exposures (command `develop.matchExposure`). Params: {ids?} — set each selected photo's Exposure so its total exposure (shutter × ISO ÷ aperture², plus the slider) equals the active photo's; photos without exposure data are skipped → {changed, skipped}. Menu: Photo.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Match Total Exposures"
+    },
+    {
+      "name": "cmd_develop_autoSync",
+      "description": "Auto Sync (command `develop.autoSync`). Params: {on?: bool} (toggles when omitted) — edits to the active photo also change the other selected photos (only the settings that changed; not spot removal / red eye) → {on}. Menu: Edit. Shortcut: Cmd+Alt+Shift+A.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Auto Sync"
+    },
+    {
+      "name": "cmd_preset_apply",
+      "description": "Apply Preset (command `preset.apply`). Params: {id: presetId, amount?: 0..200 (percent), ids?}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Apply Preset"
+    },
+    {
+      "name": "cmd_preset_create",
+      "description": "Create Preset (command `preset.create`). Params: {name, group?, groups?: [settingsGroup]}. Menu: Photo.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Create Preset"
+    },
+    {
+      "name": "cmd_preset_delete",
+      "description": "Delete Preset (command `preset.delete`). Params: {id}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Delete Preset"
+    },
+    {
+      "name": "cmd_preset_favorite",
+      "description": "Favorite Preset (command `preset.favorite`). Params: {id, favorite?: bool}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Favorite Preset"
+    },
+    {
+      "name": "cmd_preset_rename",
+      "description": "Rename Preset (command `preset.rename`). Params: {id, name}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Rename Preset"
+    },
+    {
+      "name": "cmd_preset_move",
+      "description": "Move Preset to Group (command `preset.move`). Params: {id, group}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Move Preset to Group"
+    },
+    {
+      "name": "cmd_preset_update",
+      "description": "Update Preset with Current Settings (command `preset.update`). Params: {id, groups?: [settingsGroup] (default: the groups the preset already sets)} — from the active photo.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Update Preset with Current Settings"
+    },
+    {
+      "name": "cmd_version_create",
+      "description": "Create Version (command `version.create`). Params: {name?}. Menu: Photo. Shortcut: Cmd+Shift+S.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Create Version"
+    },
+    {
+      "name": "cmd_version_restore",
+      "description": "Restore Version (command `version.restore`). Params: {index}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Restore Version"
+    },
+    {
+      "name": "cmd_version_delete",
+      "description": "Delete Version (command `version.delete`). Params: {index}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Delete Version"
+    },
+    {
+      "name": "cmd_version_rename",
+      "description": "Rename Version (command `version.rename`). Params: {index, name}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Rename Version"
+    },
+    {
+      "name": "cmd_version_update",
+      "description": "Update Version with Current Settings (command `version.update`). Params: {index}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Update Version with Current Settings"
+    },
+    {
+      "name": "cmd_history_clear",
+      "description": "Clear History (command `history.clear`). Params: {} — keeps the current settings as the only step.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Clear History"
+    },
+    {
+      "name": "cmd_history_restore",
+      "description": "Go to History Step (command `history.restore`). Params: {index}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Go to History Step"
+    },
+    {
+      "name": "cmd_develop_beginInteraction",
+      "description": "Begin Interaction (command `develop.beginInteraction`). Params: {label}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Begin Interaction"
+    },
+    {
+      "name": "cmd_develop_endInteraction",
+      "description": "End Interaction (command `develop.endInteraction`). Params: {}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "End Interaction"
+    },
+    {
+      "name": "cmd_develop_cancelInteraction",
+      "description": "Cancel Interaction (command `develop.cancelInteraction`). Params: {}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Cancel Interaction"
+    },
+    {
+      "name": "cmd_pointColor_pick",
+      "description": "Add Point Color Sample (command `pointColor.pick`). Params: {x, y} normalized image coords — samples the colour there (max 8); returns {index, lum, chroma, hue}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Add Point Color Sample"
+    },
+    {
+      "name": "cmd_develop_targeted",
+      "description": "Targeted Adjustment (command `develop.targeted`). Params: {target: curve|hue|sat|lum, x, y (normalized image coords), delta (slider units; point curves: output levels 0..255), channel?: parametric|master|red|green|blue (curve)} — adjusts the curve region / colour-mixer bands under the point; returns the changed controls.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Targeted Adjustment"
+    },
+    {
+      "name": "cmd_pointColor_delete",
+      "description": "Delete Point Color Sample (command `pointColor.delete`). Params: {index}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Delete Point Color Sample"
+    },
+    {
+      "name": "cmd_curve_reset",
+      "description": "Reset Tone Curve (command `curve.reset`). Params: {channel?: all|point|parametric|master|red|green|blue (default all)} — the active photo's tone curve (or one channel) back to linear.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Reset Tone Curve"
+    },
+    {
+      "name": "cmd_curve_presets",
+      "description": "Point Curve Presets (command `curve.presets`). Params: {} → {presets: [{name, master, red, green, blue: [[x,y],...], builtin?}], current: name of the preset the active photo's point curves match, or null}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Point Curve Presets"
+    },
+    {
+      "name": "cmd_curve_applyPreset",
+      "description": "Apply Point Curve Preset (command `curve.applyPreset`). Params: {name} — sets the active photo's point curves (all four channels; the parametric curve stays).",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Apply Point Curve Preset"
+    },
+    {
+      "name": "cmd_curve_savePreset",
+      "description": "Save Point Curve Preset (command `curve.savePreset`). Params: {name} — the active photo's point curves under a name (replaces a user preset of that name; built-in names are reserved), saved with the library.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Save Point Curve Preset"
+    },
+    {
+      "name": "cmd_curve_deletePreset",
+      "description": "Delete Point Curve Preset (command `curve.deletePreset`). Params: {name} — a user preset (built-ins can't be deleted).",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Delete Point Curve Preset"
+    },
+    {
+      "name": "cmd_curve_importPresets",
+      "description": "Import Point Curve Presets (command `curve.importPresets`). Params: {path | paths: [file]} — .lccurve JSON files ({format, version, presets: [...]}, an array of presets, or one preset); same-named user presets are replaced → {imported: [name], failed: [[file, error]]}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Import Point Curve Presets"
+    },
+    {
+      "name": "cmd_curve_exportPresets",
+      "description": "Export Point Curve Presets (command `curve.exportPresets`). Params: {path, names?: [name] (default: every user preset)} — writes a .lccurve JSON file → {path, count}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Export Point Curve Presets"
+    },
+    {
+      "name": "cmd_mask_add",
+      "description": "Create New Mask (command `mask.add`). Params: {kind: brush|linear|radial|sky|subject|background|luminanceRange|colorRange, ...shape params (start/end, center/rx/ry/angle/feather, lo/hi…), name?}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Create New Mask"
+    },
+    {
+      "name": "cmd_mask_addComponent",
+      "description": "Add/Subtract/Intersect Mask (command `mask.addComponent`). Params: {id?: maskId, op: add|subtract|intersect, kind, ...shape params}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Add/Subtract/Intersect Mask"
+    },
+    {
+      "name": "cmd_mask_brushStroke",
+      "description": "Brush Stroke (command `mask.brushStroke`). Params: {id?: maskId, points: [[x,y],…] normalized, size?: fraction of long edge (0.03), feather?, flow?, density?, erase?: bool, autoMask?: bool}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Brush Stroke"
+    },
+    {
+      "name": "cmd_mask_update",
+      "description": "Update Mask Shape (command `mask.update`). Params: {id?, component?: index (0), shape: MaskShape JSON}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Update Mask Shape"
+    },
+    {
+      "name": "cmd_mask_sampleColor",
+      "description": "Sample Mask Color (command `mask.sampleColor`). Params: {x, y: normalized image point, add?: bool (⇧: add to the samples, max 5), id?, component?} — the colour range of the selected mask (its first colour-range component) samples the colour there → {samples}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Sample Mask Color"
+    },
+    {
+      "name": "cmd_mask_refine",
+      "description": "Refine Mask Edges (command `mask.refine`). Params: {id?, value: 0..100} — the mask's edges snap to the photo's (guided filter; rendered on the CPU).",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Refine Mask Edges"
+    },
+    {
+      "name": "cmd_mask_adjust",
+      "description": "Set Mask Adjustments (command `mask.adjust`). Params: {id?, values: {exposure, contrast, highlights, shadows, whites, blacks, temp, tint, texture, clarity, dehaze, hue, saturation, sharpness, noise, moire, defringe, color_hue, color_sat, amount}}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Set Mask Adjustments"
+    },
+    {
+      "name": "cmd_mask_select",
+      "description": "Select Mask (command `mask.select`). Params: {id|null}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Select Mask"
+    },
+    {
+      "name": "cmd_mask_delete",
+      "description": "Delete Mask (command `mask.delete`). Params: {id?}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Delete Mask"
+    },
+    {
+      "name": "cmd_mask_deleteAll",
+      "description": "Delete All Masks (command `mask.deleteAll`). Params: {}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Delete All Masks"
+    },
+    {
+      "name": "cmd_mask_rename",
+      "description": "Rename Mask (command `mask.rename`). Params: {id?, name}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Rename Mask"
+    },
+    {
+      "name": "cmd_mask_invert",
+      "description": "Invert Mask (command `mask.invert`). Params: {id?}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Invert Mask"
+    },
+    {
+      "name": "cmd_mask_visible",
+      "description": "Show/Hide Mask (command `mask.visible`). Params: {id?, visible?: bool}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Show/Hide Mask"
+    },
+    {
+      "name": "cmd_mask_duplicate",
+      "description": "Duplicate Mask (command `mask.duplicate`). Params: {id?, invert?: bool (Duplicate and Invert)} — the copy goes right after the original and is selected.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Duplicate Mask"
+    },
+    {
+      "name": "cmd_mask_component",
+      "description": "Edit Mask Component (command `mask.component`). Params: {id?, component: index, action: invert|duplicate|delete|rename|op, name? (rename; empty clears), op?: add|subtract|intersect} — one component of a mask (deleting the last one deletes the mask).",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Edit Mask Component"
+    },
+    {
+      "name": "cmd_mask_move",
+      "description": "Move Mask (command `mask.move`). Params: {id?, to?: index (0 = top), delta?: ±n} — reorder the masks list.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Move Mask"
+    },
+    {
+      "name": "cmd_spot_findDust",
+      "description": "Find Dust Spots (command `spot.findDust`). Params: {sensitivity?: 0..100 (50), add?: bool (true)} — find sensor-dust spots (small soft dark spots on smooth areas) and add a heal spot on each (one undo step) → {spots: [{x, y, size}], added}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Find Dust Spots"
+    },
+    {
+      "name": "cmd_spot_add",
+      "description": "Add Remove Spot (command `spot.add`). Params: {mode?: remove|heal|clone, points: [[x,y],…], size?: fraction of long edge, feather?, opacity?, source?: [dx,dy] (default: the best match nearby)} — selects the new spot; returns {index}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Add Remove Spot"
+    },
+    {
+      "name": "cmd_spot_select",
+      "description": "Select Spot (command `spot.select`). Params: {index|null}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Select Spot"
+    },
+    {
+      "name": "cmd_spot_update",
+      "description": "Edit Spot (command `spot.update`). Params: {index? (the selected spot), move?: [dx,dy] (the target, normalized), source?: [dx,dy] (offset from the target), moveSource?: [dx,dy], size?, feather?, opacity?, mode?}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Edit Spot"
+    },
+    {
+      "name": "cmd_spot_refreshSource",
+      "description": "Refresh Source (command `spot.refreshSource`). Params: {index? (the selected spot)} — picks the next-best source away from the current one.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Refresh Source"
+    },
+    {
+      "name": "cmd_spot_delete",
+      "description": "Delete Spot (command `spot.delete`). Params: {index? (the selected spot)}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Delete Spot"
+    },
+    {
+      "name": "cmd_redeye_add",
+      "description": "Add Red Eye Correction (command `redeye.add`). Params: {center: [x,y] normalized, rx, ry: radii as fractions of the long edge, pet?: bool, pupilSize?: 0..100, darken?: 0..100} — the pupil inside is found automatically; returns {index}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Add Red Eye Correction"
+    },
+    {
+      "name": "cmd_redeye_catchlight",
+      "description": "Pet Eye Catchlight (command `redeye.catchlight`). Params: {index, on?: bool (default true), offset?: [dx, dy] from the pupil centre in pupil radii (default [-0.35, -0.35])}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Pet Eye Catchlight"
+    },
+    {
+      "name": "cmd_redeye_delete",
+      "description": "Delete Red Eye Correction (command `redeye.delete`). Params: {index}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Delete Red Eye Correction"
+    },
+    {
+      "name": "cmd_photo_virtualCopy",
+      "description": "Create Virtual Copy (command `photo.virtualCopy`). Params: {ids?, name?} → {ids: [new photo ids]} — a new catalog entry sharing the original file, with independent settings; stacked with its original and named `name` or \"Copy N\". Menu: Photo. Shortcut: Cmd+'.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Create Virtual Copy"
+    },
+    {
+      "name": "cmd_stack_group",
+      "description": "Group into Stack (command `stack.group`). Params: {ids?, top?: photoId (default: the active photo), collapsed?: bool (default true)} — stacks the photos are already in are merged. Menu: Photo › Stack. Shortcut: Cmd+G.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Group into Stack"
+    },
+    {
+      "name": "cmd_stack_ungroup",
+      "description": "Ungroup Stack (command `stack.ungroup`). Params: {ids?}. Menu: Photo › Stack. Shortcut: Cmd+Shift+G.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Ungroup Stack"
+    },
+    {
+      "name": "cmd_stack_remove",
+      "description": "Remove from Stack (command `stack.remove`). Params: {ids?}. Menu: Photo › Stack.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Remove from Stack"
+    },
+    {
+      "name": "cmd_stack_setTop",
+      "description": "Set as Top of Stack (command `stack.setTop`). Params: {id?} (default: the active photo). Menu: Photo › Stack. Shortcut: Shift+S.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Set as Top of Stack"
+    },
+    {
+      "name": "cmd_stack_moveUp",
+      "description": "Move Up in Stack (command `stack.moveUp`). Params: {id?} — one place towards the top. Menu: Photo › Stack.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Move Up in Stack"
+    },
+    {
+      "name": "cmd_stack_moveDown",
+      "description": "Move Down in Stack (command `stack.moveDown`). Params: {id?} — one place away from the top. Menu: Photo › Stack.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Move Down in Stack"
+    },
+    {
+      "name": "cmd_stack_split",
+      "description": "Split Stack (command `stack.split`). Params: {id?} — this photo and the ones after it become their own stack. Menu: Photo › Stack.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Split Stack"
+    },
+    {
+      "name": "cmd_stack_toggle",
+      "description": "Expand/Collapse Stack (command `stack.toggle`). Params: {ids?, collapsed?: bool}. Menu: Photo › Stack. Shortcut: S.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Expand/Collapse Stack"
+    },
+    {
+      "name": "cmd_stack_expandAll",
+      "description": "Expand All Stacks (command `stack.expandAll`). Params: {}. Menu: View › Stacks.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Expand All Stacks"
+    },
+    {
+      "name": "cmd_stack_collapseAll",
+      "description": "Collapse All Stacks (command `stack.collapseAll`). Params: {}. Menu: View › Stacks.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Collapse All Stacks"
+    },
+    {
+      "name": "cmd_stack_auto",
+      "description": "Auto-Stack by Capture Time (command `stack.auto`). Params: {gap?: seconds between consecutive captures (default 60), ids? (default: the selection if several photos, else the current view), preview?: bool} → {stacks, photos}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Auto-Stack by Capture Time"
+    },
+    {
+      "name": "cmd_keyword_sets",
+      "description": "Keyword Sets (command `keyword.sets`). Params: {} → {sets: [{name, keywords}], current, keywords: the nine ⌥1–⌥9 apply}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Keyword Sets"
+    },
+    {
+      "name": "cmd_keyword_useSet",
+      "description": "Use Keyword Set (command `keyword.useSet`). Params: {name} (\"Recent Keywords\" = the recently added ones).",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Use Keyword Set"
+    },
+    {
+      "name": "cmd_keyword_saveSet",
+      "description": "Save Keyword Set (command `keyword.saveSet`). Params: {name, keywords?: [up to 9] (default: the current nine)} — replaces a set of that name and makes it current.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Save Keyword Set"
+    },
+    {
+      "name": "cmd_keyword_deleteSet",
+      "description": "Delete Keyword Set (command `keyword.deleteSet`). Params: {name}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Delete Keyword Set"
+    },
+    {
+      "name": "cmd_keyword_toggleFromSet",
+      "description": "Toggle Keyword from Set (command `keyword.toggleFromSet`). Params: {index: 1..9, ids?} — the set's keyword N: added to the target photos, or removed when they all have it.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Toggle Keyword from Set"
+    },
+    {
+      "name": "cmd_keyword_list",
+      "description": "Keywords (command `keyword.list`). Params: {} → [{name, path, count, children}] keyword tree (`a|b|c` keywords are hierarchical).",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Keywords"
+    },
+    {
+      "name": "cmd_keyword_suggest",
+      "description": "Keyword Suggestions (command `keyword.suggest`). Params: {prefix?: typed text, ids?, limit?: 12} → keywords to suggest for the photos (co-occurring / most used, or matching the prefix).",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Keyword Suggestions"
+    },
+    {
+      "name": "cmd_keyword_rename",
+      "description": "Rename Keyword (command `keyword.rename`). Params: {from, to} — on every photo, children included (`a` → `b` renames `a|x` to `b|x`); renaming onto an existing keyword merges them.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Rename Keyword"
+    },
+    {
+      "name": "cmd_keyword_delete",
+      "description": "Delete Keyword (command `keyword.delete`). Params: {keyword} — removes it (and the keywords below it) from every photo.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Delete Keyword"
+    },
+    {
+      "name": "cmd_keyword_merge",
+      "description": "Merge Keywords (command `keyword.merge`). Params: {from: [keyword], into: keyword} — replaces each `from` keyword (children included) with `into` on every photo.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Merge Keywords"
+    },
+    {
+      "name": "cmd_photo_renameTokens",
+      "description": "Rename Template Tags (command `photo.renameTokens`). Params: {} → {tokens: [{tag, aliases, meaning, example}], dateDirectives: [{directive, meaning}], notes: [..], sample} — the file-name template tags shared by photo.rename, library.import (rename) and app.export (naming); examples are for a sample photo.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Rename Template Tags"
+    },
+    {
+      "name": "cmd_photo_renamePreview",
+      "description": "Rename Preview (command `photo.renamePreview`). Params: {template: e.g. `{date}_{name}`, `Trip-{seq:3}` (tokens: {name} {num} {seq} {seq:N} {date} {date:%Y%m%d} {folder} {camera} {lens} {iso} {rating} {title} {creator} {ext}; photo.renameTokens explains each), start?: first sequence number (1), ids?} — renames the files on disk (sidecars too, never overwriting: collisions get -1, -2…); undoable.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Rename Preview"
+    },
+    {
+      "name": "cmd_photo_rename",
+      "description": "Rename Photos (command `photo.rename`). Params: {template: e.g. `{date}_{name}`, `Trip-{seq:3}` (tokens: {name} {num} {seq} {seq:N} {date} {date:%Y%m%d} {folder} {camera} {lens} {iso} {rating} {title} {creator} {ext}; photo.renameTokens explains each), start?: first sequence number (1), ids?} — renames the files on disk (sidecars too, never overwriting: collisions get -1, -2…); undoable.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Rename Photos"
+    },
+    {
+      "name": "cmd_photo_setCaptureTime",
+      "description": "Edit Capture Time (command `photo.setCaptureTime`). Params: {ids?, time?: `2026-09-30T14:05:00` (the active photo gets it, the others shift by the same amount), each?: bool (every photo gets `time`), shift?: seconds, hours?: time-zone shift in hours} → {changed, captured: [..]}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Edit Capture Time"
+    },
+    {
+      "name": "cmd_photo_autoTagTracklog",
+      "description": "Auto-Tag Photos from Tracklog (command `photo.autoTagTracklog`). Params: {path?: GPX file | gpx?: GPX text, ids?, offset?: camera clock's UTC offset for photos whose capture time has no zone (`+02:00`, or hours; default UTC), maxGap?: seconds (600), replace?: bool (also photos that already have GPS), dryRun?: bool} → {tagged, interpolated, nearest, skipped: {noTime, outside, hasGps}, assumedUtc, points, start, end, photos: [{id, gps, match}]} — positions from the track log by capture time; one undo step.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Auto-Tag Photos from Tracklog"
+    },
+    {
+      "name": "cmd_label_names",
+      "description": "Color Label Names (command `label.names`). Params: {} → [{label, name, custom}].",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Color Label Names"
+    },
+    {
+      "name": "cmd_label_setNames",
+      "description": "Edit Color Label Names (command `label.setNames`). Params: {names: {red?: name|null, yellow?, green?, blue?, purple?}} — null or empty restores the colour's name.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Edit Color Label Names"
+    },
+    {
+      "name": "cmd_label_sets",
+      "description": "Color Label Sets (command `label.sets`). Params: {} → {sets: [{name, names: [red, yellow, green, blue, purple], builtin}], current: name|null}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Color Label Sets"
+    },
+    {
+      "name": "cmd_label_applySet",
+      "description": "Apply Color Label Set (command `label.applySet`). Params: {name} — use a set's label names (undoable).",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Apply Color Label Set"
+    },
+    {
+      "name": "cmd_label_saveSet",
+      "description": "Save Color Label Set (command `label.saveSet`). Params: {name} — save the current label names as a set (replaces a user set of that name).",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Save Color Label Set"
+    },
+    {
+      "name": "cmd_label_deleteSet",
+      "description": "Delete Color Label Set (command `label.deleteSet`). Params: {name} — user sets only.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Delete Color Label Set"
+    },
+    {
+      "name": "cmd_library_smartPreviews",
+      "description": "Build Smart Previews (command `library.smartPreviews`). Params: {ids?, discard?: bool, background?: bool} — build (or discard) the smart previews of the selected photos (else all in view): compact proxies in the library that keep photos editable and exportable (at proxy size) while their originals are offline; a damaged proxy (cut short) is rebuilt → {built, repaired, removed, failed}; with background (the app's menu) the files are read and written on a worker thread → {total, done, failed, repaired, running, what} like library.buildPreviews (progress: library.previewProgress, stop: library.cancelPreviews).",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Build Smart Previews"
+    },
+    {
+      "name": "cmd_library_smartPreviewsLocation",
+      "description": "Smart Previews Location (command `library.smartPreviewsLocation`). Params: {path?: absolute folder, reset?: bool, existing?: move|leave|discard} — without path/reset: where this library keeps its smart previews → {path, default, custom, available, count, bytes}. With path (or reset = back to `Smart Previews` in the library): use that folder instead (must exist or have an existing parent, and accept writes; never falls back to another drive). Smart previews already in the old folder need `existing`: move them, leave them (build again), or discard them → also {handled, failed}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Smart Previews Location"
+    },
+    {
+      "name": "cmd_photo_smartPreview",
+      "description": "Smart Preview Status (command `photo.smartPreview`). Params: {id?} → {smartPreview: bool, originalOnline: bool}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Smart Preview Status"
+    },
+    {
+      "name": "cmd_library_buildPreviews",
+      "description": "Build Previews (command `library.buildPreviews`). Params: {size?: standard (2048 px, or `edge`) | full (1:1), ids?, wait?: bool} — render the grid thumbnail and loupe view of the selected photos (else all in view) into the preview cache, in the background unless `wait` → {total, done, failed, running}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Build Previews"
+    },
+    {
+      "name": "cmd_library_previewProgress",
+      "description": "Preview Build Progress (command `library.previewProgress`). Params: {} → {total, done, failed, repaired, running, cancelled, what, error} | null.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Preview Build Progress"
+    },
+    {
+      "name": "cmd_library_cancelPreviews",
+      "description": "Cancel Preview Build (command `library.cancelPreviews`). Params: {}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Cancel Preview Build"
+    },
+    {
+      "name": "cmd_profile_import",
+      "description": "Import Profiles (command `profile.import`). Params: {paths: [.cube file, folder or .zip]} — 3D LUTs become creative profiles (Amount 0–200 %; rendered on the CPU) in the profile browser's groups (folder / zip name, else Imported) → {imported: [{id, name, group}], failed}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Import Profiles"
+    },
+    {
+      "name": "cmd_profile_deleteImported",
+      "description": "Delete Imported Profile (command `profile.deleteImported`). Params: {id: lut:…}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Delete Imported Profile"
+    },
+    {
+      "name": "cmd_library_findSimilar",
+      "description": "Find Similar Photos (command `library.findSimilar`). Params: {id?, similarity?: 0..1 (0.8), filter?: bool (true)} — photos that look like the active one (composition and tones), most similar first; filters the view to them (Clear Filters to go back) → {photos: [{id, similarity}]}. Menu: Photo.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Find Similar Photos"
+    },
+    {
+      "name": "cmd_photo_analyze",
+      "description": "Assisted Culling (command `photo.analyze`). Params: {ids?, rejectBelow?: sharpness 0..100, pickBest?: bool} — score the selected photos (else all in view) for focus (0..100) and clipping, group look-alike shots taken within 10 s and mark the sharpest of each; optionally reject blurry photos and pick each group's best; one undo step → {photos: [{id, sharpness, clipped, group, best}], groups, rejected, picked}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Assisted Culling"
+    },
+    {
+      "name": "cmd_photo_convertToDng",
+      "description": "Convert to DNG (command `photo.convertToDng`). Params: {ids?} — write each raw photo as a lossless DNG next to it (settings embedded) and relink the photo to it; originals are kept → {converted: [{id, path, original}], skipped}. Menu: Photo.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Convert to DNG"
+    },
+    {
+      "name": "cmd_photo_duplicate",
+      "description": "Duplicate (command `photo.duplicate`). Params: {ids?} — copy each photo's file next to it (`-copy`) and add it with the same settings, metadata and albums (a real file, unlike a virtual copy) → {ids}. Menu: Photo.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Duplicate"
+    },
+    {
+      "name": "cmd_photo_reload",
+      "description": "Reload from Disk (command `photo.reload`). Params: {ids?} — re-read photos whose files changed on disk (e.g. saved by an external editor), or raws shown from their embedded preview that can be decoded now → {reloaded}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Reload from Disk"
+    },
+    {
+      "name": "cmd_photo_editExternal",
+      "description": "Edit Copy for External Editor (command `photo.editExternal`). Params: {colorSpace?: adobeRgb (default) | proPhoto | displayP3 | srgb, dir?} — render the active photo with its edits as a 16-bit TIFF `<name>-Edit.tif` next to it, add it stacked on the original and select it → {path, id, original} (the app then opens it in the external editor).",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Edit Copy for External Editor"
+    },
+    {
+      "name": "cmd_merge_hdr",
+      "description": "HDR Merge (command `merge.hdr`). Params: {ids?, align=true, deghost=none|low|medium|high, autoSettings=true, stack=false, preview=false, showOverlay=false, previewPath?}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "HDR Merge"
+    },
+    {
+      "name": "cmd_merge_panorama",
+      "description": "Panorama Merge (command `merge.panorama`). Params: {ids?, projection=auto|spherical|cylindrical|perspective, boundaryWarp=0..100, autoCrop=false, fillEdges=false, autoSettings=true, stack=false, maxMegapixels=40, preview=false, previewPath?}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Panorama Merge"
+    },
+    {
+      "name": "cmd_merge_hdrPanorama",
+      "description": "HDR Panorama Merge (command `merge.hdrPanorama`). Params: {ids?, bracket=0 (auto from EXIF), align, deghost, projection, boundaryWarp, autoCrop, fillEdges, autoSettings, stack, preview, previewPath?}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "HDR Panorama Merge"
+    },
+    {
+      "name": "cmd_catalog_query",
+      "description": "Query Photos (command `catalog.query`). Params: {filter?: Filter, sort?: Sort, offset?, limit?} — omit filter to list the current view.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Query Photos"
+    },
+    {
+      "name": "cmd_catalog_stats",
+      "description": "Catalog Statistics (command `catalog.stats`). Params: {}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Catalog Statistics"
+    },
+    {
+      "name": "cmd_library_state",
+      "description": "Library State (command `library.state`). Params: {}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Library State"
+    },
+    {
+      "name": "cmd_photo_allMetadata",
+      "description": "All Metadata (command `photo.allMetadata`). Params: {id?} → {exif: [{group, tag, name, value}], xmp: [{name, value}]} — every EXIF / TIFF / GPS tag of the file and its XMP properties.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "All Metadata"
+    },
+    {
+      "name": "cmd_albums_list",
+      "description": "List Albums (command `albums.list`). Params: {}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "List Albums"
+    },
+    {
+      "name": "cmd_photo_inspect",
+      "description": "Inspect Photo (command `photo.inspect`). Params: {id?}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Inspect Photo"
+    },
+    {
+      "name": "cmd_develop_get",
+      "description": "Get Develop Settings (command `develop.get`). Params: {id?}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Get Develop Settings"
+    },
+    {
+      "name": "cmd_develop_controls",
+      "description": "List Develop Controls (command `develop.controls`). Params: {section?} — every slider with range, default and current value.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "List Develop Controls"
+    },
+    {
+      "name": "cmd_presets_list",
+      "description": "List Presets (command `presets.list`). Params: {}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "List Presets"
+    },
+    {
+      "name": "cmd_profiles_list",
+      "description": "List Profiles (command `profiles.list`). Params: {} — every profile with its group and favourite flag.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "List Profiles"
+    },
+    {
+      "name": "cmd_profiles_menu",
+      "description": "Profile Menu (command `profiles.menu`). Params: {} — favourites, recent (newest first) and groups.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Profile Menu"
+    },
+    {
+      "name": "cmd_history_list",
+      "description": "List History (command `history.list`). Params: {id?}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "List History"
+    },
+    {
+      "name": "cmd_app_gpu",
+      "description": "GPU Rendering (command `app.gpu`). Params: {enabled?: bool} — allow/forbid GPU rendering (CPU fallback; DAGUERRE_DEVELOP_GPU=0 forbids it for the process); returns {enabled, available, adapter, reason (why the GPU is off), lastFallback (latest render redone on the CPU, and why)}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "GPU Rendering"
+    },
+    {
+      "name": "cmd_library_memory",
+      "description": "Memory Usage (command `library.memory`). Params: {} — bytes held by each cache (decoded sources, rendered previews, GPU buffers; heap when instrumented).",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Memory Usage"
+    },
+    {
+      "name": "cmd_app_memoryBudget",
+      "description": "Memory Budget (command `app.memoryBudget`). Params: {mb?: number} — set the memory budget shared by the caches (default: a quarter of RAM, at most 1536 MB); returns the report.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Memory Budget"
+    },
+    {
+      "name": "cmd_journal_list",
+      "description": "Command Journal (command `journal.list`). Params: {limit?}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Command Journal"
+    },
+    {
+      "name": "cmd_photo_saveMetadataToFile",
+      "description": "Save Metadata to File (command `photo.saveMetadataToFile`). Params: {ids?} — writes each photo's XMP sidecar (metadata + develop settings) next to the original, merged into an existing one (other apps' data kept; an unreadable one is backed up first) → {written: [path], merged: [path], backups: [{path, backup}], failed}. Menu: Photo. Shortcut: Cmd+S.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Save Metadata to File"
+    },
+    {
+      "name": "cmd_photo_readMetadataFromFile",
+      "description": "Read Metadata from File (command `photo.readMetadataFromFile`). Params: {ids?} — reads each photo's XMP sidecar (or a raw/DNG's embedded XMP): metadata and develop settings, one undo step → {read, failed}. Menu: Photo.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Read Metadata from File"
+    },
+    {
+      "name": "cmd_library_xmpPreferences",
+      "description": "XMP Sidecar Preferences (command `library.xmpPreferences`). Params: {autoWrite?: bool, naming?: stem (IMG_1.xmp, default) | full (IMG_1.CR3.xmp)} → current preferences (saved with the library).",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "XMP Sidecar Preferences"
+    },
+    {
+      "name": "cmd_library_toggleAutoWriteXmp",
+      "description": "Automatically Write Changes into XMP (command `library.toggleAutoWriteXmp`). Params: {} → {autoWrite}. Menu: File.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Automatically Write Changes into XMP"
+    },
+    {
+      "name": "cmd_preset_import",
+      "description": "Import Presets (command `preset.import`). Params: {paths: [file or folder], group?, dryRun?} — .lcpreset, XMP presets, .lrtemplate, photos carrying edits (DNG/JPEG/TIFF \"DNG presets\"), Luminar looks (.lmp, .mplumpack collections) and .zip bundles of these; folders give their name as group; crs: fields mapped per docs/xmp-interop.md → {imported: [{id,name,group,file,unmapped}], skipped, failed}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Import Presets"
+    },
+    {
+      "name": "cmd_preset_export",
+      "description": "Export Presets (command `preset.export`). Params: {path, ids?: [presetId], group?: name} (default: all user presets) → {path, count}; writes a .lcpreset JSON file.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Export Presets"
+    },
+    {
+      "name": "cmd_library_preferences",
+      "description": "Library Preferences (command `library.preferences`). Params: {import?: {rawPreset?: presetId|\"default\", otherPreset?: presetId|\"default\", perCamera?: bool, cameras?: [{camera: \"Make Model\", preset: presetId|null}], copyright?: text, creator?: text (given to imported photos without one)}, camera?: {camera, preset?, remove?: bool}, cacheMb?: n (0 = default), forgetLocalDays?: n (forget untouched Local photos of folders not browsed for n days; 0 = never)} — develop defaults applied on import (raws / other images / per camera) and the thumbnail cache size, saved with the library → {xmp, import, cacheMb, forgetLocalDays, persistent}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Library Preferences"
+    },
+    {
+      "name": "cmd_export_presets",
+      "description": "Export Presets (command `export.presets`). Params: {} → [{name, builtin, params}] (use with app.export {preset: name, …overrides}).",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Export Presets"
+    },
+    {
+      "name": "cmd_export_savePreset",
+      "description": "Save Export Preset (command `export.savePreset`). Params: {name, params?: app.export params (default: the last export's)} — adds or replaces a user preset, saved with the library → presets.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Save Export Preset"
+    },
+    {
+      "name": "cmd_export_deletePreset",
+      "description": "Delete Export Preset (command `export.deletePreset`). Params: {name} — removes a user preset → presets.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Delete Export Preset"
+    },
+    {
+      "name": "cmd_export_checkTarget",
+      "description": "Check Output Path (command `export.checkTarget`). Params: {path} — fails when writing `path` would replace a photo's original (or its XMP sidecar) in the library; front ends call it before saving a render or screenshot to a user-given path → {path}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Check Output Path"
+    },
+    {
+      "name": "cmd_beforeAfter_setBefore",
+      "description": "Set Before (command `beforeAfter.setBefore`). Params: {source: import|current|history|version, index? (history step), name? (version)} — what the before side shows (this session).",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Set Before"
+    },
+    {
+      "name": "cmd_beforeAfter_copyAfterToBefore",
+      "description": "Copy After's Settings to Before (command `beforeAfter.copyAfterToBefore`). Params: {}. Menu: View › Before/After Settings.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Copy After's Settings to Before"
+    },
+    {
+      "name": "cmd_beforeAfter_copyBeforeToAfter",
+      "description": "Copy Before's Settings to After (command `beforeAfter.copyBeforeToAfter`). Params: {}. Menu: View › Before/After Settings.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Copy Before's Settings to After"
+    },
+    {
+      "name": "cmd_beforeAfter_swap",
+      "description": "Swap Before and After Settings (command `beforeAfter.swap`). Params: {}. Menu: View › Before/After Settings.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Swap Before and After Settings"
+    },
+    {
+      "name": "cmd_beforeAfter_resetBefore",
+      "description": "Reset Before to Import State (command `beforeAfter.resetBefore`). Params: {}. Menu: View › Before/After Settings.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Reset Before to Import State"
+    },
+    {
+      "name": "cmd_folder_rename",
+      "description": "Rename Folder (command `folder.rename`). Params: {path, name} — rename a folder on disk (its files and sidecars go along) and relink the photos in it; one undo step (undo renames it back, refused if the old name is taken) → {path, relinked}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Rename Folder"
+    },
+    {
+      "name": "cmd_folder_move",
+      "description": "Move Folder (command `folder.move`). Params: {path, into: destination folder} — move a folder on disk into another and relink the photos in it; one undo step (undo moves it back, refused if the old place is taken) → {path, relinked}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Move Folder"
+    },
+    {
+      "name": "cmd_library_browse",
+      "description": "Browse Folder (command `library.browse`). Params: {path, subfolders?: bool} — show a folder's photos without adding them to the library (they're read in place; edits go to XMP sidecars) → {path, photos, new}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Browse Folder"
+    },
+    {
+      "name": "cmd_library_forgetLocal",
+      "description": "Forget Unchanged Local Photos (command `library.forgetLocal`). Params: {dryRun?: bool, days?: n (default: the library preference, 0 = never)} — remove Local (browsed, not added) photos nobody changed, of folders not browsed for `days`, from the catalog; files and sidecars stay, browsing the folder again brings them back; not an undo step → {local, forgotten, keptRecent, keptTouched, keptInUse, foldersStamped, days, dryRun}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Forget Unchanged Local Photos"
+    },
+    {
+      "name": "cmd_photo_addToLibrary",
+      "description": "Add to My Photos (command `photo.addToLibrary`). Params: {ids?} — browsed (Local) photos join the library. Menu: Photo.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Add to My Photos"
+    },
+    {
+      "name": "cmd_library_missing",
+      "description": "Missing Photos (command `library.missing`). Params: {} → [{id, path}] — photos whose original file isn't where the library expects it.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Missing Photos"
+    },
+    {
+      "name": "cmd_photo_relink",
+      "description": "Locate Photo (command `photo.relink`). Params: {id?, path} — point a photo at its file's new location (undo never moves files).",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Locate Photo"
+    },
+    {
+      "name": "cmd_library_findMissing",
+      "description": "Find Missing Photos (command `library.findMissing`). Params: {folder} — relink every missing photo whose file is somewhere in the folder: same name and size (and content, when the library knows its hash), or — renamed — same size and content; or {found, missing, ambiguous} — relink what a search already found (the app searches on a worker thread; photos relinked meanwhile and files now in use are skipped) → {found: [{id, from, to, by: name|content}], missing, ambiguous: [{id, from, candidates}] (several same-name candidates and no hash to tell them apart: skipped)}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Find Missing Photos"
+    },
+    {
+      "name": "cmd_metadata_presets",
+      "description": "Metadata Presets (command `metadata.presets`). Params: {} → [{name, fields}].",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Metadata Presets"
+    },
+    {
+      "name": "cmd_metadata_savePreset",
+      "description": "Save Metadata Preset (command `metadata.savePreset`). Params: {name, fields?: {copyright?, copyrightStatus?: unknown|copyrighted|publicDomain, usageTerms?, copyrightUrl?, creator?, title?, caption?, location?, city?, state?, country?, keywords?: [..]}, only?: [field] (from the active photo when `fields` is absent; default the copyright fields, creator, place)} — adds or replaces.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Save Metadata Preset"
+    },
+    {
+      "name": "cmd_metadata_deletePreset",
+      "description": "Delete Metadata Preset (command `metadata.deletePreset`). Params: {name}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Delete Metadata Preset"
+    },
+    {
+      "name": "cmd_metadata_applyPreset",
+      "description": "Apply Metadata Preset (command `metadata.applyPreset`). Params: {name, ids?} — text fields replace, keywords are added; one undo step.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Apply Metadata Preset"
+    },
+    {
+      "name": "cmd_filter_presets",
+      "description": "Filter Presets (command `filter.presets`). Params: {} → [{name, filter}].",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Filter Presets"
+    },
+    {
+      "name": "cmd_filter_savePreset",
+      "description": "Save Filter Preset (command `filter.savePreset`). Params: {name} — the current filter (library.filter), saved with the library.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Save Filter Preset"
+    },
+    {
+      "name": "cmd_filter_applyPreset",
+      "description": "Apply Filter Preset (command `filter.applyPreset`). Params: {name} — replaces the current filter → {photos}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Apply Filter Preset"
+    },
+    {
+      "name": "cmd_filter_deletePreset",
+      "description": "Delete Filter Preset (command `filter.deletePreset`). Params: {name}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Delete Filter Preset"
+    },
+    {
+      "name": "cmd_app_export",
+      "description": "Export Now (command `app.export`). Params: {path?: output file (.jpg/.png/.tif/.webp/.avif/.dng) | dir?, ids?, format?: jpeg|png|tiff|webp|avif|dng|original, longEdge?|shortEdge?|width?|height?|megapixels?|percent? (default longEdge 3000; longEdge 0 = full size), dontEnlarge?, ppi?, quality?, limitKb?, colorSpace?, bitDepth?, sharpen?, metadata?, watermark?, naming?}.",
+      "inputSchema": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Export Now"
+    }
+  ],
+  "metadata_binary_sha256": "69a3d1a66bab187c1394ce8a47d8157ee050ad11494431b2dcdd45fd0459f85e"
+}

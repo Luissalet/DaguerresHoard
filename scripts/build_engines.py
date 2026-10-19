@@ -3,6 +3,7 @@ from pathlib import Path
 import argparse,hashlib,json,os,shutil,subprocess
 ROOT=Path(__file__).resolve().parents[1]
 def main():
+    os.environ.setdefault('CARGO_BUILD_JOBS','2')
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--debug',action='store_true')
     parser.add_argument('--engine',choices=('layers','develop','all'),default='all')
@@ -16,7 +17,7 @@ def main():
         name='daguerre-'+engine
         command=['cargo','+'+args.toolchain,'build','--locked','-p',name+'-cli','-p',name]
         if not args.debug:command.append('--release')
-        subprocess.run(command,cwd=source,check=True)
+        subprocess.run(command,cwd=source,check=True,creationflags=subprocess.CREATE_NO_WINDOW if os.name=='nt' else 0)
         target=Path(os.environ.get('CARGO_TARGET_DIR',source/'target')).resolve()/profile
         for binary in (name+'-cli',name):
             filename=binary+('.exe' if os.name=='nt' else '')

@@ -2,6 +2,15 @@
 
 # Daguerre's Hoard
 
+El estudio conserva Fotos, Layers y Develop e incorpora el editor vectorial completo
+en `/vector/`. Los dos módulos empiezan apagados: consultar herramientas no abre
+motores y activarlos no escanea carpetas, recupera trabajos ni conecta editores previos.
+Los proyectos comunes crean un documento vectorial editable desde una foto, conservan
+revisiones y añaden su PNG exportado a la biblioteca. El [manual del estudio](docs/STUDIO930.md)
+explica compilación, API/MCP, datos y límites de verificación. Texto y visión utilizan
+el modelo global configurado en Faustus; las opciones locales guardadas se conservan,
+pero no seleccionan un modelo alternativo.
+
 El visor permite [igualar exposición y color a una referencia](docs/REFERENCE_MATCHING.md),
 creando copias PNG de una foto o una serie. Interfaz, HTTP y MCP comparten la
 operación y los parámetros guardados; originales y recetas permanecen intactos.
@@ -13,8 +22,6 @@ originales, reapertura nativa y vista PNG. El contenido no compatible detiene
 la importación antes de escribir. Grupos, máscaras, ajustes, texto, efectos,
 rotación y escalado siguen sin equivalencia verificada; no se afirma paridad
 con Compositor. Véase [la guía de importación en español](docs/COMPOSITOR.es.md).
-
-### ¿Sigues teniendo la foto del perro en la playa del verano pasado?
 
 *Lleva el nombre de Louis Daguerre, cuyo daguerrotipo (1839) fue la primera fotografía práctica.*
 

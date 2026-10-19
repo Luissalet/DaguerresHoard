@@ -49,7 +49,9 @@ def test_put_backend_config_saves_overrides_and_never_returns_the_token(app_and_
     body = resp.json()
     assert body["token_set"] is True
     assert "ody_super_secret" not in resp.text
-    assert body["vision"]["url"] == "http://127.0.0.1:11434"
+    assert body["overrides"]["vision"]["url"] == "http://127.0.0.1:11434"
+    assert body["vision"]["state"] == "unavailable"
+    assert body["vision"]["url"] is None
     on_disk = (tmp_path / "data" / "backend.json").read_text(encoding="utf-8")
     assert "ody_super_secret" in on_disk  # persisted, just never served back
 

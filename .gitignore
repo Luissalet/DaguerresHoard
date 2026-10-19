@@ -15,3 +15,4 @@ test-results/
 /data-uxtest/
 /native/bin/
 /native/*/target/
+/daguerre_hoard/studio_ui/fonts/

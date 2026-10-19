@@ -17,7 +17,18 @@ class Settings:
     port: int = 5222
 
 
+_owner: Settings | None = None
+
+
+def configure_owner(value: Settings | None) -> None:
+    """One explicit owner per process; never mutate environment or user config."""
+    global _owner
+    _owner = value
+
+
 def settings() -> Settings:
+    if _owner is not None:
+        return _owner
     config_path = Path(os.environ.get("DURER_CONFIG", ROOT / "local-config.json"))
     data: dict = {}
     if config_path.exists():

@@ -38,6 +38,7 @@ def walk_images(
     excluded_globs: list[str] | None = None,
     skip_dirs: Iterable[Path] = (),
     extensions: set[str] | None = None,
+    min_size_bytes: int = MIN_FILE_SIZE_BYTES,
 ) -> Iterator[Path]:
     """Yield image file paths under root, in a stable order.
 
@@ -89,7 +90,7 @@ def walk_images(
             if _is_excluded(rel, excluded_globs) or _is_excluded(name, excluded_globs):
                 continue
             try:
-                if entry.stat().st_size < MIN_FILE_SIZE_BYTES:
+                if entry.stat().st_size < min_size_bytes:
                     continue
             except OSError:
                 continue

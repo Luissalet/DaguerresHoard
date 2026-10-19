@@ -113,7 +113,7 @@ export interface JobStats {
 export interface Job {
   id: string;
   kind: string;
-  status: "running" | "done" | "error" | "interrupted";
+  status: "running" | "done" | "error" | "interrupted" | "held";
   progress: number;
   message: string | null;
   stats: JobStats | null;

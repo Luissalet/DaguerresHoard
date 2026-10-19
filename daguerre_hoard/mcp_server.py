@@ -692,5 +692,41 @@ def image_import_compositor(source_path: str, preflight_only: bool = False) -> l
     return [_text(_call("image_import_compositor", {"source_path": source_path, "preflight_only": preflight_only}))]
 
 
+def _install_visual_catalog():
+    """Static owned contracts; connecting/discovery never starts a native app."""
+    from mcp.types import Tool, CallToolResult
+    catalog=json.loads(Path(__file__).with_name('studio-catalog.json').read_text(encoding='utf-8'))
+    photo_names={t['name'] for t in catalog['photos']}
+    @mcp._mcp_server.list_tools()
+    async def list_visual_tools():
+        return [Tool(**t) for group in catalog.values() for t in group]
+    @mcp._mcp_server.call_tool()
+    async def call_visual_tool(name,arguments):
+        if name in photo_names:
+            return await mcp.call_tool(name,arguments)
+        try:
+            async with httpx.AsyncClient(base_url=APP_URL,timeout=600,trust_env=False) as client:
+                response=await client.post('/api/agent/call',json={'name':name,'arguments':arguments},
+                    headers={'Authorization':'Bearer '+_token()})
+            if response.status_code>=500:
+                raise ToolError('outcome_unknown: native operation may have completed. Inspect saved state before retrying.')
+            if response.status_code>=400: raise ToolError(response.text)
+            result=response.json()
+            if isinstance(result,dict) and 'content' in result:
+                native=CallToolResult(**result)
+                if native.isError:
+                    raise ToolError('\n'.join(getattr(c,'text','') for c in native.content))
+                return native.content
+            return [TextContent(type='text',text=json.dumps(result,ensure_ascii=False))]
+        except (httpx.ConnectError,httpx.ConnectTimeout) as error:
+            raise ToolError(UNAVAILABLE) from error
+        except httpx.HTTPError as error:
+            raise ToolError('outcome_unknown: response lost after dispatch. Inspect saved state before retrying.') from error
+
+
+if os.environ.get('DAGUERRE_CATALOG_BUILD') != '1':
+    _install_visual_catalog()
+
+
 if __name__ == "__main__":
     main()

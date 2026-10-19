@@ -9,6 +9,8 @@ import ActivityPage from "./pages/ActivityPage";
 import AlbumsPage from "./pages/AlbumsPage";
 import DuplicatesPage from "./pages/DuplicatesPage";
 import LibraryPage from "./pages/LibraryPage";
+import Lightbox from "./components/Lightbox";
+import type { PhotoDetail } from "./types";
 import PlacesPage from "./pages/PlacesPage";
 import SearchPage from "./pages/SearchPage";
 import SettingsPage from "./pages/SettingsPage";
@@ -50,6 +52,8 @@ export default function App() {
   const [lang, setLang] = useState<Lang>(initialLang);
   const [theme, setTheme] = useState<Theme>(initialTheme);
   const [status, setStatus] = useState<LibraryStatus | null>(null);
+  const [linkedPhoto,setLinkedPhoto] = useState<PhotoDetail | null>(null);
+  useEffect(()=>{const id=new URLSearchParams(location.search).get('photo');if(id)api.getPhoto(id).then(setLinkedPhoto).catch(()=>{});},[]);
   const [platformIsWindows] = useState(() => navigator.userAgent.toLowerCase().includes("windows"));
 
   const t = dict[lang];
@@ -162,6 +166,7 @@ export default function App() {
           {page === "videos" && <VideosPage t={t} platformIsWindows={platformIsWindows} status={status} />}
           {page === "settings" && <SettingsPage t={t} status={status} onChanged={refreshStatus} />}
           {page === "activity" && <ActivityPage t={t} />}
+          {linkedPhoto && <Lightbox photos={[linkedPhoto]} index={0} onIndexChange={()=>{}} onClose={()=>setLinkedPhoto(null)} t={t} platformIsWindows={platformIsWindows} />}
         </main>
       </div>
     </div>

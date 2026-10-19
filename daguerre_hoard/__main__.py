@@ -10,7 +10,7 @@ from pathlib import Path
 
 import uvicorn
 
-from .api import create_app
+from .studio import create_app
 from .config import DEFAULT_PORT, resolve_data_dir
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -39,18 +39,7 @@ def main() -> None:
     data_dir.mkdir(parents=True, exist_ok=True)
     _setup_logging(data_dir / "logs")
 
-    static_dir = REPO_ROOT / "frontend" / "dist"
-    app = create_app(data_dir=data_dir, static_dir=static_dir if static_dir.exists() else None, port=args.port)
-
-    if args.demo:
-        from .demo import generate_demo_photos
-
-        photos_dir = data_dir / "photos"
-        generate_demo_photos(photos_dir)
-        lib = app.state.library
-        if not lib.list_roots():
-            root = lib.add_root(str(photos_dir), added_by="user")
-            lib.start_scan(root["id"])
+    app = create_app(data_dir,port=args.port,demo=args.demo)
 
     if not args.no_browser:
         url = f"http://127.0.0.1:{args.port}/"

@@ -2,15 +2,22 @@
 
 # Daguerre's Hoard
 
+The visual studio preserves Photos, Layers and Develop and incorporates the complete
+vector editor under `/vector/`. Both modules start OFF; discovery opens no engines
+and activation does not scan folders, recover prior jobs or attach old editor sessions.
+Common projects transfer a photo into an editable vector document, retain revisions,
+and export a PNG back into the photo library. See the [studio manual](docs/STUDIO930.md)
+for source builds, API/MCP operations, data layout and current verification limits.
+Text and vision use the configured Faustus global model; saved local model overrides
+remain readable but cannot select an inference fallback.
+
 The photo lightbox also [matches exposure and colour to a reference](docs/REFERENCE_MATCHING.md),
 creating PNG copies of the current photo or a series. UI, HTTP and MCP share the
 same operation and saved parameters; originals and retouch recipes stay intact.
 
-### Do you still have the photo of the dog on the beach from last summer?
-
 *Named after Louis Daguerre, whose 1839 daguerreotype was the first practical photograph.*
 
-**A private photo library that indexes your folders locally, understands what is in each picture, and hands a local AI model compact, honestly ranked text results -- plus one numbered contact sheet, only when the model can see images.**
+A local photo library with indexing, editing, vector illustration and ranked search.
 
 [Español](README.es.md) · [Quick start](#quick-start) · [Connect to Faustus](#connect-it-to-faustus) · [MCP reference](docs/MCP.md) · [Portfolio](https://luissalet.github.io/Portfolio/#projects)
 

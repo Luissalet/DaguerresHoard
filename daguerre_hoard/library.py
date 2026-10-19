@@ -26,7 +26,7 @@ from typing import Any
 from . import db as dbmod
 from .backend import Backend
 from .captions import DEFAULT_BASE_URL, DEFAULT_MODEL, LinkCaptioner
-from .config import EMBED_DIM, Settings
+from .config import EMBED_DIM, MIN_FILE_SIZE_BYTES, Settings
 from .contact_sheet import MAX_ITEMS as SHEET_MAX_ITEMS
 from .contact_sheet import ContactSheetItem, encode_jpeg_under, render_contact_sheet
 from .craft_engines import CraftEngines
@@ -166,6 +166,8 @@ def _parse_date_filter(name: str, value: Any) -> str:
 
 
 def select_embedder(settings: Settings) -> Embedder:
+    if settings.demo:
+        return FakeEmbedder()
     try:
         if ClipEmbedder.is_cached(settings.models_dir):
             return ClipEmbedder(settings.models_dir, local_only=True)
@@ -201,7 +203,7 @@ class Library(VideoMixin, EditsMixin):
         self.geocoder = ReverseGeocoder(settings.geodata_dir if (settings.geodata_dir / "cities1000.txt").exists() else None)
         self.jobs = JobManager(self._conns.get, recover=automatic)
         self.backend = Backend(settings.data_dir, self.conn)
-        self.craft_engines = CraftEngines(settings.data_dir, port=settings.port)
+        self.craft_engines = CraftEngines(settings.data_dir, port=settings.port, restore_editors=automatic)
         self._index_lock = threading.Lock()
         self._edits_lock = threading.RLock()
         self._init_videos()
@@ -218,6 +220,7 @@ class Library(VideoMixin, EditsMixin):
         if self._closed:
             return
         self.jobs.stop()
+        self.craft_engines.close()
         self.backend.close()
         self.vectors.close()
         self._conns.close_all()
@@ -348,7 +351,9 @@ class Library(VideoMixin, EditsMixin):
             if not root_path.is_dir():
                 record_error(root_path, "folder is not reachable (unplugged drive or renamed?)")
                 continue
-            for path in walk_images(root_path, json.loads(root["excluded_globs"]), skip_dirs=self._skip_dirs):
+            own_results = root_path.resolve().is_relative_to(self.settings.data_dir.resolve()/'studio-artifacts') and root_path.name=='photo-results'
+            for path in walk_images(root_path, json.loads(root["excluded_globs"]), skip_dirs=self._skip_dirs,
+                                    min_size_bytes=0 if own_results else MIN_FILE_SIZE_BYTES):
                 plan.append((root, path))
         stats["files_seen"] = len(plan)
         seen_paths = {str(p) for _, p in plan}

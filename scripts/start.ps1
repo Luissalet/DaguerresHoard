@@ -109,21 +109,13 @@ if ($installed -ne $lockHash) {
 }
 
 # 3) frontend ------------------------------------------------------------
-if (-not (Test-Path (Join-Path $RepoRoot "frontend\dist\index.html"))) {
+if (-not (Test-Path (Join-Path $RepoRoot "frontend\dist\index.html")) -or -not (Test-Path (Join-Path $RepoRoot "daguerre_hoard\studio_ui\fonts\cinzel-latin-400-normal.woff2"))) {
     if (-not (Get-Command npm -ErrorAction SilentlyContinue)) {
         Fail "the interface is not built and npm was not found. Install Node.js 22 and retry."
     }
     Write-Host "Building the interface..."
-    Push-Location (Join-Path $RepoRoot "frontend")
-    try {
-        # npm.cmd, not npm: the npm.ps1 shim misreads "& npm ci" as "pm ci".
-        & npm.cmd ci --no-audit --no-fund
-        if ($LASTEXITCODE -ne 0) { Fail "npm ci failed" }
-        & npm.cmd run build
-        if ($LASTEXITCODE -ne 0) { Fail "npm run build failed" }
-    } finally {
-        Pop-Location
-    }
+    & $VenvPython (Join-Path $RepoRoot "scripts\build_studio_assets.py")
+    if ($LASTEXITCODE -ne 0) { Fail "studio asset build failed" }
 }
 
 # 4) start in the background and wait for /api/health -------------------

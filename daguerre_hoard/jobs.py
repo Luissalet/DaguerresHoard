@@ -62,6 +62,7 @@ class JobManager:
         self._conn = conn
         self._lock = threading.RLock()
         self._threads: set[threading.Thread] = set()
+        self._active: set[str] = set()
         self._stopped = threading.Event()
         # A previous process may have died mid-job: its daemon thread is
         # gone, so a 'running' row would otherwise spin in the UI forever.
@@ -94,7 +95,9 @@ class JobManager:
         def runner():
             status, message = "done", None
             try:
-                fn(handle)
+                from .global_model import scope
+                with scope():
+                    fn(handle)
             except JobStopped as exc:
                 status, message = 'interrupted', str(exc)
             except Exception as exc:  # noqa: BLE001 - surfaced to the UI, not swallowed
@@ -114,9 +117,11 @@ class JobManager:
             conn.commit()
             with self._lock:
                 self._threads.discard(threading.current_thread())
+                self._active.discard(job_id)
 
         thread = threading.Thread(target=runner, name=f"daguerre-job-{kind}", daemon=True)
         self._threads.add(thread)
+        self._active.add(job_id)
         thread.start()
         return job_id
 
@@ -131,13 +136,20 @@ class JobManager:
 
     def get(self, job_id: str) -> dict | None:
         row = self._conn().execute("SELECT * FROM jobs WHERE id = ?", (job_id,)).fetchone()
-        return _row_to_dict(row) if row else None
+        return self._public(row) if row else None
+
+    def _public(self,row):
+        value=_row_to_dict(row)
+        with self._lock:
+            if value['status']=='running' and value['id'] not in self._active:
+                value.update(status='held',original_status='running',message='Previous lifetime; not resumed automatically.')
+        return value
 
     def list(self, limit: int = 10) -> list[dict]:
         rows = self._conn().execute(
             "SELECT * FROM jobs ORDER BY started_at DESC LIMIT ?", (max(1, min(int(limit), 100)),)
         ).fetchall()
-        return [_row_to_dict(r) for r in rows]
+        return [self._public(r) for r in rows]
 
     def running(self, kind: str | None = None) -> list[dict]:
         sql = "SELECT * FROM jobs WHERE status = 'running'"
@@ -145,4 +157,5 @@ class JobManager:
         if kind:
             sql += " AND kind = ?"
             params = (kind,)
-        return [_row_to_dict(r) for r in self._conn().execute(sql, params).fetchall()]
+        with self._lock:
+            return [_row_to_dict(r) for r in self._conn().execute(sql, params).fetchall() if r['id'] in self._active]

@@ -16,6 +16,15 @@ from daguerre_hoard.config import Settings
 from daguerre_hoard.embeddings import FakeEmbedder
 from daguerre_hoard.library import Library
 
+
+@pytest.fixture(autouse=True)
+def global_model_unavailable_without_explicit_inert_fixture(monkeypatch):
+    """Inherited fixtures must never query the actual Faustus descriptor."""
+    from daguerre_hoard import global_model
+    def unavailable(_config):
+        raise RuntimeError('Global model is inert in QA; provide an explicit test descriptor.')
+    monkeypatch.setattr(global_model,'descriptor',unavailable)
+
 _TAG_ID = {v: k for k, v in ExifTags.TAGS.items()}
 _GPS_TAG_ID = {v: k for k, v in ExifTags.GPSTAGS.items()}
 

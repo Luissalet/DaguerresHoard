@@ -24,7 +24,9 @@ class _Session:
 
 class NativeSessions:
     def __init__(self):
-        self.lock = threading.Lock()
+        self.lock = threading.RLock()
+        self.pending = set()
+        self.closing = False
         self.loop = None
         self.thread = None
         self.sessions: dict[str, _Session] = {}
@@ -34,6 +36,8 @@ class NativeSessions:
 
     def _ensure(self):
         with self.lock:
+            if self.closing:
+                raise RuntimeError('The illustration module is stopping.')
             if self.loop and self.thread and self.thread.is_alive():
                 return self.loop
             ready = threading.Event()
@@ -48,6 +52,8 @@ class NativeSessions:
                     task.cancel()
                 if pending:
                     loop.run_until_complete(asyncio.gather(*pending, return_exceptions=True))
+                loop.run_until_complete(loop.shutdown_asyncgens())
+                loop.run_until_complete(loop.shutdown_default_executor())
                 loop.close()
             self.thread = threading.Thread(target=run_loop, name="durer-durer-mcp", daemon=True)
             self.thread.start()
@@ -69,7 +75,15 @@ class NativeSessions:
                 "operation_id": operation_id, "project_id": project_id,
                 "state": "pending", "result": None, "error": None,
             }
-        future = asyncio.run_coroutine_threadsafe(self._execute(project_id, path, actions, new_document), loop)
+        with self.lock:
+            if self.closing:
+                raise RuntimeError('The illustration module is stopping.')
+            future = asyncio.run_coroutine_threadsafe(self._execute(project_id, path, actions, new_document), loop)
+            self.pending.add(future)
+        def completed(done):
+            with self.lock:
+                self.pending.discard(done)
+        future.add_done_callback(completed)
         try:
             result = future.result(timeout=timeout)
             with self.lock:
@@ -180,18 +194,33 @@ class NativeSessions:
             return await answer
 
     def close(self):
-        loop, thread = self.loop, self.thread
+        with self.lock:
+            self.closing = True
+            loop, thread = self.loop, self.thread
+            pending = tuple(self.pending)
         if not loop or not thread:
+            self.closing = False
             return
+        # A timed-out request may still own a native save. Never cancel/replay it
+        # or publish OFF until it has completed and its reconciliation has run.
+        for future in pending:
+            try:
+                future.result()
+            except Exception:
+                pass
         async def close_all():
             for sid, session in list(self.sessions.items()):
                 await session.queue.put(None)
                 await asyncio.gather(session.task, return_exceptions=True)
                 self.sessions.pop(sid, None)
-        asyncio.run_coroutine_threadsafe(close_all(), loop).result(timeout=20)
+        asyncio.run_coroutine_threadsafe(close_all(), loop).result()
         loop.call_soon_threadsafe(loop.stop)
-        thread.join(timeout=5)
-        self.loop = self.thread = None
+        thread.join()
+        with self.lock:
+            self.loop = self.thread = None
+            self.project_locks.clear()
+            self.connections.clear()
+            self.closing = False
 
     def reset(self, project_id: str):
         loop, thread = self.loop, self.thread
@@ -202,7 +231,7 @@ class NativeSessions:
             if session:
                 await session.queue.put(None)
                 await asyncio.gather(session.task, return_exceptions=True)
-        asyncio.run_coroutine_threadsafe(stop_one(), loop).result(timeout=20)
+        asyncio.run_coroutine_threadsafe(stop_one(), loop).result()
 
     def connect(self, project_id: str, address: str):
         self.reset(project_id)

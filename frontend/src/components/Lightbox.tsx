@@ -419,7 +419,7 @@ export default function Lightbox({ photos, index, onClose, onIndexChange, t, pla
               <button className="btn btn-block" onClick={() => api.imageOpenEditor(craftResult.id, craftResult.engine).catch((err) => setCraftError(errorText(err)))}>{t.craft_open_editor}</button>
               {craftResult.output_url && <img className="craft-result-preview" src={craftResult.output_url} alt={t.craft_view_export} />}
               {craftResult.preview_url && <img className="craft-result-preview" src={craftResult.preview_url} alt={t.craft_view_export} />}
-              {craftResult.native_format && <a className="link-btn" href={`/api/craft/artifacts/${craftResult.id}${craftResult.native_format}`} download>{t.craft_open_project}</a>}
+              {craftResult.native_format && <a className="link-btn" href={`/photos/api/craft/artifacts/${craftResult.id}${craftResult.native_format}`} download>{t.craft_open_project}</a>}
               {(craftResult.output_url || craftResult.preview_url) && <a className="link-btn" href={craftResult.output_url ?? craftResult.preview_url} target="_blank" rel="noreferrer">{t.craft_view_export}</a>}
             </div>
           )}

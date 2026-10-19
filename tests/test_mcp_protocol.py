@@ -95,7 +95,7 @@ async def test_mcp_adapter_over_stdio(running_app, tmp_path):
 
             tools = await session.list_tools()
             names = {t.name for t in tools.tools}
-            assert names == {
+            photo_names = {
                 "photos_search", "photos_similar", "photos_show", "photos_describe",
                 "photos_duplicates", "photos_timeline", "photos_library", "videos_list", "videos_describe",
                 "photos_add_folder", "photos_album", "photos_export", "photos_match_reference", "craft_engines",
@@ -103,12 +103,15 @@ async def test_mcp_adapter_over_stdio(running_app, tmp_path):
                 "craft_tools", "craft_call", "craft_develop_photo", "craft_create_layered_document", "craft_create_layered_photo", "craft_import_compositor",
                 "image_engines", "image_tools", "image_call", "image_develop_photo", "image_create_layered_document", "image_create_layered_photo", "image_import_compositor", "image_open_editor",
             }
-            for tool in tools.tools:
+            frozen = json.loads((REPO_ROOT / 'daguerre_hoard/studio-catalog.json').read_text(encoding='utf-8'))
+            assert names == {t['name'] for group in frozen.values() for t in group}
+            assert photo_names <= names
+            for tool in (t for t in tools.tools if t.name in photo_names):
                 assert "Keywords:" in tool.description, tool.name
                 assert tool.annotations is not None and tool.annotations.openWorldHint is False, tool.name
                 assert tool.annotations.destructiveHint is False, tool.name
-            read_only = {t.name for t in tools.tools if t.annotations.readOnlyHint}
-            assert read_only == names - {
+            read_only = {t.name for t in tools.tools if t.name in photo_names and t.annotations.readOnlyHint}
+            assert read_only == photo_names - {
                 "photos_add_folder", "photos_album", "photos_export", "photos_match_reference", "craft_call",
                 "photos_set_edits", "photos_sidecar",
                 "craft_develop_photo", "craft_create_layered_document", "craft_create_layered_photo", "craft_import_compositor",

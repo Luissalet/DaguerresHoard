@@ -69,7 +69,10 @@ def test_set_overrides_persists_and_never_leaks_the_token(tmp_path):
         status = backend.status()
         assert "ody_secret" not in json.dumps(status)  # never surfaced through status()
         assert status["token_set"] is True
-        assert status["llm"]["url"] == "http://127.0.0.1:8081"
+        assert status["overrides"]["llm"]["url"] == "http://127.0.0.1:8081"
+        # Saved legacy configuration cannot select the effective global model.
+        assert status["llm"]["state"] == "unavailable"
+        assert status["llm"]["url"] is None
     finally:
         backend.link.sync.close()
 
@@ -110,6 +113,24 @@ def _sync_threads() -> int:
     import threading
 
     return sum(1 for t in threading.enumerate() if t.name == "hoard-link-sync" and t.is_alive())
+
+
+def test_status_does_not_probe_unused_modalities(tmp_path, monkeypatch):
+    settings, conn = _conn(tmp_path)
+    backend = Backend(settings.data_dir, conn)
+    original = backend.link.sync.resolve
+    calls = []
+    def resolve(capability):
+        calls.append(capability)
+        assert capability in ("llm", "vision")
+        return original(capability)
+    monkeypatch.setattr(backend.link.sync, "resolve", resolve)
+    try:
+        status = backend.status()
+        assert calls == ["llm", "vision"]
+        assert status["image"]["details"] == {"used": False}
+    finally:
+        backend.close()
 
 
 def test_reload_retires_the_old_link_instead_of_leaking_its_thread(tmp_path, monkeypatch):

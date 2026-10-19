@@ -20,6 +20,13 @@ from .config import ROOT, settings
 _gui_processes: dict[str, tuple[subprocess.Popen, str]] = {}
 
 
+def close_guis():
+    from ....native_gui import close_owned
+    for project,(process,_address) in list(_gui_processes.items()):
+        close_owned(process)
+        _gui_processes.pop(project,None)
+
+
 def failed_results(results: list[dict[str, Any]]) -> bool:
     """Keep native failure flags visible across the outer MCP/HTTP response."""
     return any(row.get("is_error") is True or

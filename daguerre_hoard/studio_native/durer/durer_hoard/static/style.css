@@ -9,3 +9,5 @@
 
 .canvas-fields{display:grid;grid-template-columns:1fr 1fr;gap:12px}.canvas-fields.hidden{display:none}.canvas-unit-field{grid-column:1/-1}.canvas-fields select{width:100%;padding:12px;border:1px solid var(--line);border-radius:8px;background:#fff}.canvas-unit-note{grid-column:1/-1;color:var(--muted);font-size:10px;margin-top:-5px}
 @media(max-width:640px){.workspace-actions{flex-wrap:wrap;overflow-x:visible}.workspace-head>div{min-width:0;max-width:100%}.project-meta{overflow-wrap:anywhere}}
+
+:root{--serif:Cinzel,serif;--sans:"Source Sans 3",sans-serif;--green:#0d7c80;--green-dark:#0d7c80;--sage:#12a4a81a}:root[data-theme="dark"]{--ink:#e1ebec;--muted:#b4bdbe;--paper:#141c1c;--panel:#1b2425;--line:#354243;--sage:#242f30;--green:#45bccb;--green-dark:#65c7d4}.topbar{background:var(--panel)}

@@ -31,3 +31,13 @@ def test_close_joins_a_held_job_before_closing_database(tmp_path):
     release.set()
     closing.join(3)
     assert not closing.is_alive() and finished.is_set() and library._closed
+
+
+def test_previous_running_job_is_held_without_recovery_writes(tmp_path):
+    library=Library(Settings(tmp_path),embedder=FakeEmbedder(),automatic=False)
+    library.conn.execute("INSERT INTO jobs(id,kind,status,progress,message,started_at) VALUES('old','index','running',0,'old','then')")
+    library.conn.commit()
+    assert library.jobs.get('old')['status']=='held'
+    assert library.jobs.running()==[]
+    assert library.conn.execute("SELECT status FROM jobs WHERE id='old'").fetchone()['status']=='running'
+    library.close()

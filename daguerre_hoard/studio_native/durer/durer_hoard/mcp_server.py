@@ -91,12 +91,12 @@ async def list_tools():
 
 
 @server.call_tool()
-async def call_tool(name: str, arguments: dict[str, Any]):
+async def call_tool(name: str, arguments: dict[str, Any], *, owned: bool = False):
     try:
         # Existing installations keep their historical tool names; preferred names are owned.
         if name.startswith("durer_"):
             name = "vectorcraft_" + name[len("durer_"):]
-        proxied = await _running_app_call(name, arguments)
+        proxied = None if owned else await _running_app_call(name, arguments)
         if proxied is not None:
             return proxied
         if name == "vectorcraft_catalog":

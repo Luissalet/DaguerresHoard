@@ -119,7 +119,7 @@ export default function TimelinePage({ t, platformIsWindows }: Props) {
                     <button className="month-card" key={m} onClick={() => setMonth({ year, month: m })}>
                       <div className={`month-mosaic n${Math.min(samples.length, 4)}`}>
                         {samples.slice(0, 4).map((id) => (
-                          <img key={id} src={`/api/photos/${id}/thumbnail`} alt="" loading="lazy" />
+                          <img key={id} src={`/photos/api/photos/${id}/thumbnail`} alt="" loading="lazy" />
                         ))}
                       </div>
                       <div className="month-label">

@@ -12,7 +12,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any, Literal
 
-from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi import APIRouter, FastAPI, File, HTTPException, UploadFile
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
@@ -24,45 +24,9 @@ from .sessions import sessions
 from .thumbnails import thumbnail as gallery_thumbnail
 from . import store
 
-try:
-    from hoard_link import family as hoard_family
-    from hoard_link import guard as hoard_guard
-    HOARDLINK_AVAILABLE = True
-except ImportError:
-    hoard_family = None
-    hoard_guard = None
-    HOARDLINK_AVAILABLE = False
-
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    settings().data_dir.mkdir(parents=True, exist_ok=True)
-    if hoard_family:
-        from hoard_link.tokens import read_or_create_token
-        read_or_create_token(settings().data_dir / "mcp-token")
-        hoard_family.configure("durer", str(settings().data_dir))
-    yield
-    sessions.close()
-
-
-app = FastAPI(title="Dürer's Hoard", version="0.1.0", lifespan=lifespan)
-app.mount("/static", StaticFiles(directory=ROOT / "durer_hoard" / "static"), name="static")
-if hoard_family:
-    hoard_family.install_fastapi(app, "durer", str(settings().data_dir), contract=True,
-                                  instructions="Persistent local Dürer illustration projects. Native tools and commands are fully discoverable.")
-if hoard_guard:
-    hoard_guard.install_guard(app, port_getter=lambda: settings().port)
-
-COPILOT_INSTALLED = False
-if hoard_family and os.environ.get("HOARD_COPILOT", "1").strip().lower() not in ("0", "false", "no", "off"):
-    # The Faustus copilot: a floating button and side panel on every page, relayed through this app (Hoard Link's
-    # install_copilot). A Hoard Link without it, or without httpx, leaves the app as it was.
-    try:
-        from hoard_link.copilot import install_copilot
-        install_copilot(app, "durer", str(settings().data_dir), app_name="Dürer's Hoard")
-        COPILOT_INSTALLED = True
-    except Exception:  # noqa: BLE001 - the copilot is an addition, never a reason for the editor not to start
-        logging.getLogger("durer_hoard").warning("Faustus copilot not installed", exc_info=True)
+router = APIRouter()
+COPILOT_INSTALLED = True
+HOARDLINK_AVAILABLE = True
 
 
 class CreateRequest(BaseModel):
@@ -90,12 +54,12 @@ def _project(project_id: str):
         raise HTTPException(404, str(exc)) from exc
 
 
-@app.get("/", response_class=HTMLResponse)
+@router.get("/", response_class=HTMLResponse)
 def index():
     return (ROOT / "durer_hoard" / "static" / "index.html").read_text(encoding="utf-8")
 
 
-@app.get("/api/health")
+@router.get("/api/health")
 def health():
     configured = ROOT / "native/bin" / ("durer-cli.exe" if os.name == "nt" else "durer-cli")
     gui = gui_executable()
@@ -103,10 +67,10 @@ def health():
             "engine_configured": bool(configured and configured.is_file()),
             "gui_configured": bool(gui and gui.is_file()),
             "engine_path": str(configured) if configured else None, "data_dir": str(settings().data_dir),
-            **(hoard_family.health_block() if hoard_family else {})}
+            }
 
 
-@app.get("/api/catalog")
+@router.get("/api/catalog")
 def get_catalog():
     try:
         return catalog()
@@ -114,12 +78,12 @@ def get_catalog():
         raise HTTPException(503, f"Native engine discovery failed: {exc}") from exc
 
 
-@app.get("/api/engine/catalog")
+@router.get("/api/engine/catalog")
 def engine_catalog():
     return get_catalog()
 
 
-@app.get("/api/operations/{operation_id}")
+@router.get("/api/operations/{operation_id}")
 def operation(operation_id: str):
     record = sessions.operation(operation_id)
     if not record:
@@ -127,12 +91,12 @@ def operation(operation_id: str):
     return record
 
 
-@app.get("/api/illustrations")
+@router.get("/api/illustrations")
 def illustrations():
     return store.list_projects()
 
 
-@app.post("/api/illustrations")
+@router.post("/api/illustrations")
 def new_illustration(payload: CreateRequest):
     try:
         canvas, native_canvas = store.canvas_settings(payload.width, payload.height, payload.units)
@@ -144,7 +108,7 @@ def new_illustration(payload: CreateRequest):
         raise HTTPException(503, str(exc)) from exc
 
 
-@app.post("/api/illustrations/import")
+@router.post("/api/illustrations/import")
 async def import_illustration(title: str, file: UploadFile = File(...)):
     filename = Path(file.filename or "source").name
     suffix = Path(filename).suffix.lower()
@@ -171,13 +135,13 @@ async def import_illustration(title: str, file: UploadFile = File(...)):
         staged.unlink(missing_ok=True)
 
 
-@app.get("/api/illustrations/{project_id}")
+@router.get("/api/illustrations/{project_id}")
 def illustration(project_id: str):
     item, _ = _project(project_id)
     return item
 
 
-@app.post("/api/illustrations/{project_id}/actions")
+@router.post("/api/illustrations/{project_id}/actions")
 def actions(project_id: str, payload: ActionsRequest):
     item, root = _project(project_id)
     try:
@@ -188,7 +152,7 @@ def actions(project_id: str, payload: ActionsRequest):
         raise HTTPException(502, f"Dürer action failed: {exc}") from exc
 
 
-@app.post("/api/illustrations/{project_id}/export")
+@router.post("/api/illustrations/{project_id}/export")
 def export(project_id: str, payload: ExportRequest):
     _, root = _project(project_id)
     fmt = payload.format.lower().lstrip(".")
@@ -209,7 +173,7 @@ def export(project_id: str, payload: ExportRequest):
         raise HTTPException(502, f"Native export failed: {exc}") from exc
 
 
-@app.get("/api/illustrations/{project_id}/files/{area}/{filename}")
+@router.get("/api/illustrations/{project_id}/files/{area}/{filename}")
 def file(project_id: str, area: str, filename: str):
     _, root = _project(project_id)
     if area not in {"exports", "sources"} or Path(filename).name != filename:
@@ -220,7 +184,7 @@ def file(project_id: str, area: str, filename: str):
     return FileResponse(target, filename=target.name)
 
 
-@app.get("/api/illustrations/{project_id}/preview")
+@router.get("/api/illustrations/{project_id}/preview")
 def preview(project_id: str):
     _, root = _project(project_id)
     path = root / "exports" / f"preview-{uuid.uuid4().hex}.png"
@@ -236,7 +200,7 @@ def preview(project_id: str):
         raise HTTPException(502, f"Preview render failed: {exc}") from exc
 
 
-@app.get("/api/illustrations/{project_id}/thumbnail")
+@router.get("/api/illustrations/{project_id}/thumbnail")
 def thumbnail(project_id: str, refresh: bool = False):
     _, root = _project(project_id)
     try:
@@ -249,7 +213,7 @@ def thumbnail(project_id: str, refresh: bool = False):
         raise HTTPException(502, f"Thumbnail render failed: {exc}") from exc
 
 
-@app.get("/api/illustrations/{project_id}/native")
+@router.get("/api/illustrations/{project_id}/native")
 def native_file(project_id: str):
     _, root = _project(project_id)
     path = root / "project.durer"
@@ -260,7 +224,7 @@ def native_file(project_id: str):
     return FileResponse(path, filename=f"{project_id}.durer")
 
 
-@app.post("/api/illustrations/{project_id}/open-gui")
+@router.post("/api/illustrations/{project_id}/open-gui")
 def open_gui(project_id: str):
     _, root = _project(project_id)
     try:
@@ -274,7 +238,7 @@ def open_gui(project_id: str):
         raise HTTPException(502, f"Could not open Dürer desktop: {exc}") from exc
 
 
-@app.post("/api/native/dispatch")
+@router.post("/api/native/dispatch")
 def raw_dispatch(payload: ActionsRequest):
     """One-shot full native bridge; persistent editing should use the project endpoint."""
     try:
@@ -286,5 +250,35 @@ def raw_dispatch(payload: ActionsRequest):
 from . import agent_tools
 for _tool_name in ("illustration_list", "illustration_create", "illustration_inspect",
                    "illustration_native_call", "illustration_export", "vectorcraft_catalog"):
-    app.add_api_route("/api/agent/" + _tool_name, getattr(agent_tools, _tool_name), methods=["POST"])
-app.add_api_route("/api/agent/durer_catalog", agent_tools.vectorcraft_catalog, methods=["POST"])
+    router.add_api_route("/api/agent/" + _tool_name, getattr(agent_tools, _tool_name), methods=["POST"])
+router.add_api_route("/api/agent/durer_catalog", agent_tools.vectorcraft_catalog, methods=["POST"])
+
+
+def create_app(config):
+    """Fresh native UI/API; the owner supplies paths before any request starts."""
+    from .config import configure_owner
+    from ....hoard_link import family, guard
+    from ....hoard_link.tokens import read_or_create_token
+    from ....hoard_link.copilot import install_copilot
+    configure_owner(config)
+    @asynccontextmanager
+    async def lifetime(app):
+        await asyncio.to_thread(config.data_dir.mkdir, parents=True, exist_ok=True)
+        await asyncio.to_thread(read_or_create_token, config.data_dir/'mcp-token')
+        try:
+            yield
+        finally:
+            await asyncio.to_thread(sessions.close)
+            from .native import close_guis
+            await asyncio.to_thread(close_guis)
+    app = FastAPI(title='Daguerre · Vector',version='0.1.0',lifespan=lifetime)
+    app.include_router(router)
+    app.mount('/static',StaticFiles(directory=ROOT/'durer_hoard'/'static'),name='static')
+    family.install_fastapi(app,'durer',str(config.data_dir),contract=True,
+        instructions='Owned vector projects, complete native tools and command registry. Activate explicitly.')
+    # The SDK's event identity is process-wide. Both modules belong to this
+    # owner; native contract closures still retain their own token directory.
+    family.configure('daguerre',str(config.data_dir.parent))
+    guard.install_guard(app,port_getter=lambda:config.port)
+    install_copilot(app,'durer',str(config.data_dir),app_name="Daguerre's Hoard")
+    return app

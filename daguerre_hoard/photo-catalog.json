@@ -1,0 +1,1184 @@
+[
+  {
+    "name": "photos_search",
+    "description": "Find photos by what they show (query in English) or by date and place. Buscar fotos, fotos de.\n\nFind the owner's photos by what they show; write `query` in English.\n\nDescribe the photo (\"dog on a beach\", \"whiteboard\") and put time and\nplace in the filters. Leave `query` out for \"every photo of that trip\":\nfilters alone give a plain listing, newest first.\nReturns {returned, indexed_total, has_more, next_offset?, note?,\nresults:[{n, id, path, taken_at, place, width, height, score,\nrelevance}]}. A result that is a key frame of a video also carries\nvideo_id, timestamp (\"01:23\"), frame_ts (seconds), video_name and `path`\n= the video; call videos_describe(video_id) for its other frames. Results are ranked, not matched: `indexed_total` counts\nevery photo that passed the filters, never \"N matches\". Judge each hit\nby `relevance` (strong/medium/weak) and read `note`.\nFilters (AND): taken_after/taken_before (ISO date, inclusive), year,\nmonth (1-12), place (city, parent city or country), folder and camera\n(substrings), orientation, min_megapixels, has_gps, frames (video key\nframes: text queries include them by default; \"only\" = just frames,\n\"exclude\" = just photos; listings without a query exclude them). limit 1-50 (default\n12); page on with offset=next_offset. contact_sheet=true attaches one\nnumbered JPEG: only if you can see images, never in a text-only turn.\nKeywords: search photos, find pictures, photo of, all photos from,\nbuscar fotos, busca la foto, fotos de, todas las fotos\n",
+    "inputSchema": {
+      "properties": {
+        "query": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Query"
+        },
+        "taken_after": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Taken After"
+        },
+        "taken_before": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Taken Before"
+        },
+        "year": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Year"
+        },
+        "month": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Month"
+        },
+        "place": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Place"
+        },
+        "folder": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Folder"
+        },
+        "camera": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Camera"
+        },
+        "orientation": {
+          "anyOf": [
+            {
+              "enum": [
+                "landscape",
+                "portrait"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Orientation"
+        },
+        "min_megapixels": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Min Megapixels"
+        },
+        "has_gps": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Has Gps"
+        },
+        "frames": {
+          "anyOf": [
+            {
+              "enum": [
+                "include",
+                "exclude",
+                "only"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Frames"
+        },
+        "limit": {
+          "default": 12,
+          "title": "Limit",
+          "type": "integer"
+        },
+        "offset": {
+          "default": 0,
+          "title": "Offset",
+          "type": "integer"
+        },
+        "min_score": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Min Score"
+        },
+        "contact_sheet": {
+          "default": false,
+          "title": "Contact Sheet",
+          "type": "boolean"
+        }
+      },
+      "title": "photos_searchArguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "photos_similar",
+    "description": "Photos that look like a given one: same scene, trip or retakes. Fotos parecidas, similares.\n\nFind photos that look like a given photo (same scene, same trip, retakes).\n\nPass `photo_id` (an id from another Daguerre result; preferred) or the\nphoto's absolute `path`. Returns {returned, indexed_total, has_more,\nnext_offset?, results:[{n, id, path, taken_at, place, score,\nrelevance}]} nearest first (the photo itself excluded). `limit`: 1-50,\ndefault 12 (clamped if higher, and the result says so); `offset` pages\npast it. Set `contact_sheet=true` only if you can see images (a\nmultimodal turn) -- it attaches one numbered contact-sheet image; a\ntext-only model must never set it and should rely on `relevance` instead.\nKeywords: similar photos, more like this, looks like, same place, fotos\nparecidas, similares a esta, más como esta, fotos iguales\n",
+    "inputSchema": {
+      "properties": {
+        "photo_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Photo Id"
+        },
+        "path": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Path"
+        },
+        "limit": {
+          "default": 12,
+          "title": "Limit",
+          "type": "integer"
+        },
+        "offset": {
+          "default": 0,
+          "title": "Offset",
+          "type": "integer"
+        },
+        "min_score": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Min Score"
+        },
+        "contact_sheet": {
+          "default": false,
+          "title": "Contact Sheet",
+          "type": "boolean"
+        }
+      },
+      "title": "photos_similarArguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "photos_show",
+    "description": "Show up to 4 photos to a model that can see images (multimodal only). Enseñar fotos, ver foto.\n\nOnly if you can see images (a multimodal turn): look at up to 4 photos\nin detail (one image each, long side `size` px).\n\nA text-only model must never call this -- an image in its context fails\nthe turn; rely on `relevance`, `place`, `taken_at` and `caption_match`\nfrom photos_search/photos_similar instead. Use this after those tools\nwhen a contact-sheet cell is too small to be sure what it shows. `ids`\nare photo ids; only the first 4 are used. `size`: 128-1024, default 768;\neach image is at most ~200 KB. Returns {shown:[{id, path, taken_at}],\nnot_found, ...} and the images in the same order.\nKeywords: show me the photo, look at this photo, open photo, zoom in,\nmuéstrame la foto, enséñame la foto, mira esta foto, ver foto\n",
+    "inputSchema": {
+      "properties": {
+        "ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Ids",
+          "type": "array"
+        },
+        "size": {
+          "default": 768,
+          "title": "Size",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "ids"
+      ],
+      "title": "photos_showArguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "photos_describe",
+    "description": "Everything about one photo: date, place, camera, EXIF, path. Detalles de una foto.\n\nEverything Daguerre knows about one photo: date, place, camera, EXIF, path.\n\nReturns {id, path, taken_at, date_source (\"exif\" or \"file_mtime\"), place,\ncity, country, gps_lat, gps_lon, make, model, lens, f_number,\nexposure_time, iso, width, height, caption} (fields without data are\nleft out). caption=true asks the owner's local Ollama vision model for a\none-sentence caption if the photo has none yet, and saves it in Daguerre's\nown database for future searches; the photo file is never touched. If\nOllama is not available you get `caption_error` instead.\nKeywords: photo details, exif, when was it taken, where was it taken,\ncamera, describe photo, datos de la foto, cuándo se hizo, dónde se hizo,\nqué cámara, describe la foto\n",
+    "inputSchema": {
+      "properties": {
+        "photo_id": {
+          "title": "Photo Id",
+          "type": "string"
+        },
+        "caption": {
+          "default": false,
+          "title": "Caption",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "photo_id"
+      ],
+      "title": "photos_describeArguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "videos_list",
+    "description": "List the owner's indexed videos with their duration and key-frame count. Listar videos de la fototeca.\n\nVideos found in the photo folders, newest first: {count, returned,\nhas_more, next_offset?, note?, results:[{id, path, name, taken_at,\nduration, duration_label, width, height, frame_count, status}]}.\n`status` is \"ok\", \"no_extractor\" (ffmpeg missing: no frames) or \"error\".\n`folder` is a substring of the path; `limit` 1-200 (default 20); page on\nwith offset=next_offset. Pass an `id` to videos_describe to see the key\nframes and their timestamps. Videos are never modified.\nKeywords: list videos, my videos, clips, video library, listar videos,\nmis videos, videos de la fototeca\n",
+    "inputSchema": {
+      "properties": {
+        "folder": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Folder"
+        },
+        "limit": {
+          "default": 20,
+          "title": "Limit",
+          "type": "integer"
+        },
+        "offset": {
+          "default": 0,
+          "title": "Offset",
+          "type": "integer"
+        }
+      },
+      "title": "videos_listArguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "videos_describe",
+    "description": "One video and its key frames with timestamps. Detalles de un video y sus fotogramas.\n\nEverything Daguerre knows about one video: {id, path, name, taken_at,\nduration, duration_label, width, height, frame_count, status, error?,\nframes:[{id, ts (seconds), timestamp (\"01:23\"), width, height, caption}]}\nin time order. Each frame `id` works in photos_show (to look at it),\nphotos_describe, photos_similar and photos_album. Frames are picked at\nscene changes plus one every ~30 s, up to 48 per video, so a frame is\nwhere something changes, not a continuous transcript: say which timestamp\nyou looked at. `frames_limit` caps the list (has_more_frames tells).\nKeywords: video frames, key frames, scenes of a video, timestamp in video,\nfotogramas de un video, escenas, minuto del video\n",
+    "inputSchema": {
+      "properties": {
+        "video_id": {
+          "title": "Video Id",
+          "type": "string"
+        },
+        "frames_limit": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Frames Limit"
+        }
+      },
+      "required": [
+        "video_id"
+      ],
+      "title": "videos_describeArguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "photos_duplicates",
+    "description": "Groups of duplicate photos with the copy to keep; never deletes. Fotos duplicadas, repetidas.\n\nGroups of duplicate photos with a suggested copy to keep. Never deletes anything.\n\nkind=\"exact\": byte-identical copies. kind=\"near\": look-alikes (the same\npicture resized or re-encoded, a burst) -- a near group can also join\ndifferent photos, so its bytes are an upper bound (read the `note`) and\nthe owner must check each group. Groups come largest wasted space\nfirst: {total_groups, has_more, reclaimable_bytes_total, groups:[{\nkeeper_id, keeper_path, count, max_distance, reclaimable_bytes,\nother_paths (up to 3), more_paths?}]}, keeper picked by largest\nresolution, then oldest, then earliest file time, away from a folder\nthat looks like a backup/copy/WhatsApp, then shortest path. Set\n`include_ids=true` only if you need every photo's id (e.g. to build an\nalbum from a group) -- each group then also carries `photo_ids`.\nlimit: 1-50 groups, default 10. Deleting is for the owner to do in\ntheir file manager; never claim you removed files.\nKeywords: duplicate photos, repeated pictures, copies, free up space,\nfotos duplicadas, fotos repetidas, copias, liberar espacio\n",
+    "inputSchema": {
+      "properties": {
+        "kind": {
+          "default": "exact",
+          "enum": [
+            "exact",
+            "near"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "limit": {
+          "default": 10,
+          "title": "Limit",
+          "type": "integer"
+        },
+        "include_ids": {
+          "default": false,
+          "title": "Include Ids",
+          "type": "boolean"
+        }
+      },
+      "title": "photos_duplicatesArguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "photos_timeline",
+    "description": "Photos per year and month, and on this day in past years. Fotos por año, tal día como hoy.\n\nHow many photos were taken per year and month, and \"on this day\" in past years.\n\nWithout `year`: {years:{\"2024\": 812, ...}, months:{\"2024\":{\"03\": 40,...}},\non_this_day:[{id, taken_at, place}] (max 10), on_this_day_count}. With\n`year`: only that year's months and total. Use it to answer \"when did I\ntake most photos\" or to pick a date range before photos_search.\nKeywords: photo timeline, how many photos, per year, on this day,\ncronología de fotos, cuántas fotos, por año, un día como hoy, tal día como hoy\n",
+    "inputSchema": {
+      "properties": {
+        "year": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Year"
+        }
+      },
+      "title": "photos_timelineArguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "photos_library",
+    "description": "Photo library status: folders, count, model, running jobs. Estado de la fototeca.\n\nStatus of the photo library: folders, photo count, model, running jobs.\n\nCall it first when unsure whether anything is indexed, when a search\ncomes back empty, or to follow a scan started by photos_add_folder.\nReturns {roots:[{id, path, photo_count, exists}], photo_count, indexing,\nembedder:{name, semantic, stale_photos}, geocoder_source, recent_jobs}.\n`semantic: false` means content search is not available yet.\nKeywords: photo library status, is it indexed, how many photos, scan\nprogress, estado de la biblioteca de fotos, está indexado, progreso\n",
+    "inputSchema": {
+      "properties": {},
+      "title": "photos_libraryArguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "photos_add_folder",
+    "description": "Add a folder of photos and index it in the background (write). Añadir carpeta de fotos.\n\nAdd a folder of photos to the library and start indexing it in the background.\n\nOnly when the owner asks to include a folder and gives its absolute path\n(e.g. C:\\Users\\name\\Pictures\\2024). Adding the same folder again just\nrescans it. Returns {root:{id, path}, job_id}; poll photos_library for\nprogress. You cannot remove folders: that is the owner's decision in the\nDaguerre Settings screen.\nKeywords: index this folder, add photo folder, scan folder, indexar esta\ncarpeta, añade esta carpeta, añadir carpeta de fotos, escanear carpeta\n",
+    "inputSchema": {
+      "properties": {
+        "path": {
+          "title": "Path",
+          "type": "string"
+        }
+      },
+      "required": [
+        "path"
+      ],
+      "title": "photos_add_folderArguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "photos_album",
+    "description": "Create an album or add photos to one (write). Crear álbum, añadir al álbum.\n\nCreate an album, or add photos to an existing album with that name (case-insensitive).\n\nNon-destructive: photos are referenced, never copied or moved, and this\ntool cannot remove anything from an album. Pass photo ids from other\nDaguerre results (max 500 per call). Returns {id, name, created, added,\nphoto_count, unknown_ids, photos (first 10)}.\nKeywords: make an album, add to album, collection, crear álbum, añadir\nal álbum, hacer un álbum, colección\n",
+    "inputSchema": {
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "photo_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Photo Ids",
+          "type": "array"
+        }
+      },
+      "required": [
+        "name",
+        "photo_ids"
+      ],
+      "title": "photos_albumArguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "photos_export",
+    "description": "Export an ordered local photo gallery, contact sheet and JSON source manifest (write).\n\nPass 1-20 ids from photos_search in the desired order. Repeated ids are\nretained deliberately (a photo may appear twice). Writes previews under\nDaguerre's data/exports; originals are read, never moved, copied or edited.\nReturns absolute file paths, gallery_url, ordered photos with stable ids\nand 1-based row/column, and complete/omitted for missing or unreadable files.\nThe HTML includes its preview images and works offline. The manifest\nreferences original paths; it does not package full-resolution originals.\nIdentical photo bytes, exported metadata, ordered selection and title reuse\nthe same export. Returns text only,\nso text-only models can use it without receiving image content.\nKeywords: export photos, gallery, selection, photobook, contact sheet,\nmanifest, exportar fotos, galería local, selección, álbum, hoja de contacto\n",
+    "inputSchema": {
+      "properties": {
+        "ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Ids",
+          "type": "array"
+        },
+        "title": {
+          "default": "Photo selection",
+          "title": "Title",
+          "type": "string"
+        }
+      },
+      "required": [
+        "ids"
+      ],
+      "title": "photos_exportArguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "photos_match_reference",
+    "description": "Match global exposure and colour of 1-20 photos to an indexed reference (write).\n\nUse comparable scenes. Produces new PNG derivatives under Daguerre data,\npreserving originals, alpha and existing retouch recipes. Inputs are original\npixels; stored edits are not rendered. strength 0-1; long_edge 256-4096.\nReturns per-photo output_url, measured before/after statistics, channel gains,\noriginal fingerprints, omissions and a reproducible manifest_url. No local\ntone masks or semantic look matching; very dark/transparent images can fail.\nKeywords: match reference, batch colour, exposure, white balance, photo series,\nigualar referencia, exposición, balance de blancos, serie fotográfica\n",
+    "inputSchema": {
+      "properties": {
+        "reference_id": {
+          "title": "Reference Id",
+          "type": "string"
+        },
+        "ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Ids",
+          "type": "array"
+        },
+        "strength": {
+          "default": 1.0,
+          "title": "Strength",
+          "type": "number"
+        },
+        "long_edge": {
+          "default": 1600,
+          "title": "Long Edge",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "reference_id",
+        "ids"
+      ],
+      "title": "photos_match_referenceArguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "photos_edits",
+    "description": "Rating, label, keywords and develop recipe of one photo, and its .xmp sidecar state. Valoración y receta de revelado.\n\nEverything Daguerre keeps about how a photo has been rated and retouched: rating (-1 rejected, 0-5 stars),\nlabel, keywords and the develop recipe, plus whether an .xmp sidecar sits next to the file, whether it changed\non disk since Daguerre last read it, and any develop settings found in it that Daguerre does not apply\n(`imported_not_applied`). A changed sidecar is read first, so the answer is current.\n\nReturns {photo_id, rating, label, keywords, recipe, source, sidecar:{path, exists, changed_on_disk,\nwritten_by}, write_sidecars, imported_not_applied?, note}. A recipe holds only the settings that are set:\nexposure (EV -5..5), contrast, highlights, shadows, whites, blacks, vibrance, saturation, clarity, dehaze\n(-100..100), temperature (K 2000-50000), tint (-150..150), crop {left, top, right, bottom (0-1), angle}, orientation.\nKeywords: photo rating, stars, label, keywords, develop settings, xmp sidecar, retouch recipe, valoración,\nestrellas, etiqueta, palabras clave, ajustes de revelado, archivo xmp, receta de retoque\n",
+    "inputSchema": {
+      "properties": {
+        "photo_id": {
+          "title": "Photo Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "photo_id"
+      ],
+      "title": "photos_editsArguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "photos_set_edits",
+    "description": "Set rating, label, keywords or develop recipe of a photo; keeps its .xmp sidecar in step (write). Valorar y etiquetar.\n\nOnly the arguments you pass change. `recipe` is merged setting by setting (a setting set to null is cleared);\naccepted settings: exposure (EV -5..5), contrast, highlights, shadows, whites, blacks, vibrance, saturation,\nclarity, dehaze (-100..100), temperature (K 2000-50000), tint (-150..150), crop {left, top, right, bottom as\n0-1 fractions, angle}, orientation (EXIF 1-8). `rating` is -1 (rejected) or 0-5 stars; `label` a short text such\nas \"Red\"; `keywords` the full list (replaces the old one).\n\nThe photo file is never modified. If the owner turned on \"Write .xmp sidecars\" in Settings (off by default),\nDaguerre also writes or merges `<photo name>.xmp` next to the photo in the standard form RAW developers read\n(a foreign sidecar is backed up first and every field Daguerre does not own is kept); otherwise the edits stay\nin Daguerre. Returns the same object as photos_edits plus `sidecar_write` ({written, path, merged, ...} or the\nreason it was not written). Only exposure is rendered by Daguerre itself (craft_develop_photo).\nKeywords: rate photo, give stars, label photo, tag photo, keywords, retouch recipe, write xmp, valorar foto,\nponer estrellas, etiquetar foto, palabras clave, receta de retoque, escribir xmp\n",
+    "inputSchema": {
+      "properties": {
+        "photo_id": {
+          "title": "Photo Id",
+          "type": "string"
+        },
+        "recipe": {
+          "anyOf": [
+            {
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Recipe"
+        },
+        "rating": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Rating"
+        },
+        "label": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Label"
+        },
+        "keywords": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Keywords"
+        }
+      },
+      "required": [
+        "photo_id"
+      ],
+      "title": "photos_set_editsArguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "photos_sidecar",
+    "description": "Read a photo's .xmp sidecar into Daguerre, or write Daguerre's edits to it (write). Leer o escribir el archivo xmp.\n\naction=\"read\": re-read the sidecar next to the photo (or, without one, the XMP embedded in the JPEG/TIFF/PNG/WebP)\nand merge its rating, label, keywords and develop settings into Daguerre's edits; settings Daguerre does not\napply come back in `imported_not_applied`. Scans do this automatically; use it after the owner edited the file.\naction=\"write\": write or merge the stored edits into `<photo name>.xmp`. Needs \"Write .xmp sidecars\" turned on by\nthe owner in Settings (off by default; you cannot turn it on) and something to write. A sidecar Daguerre did not\nwrite is backed up under Daguerre's data folder first and merged, never replaced; an unreadable one is left alone\nand the error says so. The photo itself is never modified.\nReturns the photos_edits object plus `read` or `sidecar_write`.\nKeywords: xmp sidecar, import xmp, export xmp, sync metadata, develop settings, leer xmp, escribir xmp,\nsincronizar metadatos, archivo sidecar\n",
+    "inputSchema": {
+      "properties": {
+        "photo_id": {
+          "title": "Photo Id",
+          "type": "string"
+        },
+        "action": {
+          "default": "read",
+          "enum": [
+            "read",
+            "write"
+          ],
+          "title": "Action",
+          "type": "string"
+        }
+      },
+      "required": [
+        "photo_id"
+      ],
+      "title": "photos_sidecarArguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "craft_engines",
+    "description": "Show Daguerre's incorporated layered-image and development engines.\n\nReturns owned executable availability, full engine identity and output directory.\nHistoric external executable configuration is preserved as data and ignored.\nKeywords: Daguerre image editors, layers, development, motores de imagen, capas, revelado\n",
+    "inputSchema": {
+      "properties": {},
+      "title": "craft_enginesArguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "craft_tools",
+    "description": "List the full live MCP tool catalogue and JSON schemas from a Craft engine.\n\n`engine` is `layers` or `develop`; old names remain aliases. This starts that headless engine\nbriefly and returns its actual upstream tool names, descriptions and schemas;\nit does not use a reduced feature catalogue. Use craft_call to invoke tools.\nKeywords: Daguerre Layers tools, Daguerre Develop tools, MCP schema, list commands, herramientas, esquemas, listar comandos\n",
+    "inputSchema": {
+      "properties": {
+        "engine": {
+          "enum": [
+            "layers",
+            "develop",
+            "photocraft",
+            "lightcraft"
+          ],
+          "title": "Engine",
+          "type": "string"
+        }
+      },
+      "required": [
+        "engine"
+      ],
+      "title": "craft_toolsArguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "craft_call",
+    "description": "Call one or more native MCP tools in one isolated Craft engine session.\n\nRead the live schema with craft_tools first. Each call is\n`{tool: \"engine_tool_name\", arguments: {...}}`; batches preserve the\neditor session across calls. Up to 32 calls are accepted. Daguerre Layers read\nand write roots and Daguerre Develop file paths are confined to Daguerre data;\nregistered originals are not made writable. Results contain each native\nMCP response and error. For common flows use craft_develop_photo or\ncraft_create_layered_document or craft_create_layered_photo. This exposes the complete incorporated tool surface,\nnot a claim that every engine feature has been parity tested here.\nKeywords: edit image, native MCP, photo development, layers, editar imagen, MCP nativo, revelar foto, capas\n",
+    "inputSchema": {
+      "properties": {
+        "engine": {
+          "enum": [
+            "layers",
+            "develop",
+            "photocraft",
+            "lightcraft"
+          ],
+          "title": "Engine",
+          "type": "string"
+        },
+        "calls": {
+          "items": {
+            "type": "object"
+          },
+          "title": "Calls",
+          "type": "array"
+        }
+      },
+      "required": [
+        "engine",
+        "calls"
+      ],
+      "title": "craft_callArguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "craft_develop_photo",
+    "description": "Develop an indexed photo with Daguerre Develop and export a derivative, preserving the original.\n\n`photo_id` comes from Daguerre search; `exposure` is -5 to +5 EV.\nDaguerre Develop imports a Daguerre-owned copy into its local library, records\nthe editable develop state there, and writes an export under Daguerre data.\nReturns native call results, derivative path and `original_modified:false`.\n`long_edge=0` preserves full output size. The original photo is read only.\nKeywords: adjust exposure, develop raw, edit exposure, photo copy, ajustar exposición, revelar RAW, editar foto\n",
+    "inputSchema": {
+      "properties": {
+        "photo_id": {
+          "title": "Photo Id",
+          "type": "string"
+        },
+        "exposure": {
+          "title": "Exposure",
+          "type": "number"
+        },
+        "output_format": {
+          "default": "png",
+          "enum": [
+            "png",
+            "jpg",
+            "tif",
+            "webp",
+            "avif"
+          ],
+          "title": "Output Format",
+          "type": "string"
+        },
+        "long_edge": {
+          "default": 0,
+          "title": "Long Edge",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "photo_id",
+        "exposure"
+      ],
+      "title": "craft_develop_photoArguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "craft_create_layered_photo",
+    "description": "Open a copy of an indexed photo in Daguerre Layers and save an editable project.\n\nDaguerre copies the photo into its confined workspace, opens it through\nDaguerre Layers's scoped doc_open tool, adds an editable overlay, saves `.pcraft`,\nand exports a PNG preview. The indexed original remains untouched.\nKeywords: open photo in editor, editable photo, Daguerre Layers project, abrir foto, foto editable, proyecto Daguerre Layers\n",
+    "inputSchema": {
+      "properties": {
+        "photo_id": {
+          "title": "Photo Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "photo_id"
+      ],
+      "title": "craft_create_layered_photoArguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "craft_create_layered_document",
+    "description": "Create an editable Daguerre Layers layered document and export a PNG preview.\n\nSaves a native `.pcraft` document with a background and editable overlay\nlayer, plus a PNG, under Daguerre data. Width and height are 16–8192;\nbackground is a six-digit #RRGGBB color. Returns both artifact paths and\nupstream tool results. This is a proven starter workflow, not full PSD\nor Daguerre Layers feature parity.\nKeywords: layered image, raster document, editable layers, export PNG, imagen por capas, documento raster, capas editables\n",
+    "inputSchema": {
+      "properties": {
+        "name": {
+          "default": "Daguerre canvas",
+          "title": "Name",
+          "type": "string"
+        },
+        "width": {
+          "default": 512,
+          "title": "Width",
+          "type": "integer"
+        },
+        "height": {
+          "default": 384,
+          "title": "Height",
+          "type": "integer"
+        },
+        "background": {
+          "default": "#315c7e",
+          "title": "Background",
+          "type": "string"
+        }
+      },
+      "title": "craft_create_layered_documentArguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "craft_import_compositor",
+    "description": "Import a Compositor .comp directory as editable Daguerre Layers pixel layers.\n\nsource_path explicitly selects a local package. preflight_only returns a\nper-layer report without writing or starting Daguerre Layers. Unsupported content\nreturns status=blocked without import: groups, masks, adjustments, text,\neffects, shapes, non-Normal blending, scaling, rotation and fractional offsets.\nSupports schema 1–11, sRGB 8-bit RGB/RGBA PNG, 1–128 layers, canvas/image\nsides 1–8192, integer offsets, opacity and visibility. Preserves source bytes,\nsaves .pcraft, reopens it, and exports PNG plus a JSON receipt under data.\nCheck status (imported/blocked/failed/ready) and issues before using artifacts.\nRenderer equivalence with Compositor and full format parity are unverified.\nKeywords: import Compositor, comp project, editable raster layers, conversion receipt, importar Compositor, proyecto comp, capas editables, informe de conversion\n",
+    "inputSchema": {
+      "properties": {
+        "source_path": {
+          "title": "Source Path",
+          "type": "string"
+        },
+        "preflight_only": {
+          "default": false,
+          "title": "Preflight Only",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "source_path"
+      ],
+      "title": "craft_import_compositorArguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "image_open_editor",
+    "description": "Open a generated editable copy in Daguerre's full incorporated desktop editor.\n\nFirst create a layered copy or develop a copy and use its artifact id.\nOriginals remain read-only. Returns editor PID and owned path.\nKeywords: full editor, layers, develop, abrir editor, capas, revelado\n",
+    "inputSchema": {
+      "properties": {
+        "artifact_id": {
+          "title": "Artifact Id",
+          "type": "string"
+        },
+        "engine": {
+          "enum": [
+            "layers",
+            "develop"
+          ],
+          "title": "Engine",
+          "type": "string"
+        }
+      },
+      "required": [
+        "artifact_id",
+        "engine"
+      ],
+      "title": "image_open_editorArguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "image_engines",
+    "description": "Show incorporated Daguerre image engines, owned executable paths and availability.\nKeywords: image engines, layers, development, motores de imagen, capas, revelado\n",
+    "inputSchema": {
+      "properties": {},
+      "title": "image_enginesArguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "image_tools",
+    "description": "Discover the complete live tool schemas of an incorporated Daguerre engine.\nKeywords: native tools, image schemas, herramientas de imagen, catálogo\n",
+    "inputSchema": {
+      "properties": {
+        "engine": {
+          "enum": [
+            "layers",
+            "develop"
+          ],
+          "title": "Engine",
+          "type": "string"
+        }
+      },
+      "required": [
+        "engine"
+      ],
+      "title": "image_toolsArguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "image_call",
+    "description": "Run native operations together in one incorporated engine or live editor session.\n\nDiscover schemas with image_tools. Calls contain tool and arguments; originals are\ncopied into Daguerre data before editing. Returns each result and failure.\nKeywords: image operations, layers, develop, editar imagen, capas, revelar\n",
+    "inputSchema": {
+      "properties": {
+        "engine": {
+          "enum": [
+            "layers",
+            "develop"
+          ],
+          "title": "Engine",
+          "type": "string"
+        },
+        "calls": {
+          "items": {
+            "type": "object"
+          },
+          "title": "Calls",
+          "type": "array"
+        }
+      },
+      "required": [
+        "engine",
+        "calls"
+      ],
+      "title": "image_callArguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "image_develop_photo",
+    "description": "Develop an indexed photo copy and export a derivative; keep the original intact.\nKeywords: develop copy, exposure, export image, revelar copia, exposición, exportar\n",
+    "inputSchema": {
+      "properties": {
+        "photo_id": {
+          "title": "Photo Id",
+          "type": "string"
+        },
+        "exposure": {
+          "title": "Exposure",
+          "type": "number"
+        },
+        "output_format": {
+          "default": "png",
+          "enum": [
+            "png",
+            "jpg",
+            "tif",
+            "webp",
+            "avif"
+          ],
+          "title": "Output Format",
+          "type": "string"
+        },
+        "long_edge": {
+          "default": 0,
+          "title": "Long Edge",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "photo_id",
+        "exposure"
+      ],
+      "title": "image_develop_photoArguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "image_create_layered_photo",
+    "description": "Create an editable .dglayers copy of an indexed photo, with overlay and preview.\nKeywords: layered copy, editable photo, copia por capas, fotografía editable\n",
+    "inputSchema": {
+      "properties": {
+        "photo_id": {
+          "title": "Photo Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "photo_id"
+      ],
+      "title": "image_create_layered_photoArguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "image_create_layered_document",
+    "description": "Create a reusable layered document and PNG preview in Daguerre data.\nKeywords: create canvas, layers, raster document, crear lienzo, capas, documento raster\n",
+    "inputSchema": {
+      "properties": {
+        "name": {
+          "default": "Daguerre canvas",
+          "title": "Name",
+          "type": "string"
+        },
+        "width": {
+          "default": 512,
+          "title": "Width",
+          "type": "integer"
+        },
+        "height": {
+          "default": 384,
+          "title": "Height",
+          "type": "integer"
+        },
+        "background": {
+          "default": "#315c7e",
+          "title": "Background",
+          "type": "string"
+        }
+      },
+      "title": "image_create_layered_documentArguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "image_import_compositor",
+    "description": "Inspect or import a Compositor raster package without changing its source files.\nKeywords: compositor, raster layers, import package, importar paquete, capas raster\n",
+    "inputSchema": {
+      "properties": {
+        "source_path": {
+          "title": "Source Path",
+          "type": "string"
+        },
+        "preflight_only": {
+          "default": false,
+          "title": "Preflight Only",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "source_path"
+      ],
+      "title": "image_import_compositorArguments",
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  }
+]

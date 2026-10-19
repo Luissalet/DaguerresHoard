@@ -24,8 +24,9 @@ from typing import Any
 
 from . import db as dbmod
 from .captions import DEFAULT_BASE_URL, DEFAULT_MODEL
-from .hoard_link import CapabilityConfig, Link, LinkConfig
+from .hoard_link import CAPABILITIES, CapabilityConfig, Link, LinkConfig, Resolution
 from .hoard_link.atomic import write_json_atomic
+from .global_model import GlobalLink
 
 # The two capabilities Daguerre actually uses. Kept in one place so the
 # Settings "Models" panel and the override endpoint agree on what exists.
@@ -90,7 +91,9 @@ class Backend:
                     provider="ollama",
                     allow_load=vision_cc.allow_load,
                 )
-        return Link(config)
+        # Preserve legacy settings on disk; global text/vision transport always
+        # takes its exact authenticated choice from Faustus, never this override.
+        return GlobalLink(config)
 
     def reload(self) -> None:
         """Rebuild the Link from the current backend.json + settings table.
@@ -109,11 +112,12 @@ class Backend:
         timer.start()
 
     def _retire(self, link: Link) -> None:
+        # Failed retirement stays registered so shutdown cannot lose the owner.
+        link.sync.close()
         with self._retire_lock:
             for timer, pending in list(self._retiring.items()):
                 if pending is link:
                     del self._retiring[timer]
-        _close_quietly(link)
 
     def close(self) -> None:
         """Shutdown: close the current Link and every one still retiring."""
@@ -122,8 +126,10 @@ class Backend:
             self._retiring.clear()
         for timer, link in pending:
             timer.cancel()
-            _close_quietly(link)
-        _close_quietly(self.link)
+            if timer is not threading.current_thread():
+                timer.join()
+            link.sync.close()
+        self.link.sync.close()
 
     def set_overrides(
         self,
@@ -180,7 +186,15 @@ class Backend:
 
     # -- status ------------------------------------------------------ #
     def status(self) -> dict[str, Any]:
-        caps = self.link.sync.status()  # {capability: Resolution.to_dict()}
+        # Keep the shared settings contract without probing unused modalities.
+        caps = {
+            cap: (self.link.sync.resolve(cap) if cap in USED_CAPABILITIES else Resolution(
+                capability=cap, provider=None, url=None, model=None, api=None,
+                state="unavailable", reason="This capability is not used by this app.",
+                details={"used": False},
+            )).to_dict()
+            for cap in CAPABILITIES
+        }
         return {
             **caps,
             "token_set": self.token_set(),
