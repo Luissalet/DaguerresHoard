@@ -17,16 +17,23 @@ JobFn = Callable[["JobHandle"], None]
 ConnFactory = Callable[[], sqlite3.Connection]
 
 
+class JobStopped(Exception):
+    """An explicit module stop; progress can resume only in a new requested job."""
+
+
 def _now() -> str:
     return dt.datetime.now(dt.timezone.utc).isoformat()
 
 
 class JobHandle:
-    def __init__(self, job_id: str, conn: ConnFactory):
+    def __init__(self, job_id: str, conn: ConnFactory, stopped: threading.Event | None = None):
         self.id = job_id
         self._conn = conn
+        self._stopped = stopped
 
     def progress(self, fraction: float, message: str = "") -> None:
+        if self._stopped is not None and self._stopped.is_set():
+            raise JobStopped('the module was stopped')
         c = self._conn()
         c.execute(
             "UPDATE jobs SET progress = ?, message = ? WHERE id = ?",
@@ -51,10 +58,15 @@ def _row_to_dict(row: sqlite3.Row) -> dict:
 
 
 class JobManager:
-    def __init__(self, conn: ConnFactory):
+    def __init__(self, conn: ConnFactory, *, recover: bool = True):
         self._conn = conn
+        self._lock = threading.RLock()
+        self._threads: set[threading.Thread] = set()
+        self._stopped = threading.Event()
         # A previous process may have died mid-job: its daemon thread is
         # gone, so a 'running' row would otherwise spin in the UI forever.
+        if not recover:
+            return
         c = self._conn()
         c.execute(
             "UPDATE jobs SET status = 'interrupted', finished_at = ?, "
@@ -64,6 +76,12 @@ class JobManager:
         c.commit()
 
     def start(self, kind: str, fn: JobFn) -> str:
+        with self._lock:
+            if self._stopped.is_set():
+                raise JobStopped('the module is stopping')
+            return self._start(kind, fn)
+
+    def _start(self, kind: str, fn: JobFn) -> str:
         job_id = uuid.uuid4().hex
         c = self._conn()
         c.execute(
@@ -71,12 +89,14 @@ class JobManager:
             (job_id, kind, _now()),
         )
         c.commit()
-        handle = JobHandle(job_id, self._conn)
+        handle = JobHandle(job_id, self._conn, self._stopped)
 
         def runner():
             status, message = "done", None
             try:
                 fn(handle)
+            except JobStopped as exc:
+                status, message = 'interrupted', str(exc)
             except Exception as exc:  # noqa: BLE001 - surfaced to the UI, not swallowed
                 log.exception("job %s (%s) failed", job_id, kind)
                 status, message = "error", f"{type(exc).__name__}: {exc}"[:300]
@@ -88,14 +108,26 @@ class JobManager:
                 )
             else:
                 conn.execute(
-                    "UPDATE jobs SET status = 'error', finished_at = ?, message = ? WHERE id = ?",
-                    (_now(), message, job_id),
+                    "UPDATE jobs SET status = ?, finished_at = ?, message = ? WHERE id = ?",
+                    (status, _now(), message, job_id),
                 )
             conn.commit()
+            with self._lock:
+                self._threads.discard(threading.current_thread())
 
         thread = threading.Thread(target=runner, name=f"daguerre-job-{kind}", daemon=True)
+        self._threads.add(thread)
         thread.start()
         return job_id
+
+    def stop(self) -> None:
+        """Close admission, request cooperative stop and join before stores close."""
+        with self._lock:
+            self._stopped.set()
+            threads = tuple(self._threads)
+        for thread in threads:
+            if thread is not threading.current_thread():
+                thread.join()
 
     def get(self, job_id: str) -> dict | None:
         row = self._conn().execute("SELECT * FROM jobs WHERE id = ?", (job_id,)).fetchone()

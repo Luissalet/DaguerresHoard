@@ -1,0 +1,7 @@
+# Visual studio930
+
+Owner codex-fisiones-producto; inherited isolated checkpoint b3cc30749ac98b23650e468233c5773af63bafac. Preserve the approved reference-matching function at owner c769427 and all existing photo, Layers and Develop operations. Full public vector sources ff98eb2 are already incorporated with provenance. No real data, old-runtime dependency, model, GUI activation, integration or push here. No additional Rust build while the coordinator's bundle is active.
+
+Success: fresh-process API/MCP discovery starts no engine and creates no store; photo/vector modules start OFF and never resume/index/geocode automatically; explicit ON opens native apps only; OFF drains requests, background jobs, native sessions and owned GUI processes without losing saved documents; another module stays responsive. Full native schemas/commands and UI/API/MCP remain available. Shared projects bind original photo IDs, native editable documents, revisions and ID-served results, with read-only originals and persistent provenance. Global text/vision uses authenticated Faustus938 exact job pins, no local fallback or SDK edits. Verify with synthetic stores, actual stdio MCP and targeted lifecycle tests; root owns CUA and independent review.
+
+Implementation order: lifecycle and static native catalog; cold ASGI owner and scoped complete interfaces; shared native project/asset workflows; global inference composition; inert/native verification and source packaging. Record actual errors and acceptance limits rather than claiming completion from source counts.

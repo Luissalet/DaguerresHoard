@@ -189,7 +189,8 @@ class _Prepared:
 
 
 class Library(VideoMixin, EditsMixin):
-    def __init__(self, settings: Settings, conn: sqlite3.Connection | None = None, embedder: Embedder | None = None):
+    def __init__(self, settings: Settings, conn: sqlite3.Connection | None = None, embedder: Embedder | None = None,
+                 *, automatic: bool = True):
         settings.ensure_dirs()
         self.settings = settings
         self._conns = dbmod.ThreadLocalConnections(settings.db_path)
@@ -198,22 +199,29 @@ class Library(VideoMixin, EditsMixin):
         self.embedder = embedder or select_embedder(settings)
         self.vectors = VectorStore(settings.vectors_path, dim=EMBED_DIM)
         self.geocoder = ReverseGeocoder(settings.geodata_dir if (settings.geodata_dir / "cities1000.txt").exists() else None)
-        self.jobs = JobManager(self._conns.get)
+        self.jobs = JobManager(self._conns.get, recover=automatic)
         self.backend = Backend(settings.data_dir, self.conn)
         self.craft_engines = CraftEngines(settings.data_dir, port=settings.port)
         self._index_lock = threading.Lock()
         self._edits_lock = threading.RLock()
         self._init_videos()
         self._model_lock = threading.Lock()
-        self._maybe_regeocode()
+        self._closed = False
+        if automatic:
+            self._maybe_regeocode()
 
     @property
     def conn(self) -> sqlite3.Connection:
         return self._conns.get()
 
     def close(self) -> None:
+        if self._closed:
+            return
+        self.jobs.stop()
         self.backend.close()
+        self.vectors.close()
         self._conns.close_all()
+        self._closed = True
 
     @property
     def _skip_dirs(self) -> list[Path]:

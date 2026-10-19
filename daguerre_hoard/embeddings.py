@@ -234,6 +234,14 @@ class VectorStore:
         self._mm.flush()
         self._write_count()
 
+    def close(self) -> None:
+        """Release the mapping only after the owner has joined readers/jobs."""
+        with self._lock:
+            if self._mm is not None:
+                self._mm.flush()
+                self._mm._mmap.close()
+                self._mm = None
+
     def _write_count(self) -> None:
         # Atomic with the Windows lock retries: an antivirus or the indexer holding the file for a few milliseconds
         # must not turn into a PermissionError in the middle of a scan. No fsync: the count is re-derived from
