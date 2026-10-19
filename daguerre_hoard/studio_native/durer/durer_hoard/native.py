@@ -69,7 +69,7 @@ async def _connect():
     return stdio_client(params)
 
 
-async def catalog_async() -> dict[str, Any]:
+async def discover_catalog_async() -> dict[str, Any]:
     async with await _connect() as (read, write):
         async with ClientSession(read, write) as client:
             await client.initialize()
@@ -89,12 +89,12 @@ async def catalog_async() -> dict[str, Any]:
 
 
 def catalog() -> dict[str, Any]:
-    try:
-        asyncio.get_running_loop()
-    except RuntimeError:
-        return asyncio.run(catalog_async())
-    with ThreadPoolExecutor(max_workers=1) as pool:
-        return pool.submit(asyncio.run, catalog_async()).result(timeout=180)
+    """Static build-time contract: discovery never starts an engine or creates data."""
+    return json.loads((ROOT / 'native-catalog.json').read_text(encoding='utf-8'))
+
+
+async def catalog_async() -> dict[str, Any]:
+    return catalog()
 
 
 async def dispatch_async(actions: list[dict[str, Any]]) -> list[dict[str, Any]]:

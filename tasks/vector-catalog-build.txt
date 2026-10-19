@@ -1,0 +1,2 @@
+durer-cli: MCP server on stdio (headless)
+{"native_tools": 25, "commands": 659, "mcp_tools": 57, "metadata_binary_sha256": "fd67e43c58f40c7de8e844d0996ecf1225a26ab0e07d2a5a1cbdb0739efdc6f8"}
