@@ -1,0 +1,103 @@
+{
+  "result": "PASS",
+  "target": "D:\\LocalAI\\worktrees\\daguerre-fisiones930",
+  "cases": [
+    {
+      "retiring": false,
+      "parent": false,
+      "snapshots": [
+        {
+          "off": 1,
+          "attempts": 1,
+          "app_retained": true,
+          "HTTPX_closed": true,
+          "transport_open": true
+        },
+        {
+          "off": 2,
+          "attempts": 2,
+          "app_retained": true,
+          "HTTPX_closed": true,
+          "transport_open": true
+        }
+      ],
+      "third_attempt_closed": true,
+      "parent_and_twin_closed": true,
+      "cancelled_twice_during_third": false,
+      "loop_closed_thread_joined": true
+    },
+    {
+      "retiring": false,
+      "parent": true,
+      "snapshots": [
+        {
+          "off": 1,
+          "attempts": 1,
+          "app_retained": true,
+          "HTTPX_closed": true,
+          "transport_open": true
+        },
+        {
+          "off": 2,
+          "attempts": 2,
+          "app_retained": true,
+          "HTTPX_closed": true,
+          "transport_open": true
+        }
+      ],
+      "third_attempt_closed": true,
+      "parent_and_twin_closed": true,
+      "cancelled_twice_during_third": false,
+      "loop_closed_thread_joined": true
+    },
+    {
+      "retiring": true,
+      "parent": false,
+      "snapshots": [
+        {
+          "off": 1,
+          "attempts": 1,
+          "app_retained": true,
+          "HTTPX_closed": true,
+          "transport_open": true
+        },
+        {
+          "off": 2,
+          "attempts": 2,
+          "app_retained": true,
+          "HTTPX_closed": true,
+          "transport_open": true
+        }
+      ],
+      "third_attempt_closed": true,
+      "parent_and_twin_closed": true,
+      "cancelled_twice_during_third": false,
+      "loop_closed_thread_joined": true
+    },
+    {
+      "retiring": true,
+      "parent": true,
+      "snapshots": [
+        {
+          "off": 1,
+          "attempts": 1,
+          "app_retained": true,
+          "HTTPX_closed": true,
+          "transport_open": true
+        },
+        {
+          "off": 2,
+          "attempts": 2,
+          "app_retained": true,
+          "HTTPX_closed": true,
+          "transport_open": true
+        }
+      ],
+      "third_attempt_closed": true,
+      "parent_and_twin_closed": true,
+      "cancelled_twice_during_third": true,
+      "loop_closed_thread_joined": true
+    }
+  ],
+  "owned_modules_from_target": 58
+}

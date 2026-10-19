@@ -11,6 +11,7 @@ from functools import wraps
 import threading
 
 import httpx
+from httpx._client import ClientState
 
 from .hoard_link import BackendError, Link
 from .hoard_link._sync import SyncFacade
@@ -73,6 +74,56 @@ def payload(body, choice):
         **{'expected_'+k:choice[k] for k in ('endpoint_id','model','connection_revision')}}
 
 
+class OwnedAsyncClient(httpx.AsyncClient):
+    """HTTPX 0.28.1 closes its state before its transports; retain those owners.
+
+    Record each successful resource separately, including pooled connections that
+    httpcore otherwise removes before closing. No SDK or HTTPX source is changed.
+    """
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._close_pending = None
+        self._owner_loop = None
+
+    async def send(self, *args, **kwargs):
+        self._owner_loop = asyncio.get_running_loop()
+        return await super().send(*args, **kwargs)
+
+    async def aclose(self):
+        if self._close_pending is None:
+            transports = [self._transport, *self._mounts.values()]
+            resources = []
+            for transport in transports:
+                if transport is not None:
+                    # Capture connections before the pool consumes its list.
+                    pool = getattr(transport, '_pool', None)
+                    resources.extend((connection, pool) for connection in getattr(pool, '_connections', ()))
+                    resources.append((transport, None))
+            seen = set()
+            self._close_pending = []
+            for resource, pool in resources:
+                if id(resource) not in seen:
+                    seen.add(id(resource))
+                    self._close_pending.append((resource, pool))
+        self._state = ClientState.CLOSED
+        while self._close_pending:
+            resource, pool = self._close_pending[0]
+            await resource.aclose()
+            if pool is not None:
+                # A successful connection must not be closed again by its pool.
+                with pool._optional_thread_lock:
+                    pool._connections = [c for c in pool._connections if c is not resource]
+            self._close_pending.pop(0)
+
+
+async def close_client(client):
+    owner = getattr(client, '_owner_loop', None)
+    if owner is not None and owner is not asyncio.get_running_loop() and owner.is_running():
+        await asyncio.wrap_future(asyncio.run_coroutine_threadsafe(client.aclose(), owner))
+    else:
+        await client.aclose()
+
+
 class GlobalSync(SyncFacade):
     def __init__(self, link):
         super().__init__(link)
@@ -88,11 +139,15 @@ class GlobalSync(SyncFacade):
             if loop is not None:
                 async def drain():
                     if inner is not None and inner._owns_client:
-                        await inner._client.aclose()
+                        await close_client(inner._client)
+                    if self._link._owns_client:
+                        await close_client(self._link._client)
                     await loop.shutdown_asyncgens()
                     await loop.shutdown_default_executor()
                 asyncio.run_coroutine_threadsafe(drain(), loop).result()
                 loop.call_soon_threadsafe(loop.stop)
+            elif self._link._owns_client:
+                asyncio.run(close_client(self._link._client))
             if thread is not None:
                 thread.join()
             if loop is not None:
@@ -109,10 +164,15 @@ class GlobalSync(SyncFacade):
 
 
 class GlobalLink(Link):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, config, client=None):
+        super().__init__(config, client=OwnedAsyncClient(trust_env=False) if client is None else client)
+        self._owns_client = client is None
         self.sync = GlobalSync(self)
         self._selection = ContextVar('daguerre_call_selection', default=None)
+
+    async def aclose(self):
+        # Allow the async parent's owning loop to run while the facade joins.
+        await asyncio.to_thread(self.sync.close)
 
     def global_selection(self):
         pin = _job.get()

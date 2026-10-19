@@ -118,3 +118,7 @@ The owned global sync close propagates an inner HTTP close failure and retains i
 same client/loop/thread for another OFF. A retiring backend is removed from its owner
 registry only after success. Real installed photo factories are probed with two close
 failures and a successful third OFF; ON cannot replace the retained owner.
+The owner inventories its parent and synchronous twin clients separately. Transport
+failures retain their close operation even after HTTPX marks its client CLOSED;
+successful resources are checkpointed and remaining resources retry before OFF.
+The HTTPX0.28.1/httpcore1.0.9 composition is owned code, outside the vendored SDK.
