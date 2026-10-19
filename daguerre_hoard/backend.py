@@ -114,12 +114,13 @@ class Backend:
         """Shutdown: close the current Link and every one still retiring."""
         with self._retire_lock:
             pending = list(self._retiring.items())
-            self._retiring.clear()
         for timer, link in pending:
             timer.cancel()
             if timer is not threading.current_thread():
                 timer.join()
             link.sync.close()
+            with self._retire_lock:
+                self._retiring.pop(timer, None)
         self.link.sync.close()
 
     def set_overrides(

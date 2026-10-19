@@ -74,15 +74,30 @@ def payload(body, choice):
 
 
 class GlobalSync(SyncFacade):
+    def __init__(self, link):
+        super().__init__(link)
+        self._close_lock = threading.Lock()
+
     def close(self, timeout=2.0):
-        loop, thread = self._loop, self._thread
-        if loop is not None and loop.is_running() and thread is not threading.current_thread():
-            async def drain(_link):
-                await asyncio.get_running_loop().shutdown_default_executor()
-            self._run(drain)
-        super().close(timeout)
-        if thread is not None and thread is not threading.current_thread():
-            thread.join()
+        # The SDK close suppresses HTTP errors and drops ownership after a timed
+        # join. Retain the actual client/loop/thread until every close succeeds.
+        if self._thread is threading.current_thread():
+            raise RuntimeError('Close the global client from its owning module')
+        with self._close_lock:
+            loop, inner, thread = self._loop, self._inner, self._thread
+            if loop is not None:
+                async def drain():
+                    if inner is not None and inner._owns_client:
+                        await inner._client.aclose()
+                    await loop.shutdown_asyncgens()
+                    await loop.shutdown_default_executor()
+                asyncio.run_coroutine_threadsafe(drain(), loop).result()
+                loop.call_soon_threadsafe(loop.stop)
+            if thread is not None:
+                thread.join()
+            if loop is not None:
+                loop.close()
+            self._loop = self._thread = self._inner = None
 
     def _twin(self):
         with self._start_lock:
