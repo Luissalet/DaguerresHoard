@@ -90,6 +90,11 @@ async def test_photo_vector_photo_retains_originals_revisions_and_native_ids(tmp
         exported=await studio.control('visual_project_export',{'project':project['id'],'illustration':vector_id})
         new_photo=exported['transfers'][-1]['receipt']['photo_id']
         assert (await asyncio.to_thread(lib.describe,new_photo))['id']==new_photo
+        async with httpx.AsyncClient(transport=httpx.ASGITransport(app=studio),base_url='http://127.0.0.1:64838') as client:
+            first=(await client.get('/api/studio/objects')).json()['photos']
+            later=(await client.get('/api/studio/objects?offset=1')).json()['photos']
+            assert len(first)==2 and len(later)==1
+            assert later[0]['id']==first[1]['id']
         assert hashlib.sha256(original.read_bytes()).hexdigest()==before
         await studio.close()
         retained=studio.projects.get(project['id'])

@@ -1,17 +1,8 @@
-"""Daguerre's own thin wrapper around the vendored Hoard Link.
+"""Owned backend composition: preserve saved settings, use Faustus global inference.
 
-Per CONTRACT_BACKEND.md: Daguerre never loads its own copy of a model server.
-It vendors Hoard Link (``daguerre_hoard/hoard_link/``, never edited) and
-composes it here with the one piece Hoard Link cannot know about: the
-pre-existing, per-app Ollama URL/model fields in Daguerre's own ``settings``
-table (Settings -> "Ollama model"), which predate Hoard Link. Those fields
-become the explicit override for the ``vision`` capability -- but only
-once the owner has actually saved one (a row exists in ``settings``), so a
-fresh install still benefits from Faustus/loopback resolution instead of
-being pinned to the built-in Ollama default forever.
-
-This module never touches ``hoard_link/*``; it only builds a ``Link`` from
-a ``LinkConfig`` and persists ``data/backend.json``.
+The vendored SDK remains unchanged. Legacy local URLs/model names are retained
+for continuity; GlobalLink selects text/vision only through global938's exact
+configured descriptor and authenticated completion contract.
 """
 from __future__ import annotations
 
@@ -69,7 +60,7 @@ class Backend:
             # without a model): fall back to env + probing and say why.
             config = LinkConfig.load(None, env=os.environ, app="daguerre")
             self.config_error = (
-                f"backend.json is not usable ({exc}); using automatic detection "
+                f"backend.json is not usable ({exc}); using global Faustus configuration "
                 "until it is fixed."
             )
         vision_cc = config.capability("vision")

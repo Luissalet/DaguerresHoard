@@ -1,20 +1,8 @@
-"""Optional local captioning of photos through a vision-capable model.
+"""Explicit caption requests and batches through the global vision-capable model.
 
-Off by default. Never blocks indexing: a caption is only generated on
-explicit request (`photos_describe(caption=true)`) or a user-started batch
-job. Two ways to reach a model:
-
-- `OllamaCaptioner`: a direct, private connection to one Ollama server
-  (this app's original implementation, kept for anyone still wiring things
-  up by hand and exercised directly by the tests below).
-- `LinkCaptioner`: the one `Library._captioner()` actually returns. It
-  captions through Hoard Link's `vision` capability, so it shares whatever
-  server Faustus or a loopback probe resolves (Ollama, llama.cpp, an
-  OpenAI-compatible server) instead of only ever speaking Ollama's
-  `/api/generate`. See `daguerre_hoard/backend.py` for how the legacy
-  Ollama URL/model settings become that capability's explicit override.
-
-If nothing resolves we say so instead of failing silently.
+Library uses LinkCaptioner with the owned GlobalLink consumer. The historical
+OllamaCaptioner remains import-compatible for external callers and isolated
+legacy tests; no application route constructs it or falls back to it.
 """
 from __future__ import annotations
 
@@ -119,18 +107,16 @@ class OllamaCaptioner:
 
 
 NO_VISION_MODEL = (
-    "No vision model is loaded. Faustus can serve one, or load one in Ollama."
+    "No vision model is loaded in the configured Faustus global service."
 )
 
 
 class LinkCaptioner:
     """Captions through Hoard Link's `vision` capability.
 
-    This is what `Library._captioner()` returns. It shares whatever server
-    Faustus or a loopback probe resolves for `vision` -- Ollama, a
-    llama.cpp vision build or an OpenAI-compatible server -- via
-    `Link.chat(images=..., capability="vision")`, rather than a private
-    connection to one hard-coded Ollama address.
+    Library supplies the owned GlobalLink, so resolution and completion use
+    the configured Faustus global contract. This class also accepts an inert
+    Link in unit tests without constructing a model service.
     """
 
     def __init__(self, link: "Link | Callable[[], Link]"):

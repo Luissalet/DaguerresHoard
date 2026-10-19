@@ -267,10 +267,10 @@ def photos_describe(photo_id: str, caption: bool = False) -> list:
     Returns {id, path, taken_at, date_source ("exif" or "file_mtime"), place,
     city, country, gps_lat, gps_lon, make, model, lens, f_number,
     exposure_time, iso, width, height, caption} (fields without data are
-    left out). caption=true asks the owner's local Ollama vision model for a
+    left out). caption=true asks the configured global vision model for a
     one-sentence caption if the photo has none yet, and saves it in Daguerre's
     own database for future searches; the photo file is never touched. If
-    Ollama is not available you get `caption_error` instead.
+    the global model is not available you get `caption_error` instead.
     Keywords: photo details, exif, when was it taken, where was it taken,
     camera, describe photo, datos de la foto, cuándo se hizo, dónde se hizo,
     qué cámara, describe la foto

@@ -218,9 +218,11 @@ class Studio:
         if path=='/api/studio/modules': return await self.json(send,await self.control('visual_modules',{}))
         if path=='/api/studio/demo' and method=='POST': return await self.json(send,await self.control('visual_demo_prepare',{}))
         if path=='/api/studio/objects':
+            query=parse_qs(scope.get('query_string',b'').decode())
+            offset=max(0,int(query.get('offset',['0'])[0]))
             result={'photos':[],'vector':[]}
             if self.modules['photos'].phase=='on':
-                result['photos']=await self.modules['photos'].work(lambda:self.modules['photos'].app.state.library.list_photos(limit=50)['results'])
+                result['photos']=await self.modules['photos'].work(lambda:self.modules['photos'].app.state.library.list_photos(limit=50,offset=offset)['results'])
             if self.modules['vector'].phase=='on':
                 def read():
                     from .studio_native.durer.durer_hoard.store import list_projects
