@@ -1,5 +1,9 @@
 # Implementation checkpoint930
 
+Historical checkpoint, superseded by `submission930.md`: all six native builds now
+completed, general suite265PASS and native photo checks30PASS. No Rust process is
+left running. The old active-build/PID instructions below are historical only.
+
 Isolated branch `fisiones-daguerre930`; owner codex-fisiones-producto, supervision926
 also open. Public photo base c769427; incorporated vector ff98eb2 at b3cc3074.
 Committed implementation checkpoints b21c6ef7, 8bc33c2f, 39a0a576 and35f16e3;

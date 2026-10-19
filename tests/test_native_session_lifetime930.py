@@ -92,3 +92,41 @@ async def test_failed_async_generator_close_retries_owned_cleanup_before_off(tmp
     repaired.set()
     await module.set(False)
     assert len(calls)==3 and module.phase=='off' and module.app is None
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('name',['photos','vector'])
+async def test_real_native_factory_retains_resources_across_two_failed_closes(tmp_path,monkeypatch,name):
+    from daguerre_hoard.studio import Studio
+    studio=Studio(tmp_path/'data',demo=True)
+    module=studio.modules[name]
+    await module.set(True)
+    if name=='photos':
+        owner=module.app.state.library.craft_engines
+        field='close'
+        library=module.app.state.library
+    else:
+        from daguerre_hoard.studio_native.durer.durer_hoard import native as owner
+        field='close_guis'
+    original=getattr(owner,field);calls=[]
+    def close():
+        calls.append(1)
+        if len(calls)<3:raise RuntimeError('synthetic owned-window failure')
+        original()
+    monkeypatch.setattr(owner,field,close)
+    try:
+        for count in (1,2):
+            with pytest.raises(ValueError,match='close is incomplete'):
+                await module.set(False)
+            assert module.phase=='stopping' and module.app is not None and len(calls)==count
+            with pytest.raises(ValueError,match='Retry OFF'):
+                await module.set(True)
+            if name=='photos':
+                assert not library._closed
+                assert library.conn.execute('SELECT 1').fetchone()[0]==1
+        await module.set(False)
+        assert module.phase=='off' and module.app is None and len(calls)==3
+        if name=='photos':assert library._closed and library.vectors._mm is None
+    finally:
+        monkeypatch.setattr(owner,field,original)
+        await studio.close()

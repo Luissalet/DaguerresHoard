@@ -44,6 +44,8 @@ class Module:
                 self.transition = None
 
     async def _set(self, enabled, automatic):
+        if enabled and self.app is not None and self.phase != 'on':
+            raise ValueError(f'{self.name} close is incomplete. Retry OFF before activating again.')
         if enabled and self.app is None:
             self.phase = 'starting'
             app = None

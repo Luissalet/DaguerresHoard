@@ -15,6 +15,7 @@ def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--metadata-root',type=Path,required=True)
     args=parser.parse_args()
+    args.metadata_root=args.metadata_root.resolve()
     output=ROOT/'native'/'catalogs';output.mkdir(exist_ok=True)
     with tempfile.TemporaryDirectory(prefix='daguerre-craft-metadata-') as raw:
         engines=CraftEngines(Path(raw),restore_editors=False)

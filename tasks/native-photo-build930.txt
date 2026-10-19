@@ -1,0 +1,26 @@
+Observed build receipt (not captured cargo stdout):
+Command: .venv/Scripts/python.exe -u scripts/build_engines.py --engine all
+CARGO_BUILD_JOBS=2; tool session8717 completed with exit0.
+The redirected cargo output file was empty; generated build-all.json and production binary hashes follow.
+{
+  "profile": "release",
+  "source": "native",
+  "binaries": [
+    {
+      "file": "daguerre-layers-cli.exe",
+      "sha256": "c12019eef460ab119f409606b08b80579dc889dc7c093398a7583df39c0ab5e1"
+    },
+    {
+      "file": "daguerre-layers.exe",
+      "sha256": "2c4a93964a8f0fa4ae5c8866837ab17a00a0a078dc2dbcb7a7f01d8ff68a6e98"
+    },
+    {
+      "file": "daguerre-develop-cli.exe",
+      "sha256": "a08fd029e6f9ff6a9bbd666dd8215cf3e861e94947a3e64472eabbafc4925a46"
+    },
+    {
+      "file": "daguerre-develop.exe",
+      "sha256": "e08528eda864fae2c0f6d67cca3f6f0a2150cc68e009d0939de16ddd4981ed62"
+    }
+  ]
+}

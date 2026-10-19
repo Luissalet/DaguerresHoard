@@ -28,6 +28,10 @@ closes owned native editor windows normally. An unsaved native editor may show i
 save/discard dialogue: the module stays stopping until the window actually exits.
 No process timeout is treated as successful OFF. Actual Windows dialogue behaviour
 still requires the coordinator's CUA check; no native GUI was opened for these tests.
+If cleanup fails, the app remains owned/stopping; Retry stop invokes its native
+cleanup again. Reactivation waits for successful cleanup. The Windows close-window
+transport is implemented; other platforms currently require closing an owned editor
+manually before retrying OFF. No unsupported platform is silently reported stopped.
 
 Previous database jobs left as running are shown as held without rewriting their
 historical rows. Automatic maintenance is an explicit per-activation option, OFF by
@@ -76,7 +80,11 @@ The vector CLI and editor were built from this checkout; six actual headless che
 against its production `native/bin`, including full schema/command parity, historical
 copy/edit/undo/redo/reopen, SVG/PNG/PDF exports and real photo/vector/photo transfer.
 Real owner stdio MCP also passes that complete transfer, reopen, OFF and retained PNG
-Range206 download. No native editor window was opened. Layers/Develop builds and their
-optional native checks are still pending. Browser behaviour, GUI save dialogues, installed
+Range206 download. No native editor window was opened. Layers/Develop release builds
+and all30 original optional photo/compositor checks now pass, including actual Develop
+exposure/export and original-byte preservation. Explicit metadata discovery of owned
+production binaries matches all18 Layers and243 Develop schemas. The final general
+suite passes265 with15 skips and one model deselection in92.10s; real-factory regressions
+verify failed close retry and retained resources. Browser behaviour, GUI save dialogues, installed
 packaging and real data continuity are not established by these CPU tests. The migration
 inventory is `MIGRATION930.json`; it records expectations rather than a migration receipt.

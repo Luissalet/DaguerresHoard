@@ -1,0 +1,322 @@
+{
+  "source_base": "c769427",
+  "public_vector": "ff98eb259e0ddd06ee7ca642b6908245f48b14e3",
+  "artifacts": [
+    {
+      "file": "daguerre_hoard/studio_native/durer/durer_hoard/static/app.js",
+      "bytes": 22773,
+      "sha256": "7a535bdd084c25d2691883ba721ef53a624392269bc492938db61cc4b11b205e"
+    },
+    {
+      "file": "daguerre_hoard/studio_native/durer/durer_hoard/static/copilot.js",
+      "bytes": 10900,
+      "sha256": "e37197f8a1ea03740ad8b71e0fd65a5f6dc92063c1ff3384ea52f8d24ab00a8e"
+    },
+    {
+      "file": "daguerre_hoard/studio_native/durer/durer_hoard/static/icon.png",
+      "bytes": 227222,
+      "sha256": "1454d2fe501014db7be719bed6eacdf01a1b69a41465ba7d6b88e8de0e877096"
+    },
+    {
+      "file": "daguerre_hoard/studio_native/durer/durer_hoard/static/icon.svg",
+      "bytes": 303164,
+      "sha256": "ea6479bacae055899a1a416c2a160dbc2ba6c4367401c4a27682b6f74feefde7"
+    },
+    {
+      "file": "daguerre_hoard/studio_native/durer/durer_hoard/static/index.html",
+      "bytes": 10112,
+      "sha256": "1c1db7d6122f2b4d86fa3a4c4cedd3f7ab60e56c7a91b6c8b29287c966adf756"
+    },
+    {
+      "file": "daguerre_hoard/studio_native/durer/durer_hoard/static/style.css",
+      "bytes": 12613,
+      "sha256": "91e0cce1ccf30edafc9b1fbd4be5852122943a6ca5adcf33c1a3c69a22c8d79b"
+    },
+    {
+      "file": "daguerre_hoard/studio_native/durer/native/bin/durer-cli.exe",
+      "bytes": 53449216,
+      "sha256": "517b739f89a446eca19a147962b27e7b5d47b04df9b39417beb28ecfe46862d2"
+    },
+    {
+      "file": "daguerre_hoard/studio_native/durer/native/bin/durer.exe",
+      "bytes": 78035456,
+      "sha256": "9f80f3df5a5dadb3d829cac27b23c4af8df62889b7bc341c5c085865578fe2db"
+    },
+    {
+      "file": "daguerre_hoard/studio_ui/fonts/cinzel-latin-400-normal.woff2",
+      "bytes": 14128,
+      "sha256": "b873cdd90d6bd9ca4793c805b4175abfae00b3611ee8afccf63067133dcf1217"
+    },
+    {
+      "file": "daguerre_hoard/studio_ui/fonts/cinzel-latin-700-normal.woff2",
+      "bytes": 15184,
+      "sha256": "8efa224fe70fef188a39c095e218b81fd31061809f2752537e33a9ec7b9c2263"
+    },
+    {
+      "file": "daguerre_hoard/studio_ui/fonts/cinzel-LICENSE.txt",
+      "bytes": 4382,
+      "sha256": "f5a242cf68ad6ebd0603b3359a74c593ca080318a681035be5296ba2c6b04ae6"
+    },
+    {
+      "file": "daguerre_hoard/studio_ui/fonts/source-sans-3-latin-400-normal.woff2",
+      "bytes": 15696,
+      "sha256": "0f73f35e08cde0a2f10c109c6e01d71459d97e4099ecd9a50f1b6c0209e4de2b"
+    },
+    {
+      "file": "daguerre_hoard/studio_ui/fonts/source-sans-3-latin-700-normal.woff2",
+      "bytes": 15596,
+      "sha256": "ae35266f2ab0d5314ff9a04127931eb26c793e4f1269bb240046d4d2db4b7bb1"
+    },
+    {
+      "file": "daguerre_hoard/studio_ui/fonts/source-sans-3-LICENSE.txt",
+      "bytes": 4314,
+      "sha256": "18aabf190848725e2576eefb5c29ba06aac1029d02132252a7f312eac2e50cf3"
+    },
+    {
+      "file": "daguerre_hoard/studio_ui/native.js",
+      "bytes": 1049,
+      "sha256": "184bfc573fec2121c89d3f8f61ef7dfa0385251e854f71ed7565564d5d427a21"
+    },
+    {
+      "file": "daguerre_hoard/studio_ui/off.js",
+      "bytes": 779,
+      "sha256": "d3901061b4da0680842173108919148e2c3261499f8ac858641c67a84e93f669"
+    },
+    {
+      "file": "daguerre_hoard/studio_ui/studio.js",
+      "bytes": 5188,
+      "sha256": "c29814ac7841ef00dd309d6eda34f4cd4732a86bbcae6240e48d707d57078704"
+    },
+    {
+      "file": "frontend/dist/app-icon.png",
+      "bytes": 187062,
+      "sha256": "918fcaadfda8bd9bb9b2c55ec992e11e69f1b04fa988b2f8f055a7d0840115e2"
+    },
+    {
+      "file": "frontend/dist/assets/cinzel-latin-400-normal-C8jUSQqm.woff",
+      "bytes": 16616,
+      "sha256": "99c6477f06f0c717d31f2bb41013582c347be65366179d5726d107ad908ff3b0"
+    },
+    {
+      "file": "frontend/dist/assets/cinzel-latin-400-normal-DnUIPmzd.woff2",
+      "bytes": 14128,
+      "sha256": "b873cdd90d6bd9ca4793c805b4175abfae00b3611ee8afccf63067133dcf1217"
+    },
+    {
+      "file": "frontend/dist/assets/cinzel-latin-700-normal-C-gK7hA8.woff",
+      "bytes": 17524,
+      "sha256": "83ea41e439a253b4d436cc895d07a0d47f714c4816a23e86df35c442eddffafb"
+    },
+    {
+      "file": "frontend/dist/assets/cinzel-latin-700-normal-Dkw14w9r.woff2",
+      "bytes": 15184,
+      "sha256": "8efa224fe70fef188a39c095e218b81fd31061809f2752537e33a9ec7b9c2263"
+    },
+    {
+      "file": "frontend/dist/assets/cinzel-latin-ext-400-normal-DJ0Lq8y-.woff",
+      "bytes": 9292,
+      "sha256": "92a7ae1bae4213eff4bd574b5d0161b11fa226b70d299716b1870fdd076ba027"
+    },
+    {
+      "file": "frontend/dist/assets/cinzel-latin-ext-400-normal-XQK_CSAr.woff2",
+      "bytes": 7856,
+      "sha256": "4fc5b16d66f7ec618140abe75294dfb615c34ab2d824bd8a67691af58ddf6640"
+    },
+    {
+      "file": "frontend/dist/assets/cinzel-latin-ext-700-normal-C24KFjuG.woff2",
+      "bytes": 8256,
+      "sha256": "55b110958b9b614a410cf607c12b1ff2990fa3e5bd0bfacf17e5fd7dce681562"
+    },
+    {
+      "file": "frontend/dist/assets/cinzel-latin-ext-700-normal-CORa-yIv.woff",
+      "bytes": 9812,
+      "sha256": "dd34984698f3fa925365b89530fdfdfe9fa70ee2f681b233f267491145c8ecbd"
+    },
+    {
+      "file": "frontend/dist/assets/index-BWDjhvda.css",
+      "bytes": 50695,
+      "sha256": "19239dc81b336af57e2667b17bd4d117e53002b41f01c9b517a47890d0866072"
+    },
+    {
+      "file": "frontend/dist/assets/index-D5iWzPra.js",
+      "bytes": 288957,
+      "sha256": "37458eab7d6c5246ed59bed405629bf37f0f572f5125c88169d7c9dec7d78472"
+    },
+    {
+      "file": "frontend/dist/assets/source-sans-3-cyrillic-400-normal-DjhbW-4D.woff2",
+      "bytes": 9604,
+      "sha256": "b0324c3af47c138a2b5457466037637b8279576197024ed6968041836ffc0546"
+    },
+    {
+      "file": "frontend/dist/assets/source-sans-3-cyrillic-400-normal-DkNBMcYd.woff",
+      "bytes": 12096,
+      "sha256": "67173d2915388e05cc27b1aa04f4b27e444b268c9d305e9d460bf740d54e8d2f"
+    },
+    {
+      "file": "frontend/dist/assets/source-sans-3-cyrillic-700-normal-CIuudVLB.woff2",
+      "bytes": 9604,
+      "sha256": "1c484c7583999a7471c7d2dff4f0d1e001d459afaed4f58b3f6e0d88548d982c"
+    },
+    {
+      "file": "frontend/dist/assets/source-sans-3-cyrillic-700-normal-D_p3L75o.woff",
+      "bytes": 12004,
+      "sha256": "a95612f5cc2cc5d5e0a3338793dcaa274565d406033187e790f0022f661a5b55"
+    },
+    {
+      "file": "frontend/dist/assets/source-sans-3-cyrillic-ext-400-normal-BqOlcezh.woff",
+      "bytes": 7108,
+      "sha256": "a6eac83691f29a58c18a353ce51dcf849a8db4925f2731eabdb5bed60f24388a"
+    },
+    {
+      "file": "frontend/dist/assets/source-sans-3-cyrillic-ext-400-normal-BwJdxs7r.woff2",
+      "bytes": 5576,
+      "sha256": "5d89d7bc06f9eb952b94bd148c5a7ae687cde1810eedbe913ad527ed0482839f"
+    },
+    {
+      "file": "frontend/dist/assets/source-sans-3-cyrillic-ext-700-normal-BhUSqjb8.woff2",
+      "bytes": 5540,
+      "sha256": "2aa0e8a007570ab8eab5bb3b4041243d9e117656e72031b7fb733119f496c045"
+    },
+    {
+      "file": "frontend/dist/assets/source-sans-3-cyrillic-ext-700-normal-COA7LiPB.woff",
+      "bytes": 7040,
+      "sha256": "2352beed8cf9ceaae85e6d7e5a54c8a7dd214cf69aad304d7fc5cfbefbba68d1"
+    },
+    {
+      "file": "frontend/dist/assets/source-sans-3-greek-400-normal-DyO2Yfz5.woff",
+      "bytes": 10124,
+      "sha256": "a76b2acfde6f84c31a1955e2be2efabaf692985a65744f55a6e5b1653b96758d"
+    },
+    {
+      "file": "frontend/dist/assets/source-sans-3-greek-400-normal-DZReXJla.woff2",
+      "bytes": 8024,
+      "sha256": "7f0050bec7f5350c0d331ff3513308416f33496a478b8914c8381b6a70f2811c"
+    },
+    {
+      "file": "frontend/dist/assets/source-sans-3-greek-700-normal-C-sAg5NG.woff",
+      "bytes": 10096,
+      "sha256": "948cb5181acc5e065ff4457ea2a0dfa5f582266d5e4ec2f1b1bcbb72bd20976b"
+    },
+    {
+      "file": "frontend/dist/assets/source-sans-3-greek-700-normal-C8Tp2qRF.woff2",
+      "bytes": 7984,
+      "sha256": "c80dc9b474bec019ad2be0b9713d1bade3f836e8ee866c4ebea887f8bda46f7d"
+    },
+    {
+      "file": "frontend/dist/assets/source-sans-3-greek-ext-400-normal-CN4VBqpr.woff",
+      "bytes": 7988,
+      "sha256": "5ff6210332abe9a1148c7e0969ad9d94d2995ddab1ccb5751b1fd16b60606f5a"
+    },
+    {
+      "file": "frontend/dist/assets/source-sans-3-greek-ext-400-normal-CpIwTHMM.woff2",
+      "bytes": 6024,
+      "sha256": "2a10434a46d7ad591d62dd9330dff15cf1db7bf411dcb73f619f159068bf5508"
+    },
+    {
+      "file": "frontend/dist/assets/source-sans-3-greek-ext-700-normal-Dd6uIcuy.woff2",
+      "bytes": 6012,
+      "sha256": "3eedb5eb260600a311603665d164abfd5c025fa01f8f2d20eca56dad989d0ffe"
+    },
+    {
+      "file": "frontend/dist/assets/source-sans-3-greek-ext-700-normal-KTP46hTS.woff",
+      "bytes": 7972,
+      "sha256": "b6a0483ebc7a8e8fa591b57e17cca678b8338992f84b48e67b6a494dea324b49"
+    },
+    {
+      "file": "frontend/dist/assets/source-sans-3-latin-400-normal-DQi5PRDE.woff2",
+      "bytes": 15696,
+      "sha256": "0f73f35e08cde0a2f10c109c6e01d71459d97e4099ecd9a50f1b6c0209e4de2b"
+    },
+    {
+      "file": "frontend/dist/assets/source-sans-3-latin-400-normal-RR2C27NP.woff",
+      "bytes": 19992,
+      "sha256": "8969d8c55bd5d6aebf95b2603612503cd6424a4d3b8e9606a38a831bda1cd5c2"
+    },
+    {
+      "file": "frontend/dist/assets/source-sans-3-latin-700-normal-B-h9tW5h.woff",
+      "bytes": 19908,
+      "sha256": "dfdfe9a92eb014666e44bb90f5eb375888295839f2f17ebd1163a097c07b25f7"
+    },
+    {
+      "file": "frontend/dist/assets/source-sans-3-latin-700-normal-CkzU-mV9.woff2",
+      "bytes": 15596,
+      "sha256": "ae35266f2ab0d5314ff9a04127931eb26c793e4f1269bb240046d4d2db4b7bb1"
+    },
+    {
+      "file": "frontend/dist/assets/source-sans-3-latin-ext-400-normal-D5P-Ud2J.woff",
+      "bytes": 43736,
+      "sha256": "4827f30a859c8e939041ade2f044b3a4381e918939589dcefc07f3113c072184"
+    },
+    {
+      "file": "frontend/dist/assets/source-sans-3-latin-ext-400-normal-UNsKFIBq.woff2",
+      "bytes": 33024,
+      "sha256": "f5706bb057951632456ecbc496dfd01f0e1598718cb31c464c74a6b1fe79c837"
+    },
+    {
+      "file": "frontend/dist/assets/source-sans-3-latin-ext-700-normal-6Xi0A2be.woff2",
+      "bytes": 32956,
+      "sha256": "6a9fd74275186fc7c5019796401ac280d2cdd19afc6cbb1ae9af481cbda9d25c"
+    },
+    {
+      "file": "frontend/dist/assets/source-sans-3-latin-ext-700-normal-C1ecyfgK.woff",
+      "bytes": 43396,
+      "sha256": "6f0761453ab86868f53eba246d76905783e5332cd2753bdab7f995dd94849dcf"
+    },
+    {
+      "file": "frontend/dist/assets/source-sans-3-vietnamese-400-normal-CwtaIDr2.woff2",
+      "bytes": 6216,
+      "sha256": "06d1ea08ca0f42e1eba33fb67670d3aa24f0a5bc14f5076094f2e4c43790929d"
+    },
+    {
+      "file": "frontend/dist/assets/source-sans-3-vietnamese-400-normal-eMQk7hmk.woff",
+      "bytes": 8280,
+      "sha256": "5b92c8240a0fb27f46abcce0e3f9447604d47f527267ba5891c3fbba59c0a39c"
+    },
+    {
+      "file": "frontend/dist/assets/source-sans-3-vietnamese-700-normal-Bgamivog.woff2",
+      "bytes": 6136,
+      "sha256": "16b08bc821a9a93bc3c7379c41801edb0a35806e1eac54630467a7439ca8ca6c"
+    },
+    {
+      "file": "frontend/dist/assets/source-sans-3-vietnamese-700-normal-W-J7ohm4.woff",
+      "bytes": 8252,
+      "sha256": "fb62c7d2c014ceb610909383e218e343268a78238bf048bba21b7be75d143f6e"
+    },
+    {
+      "file": "frontend/dist/favicon-192.png",
+      "bytes": 29083,
+      "sha256": "bcb4c56b849114a4e1f2c3c64b8e89bacba731f1d83d5c6cf7d76823d2105cfd"
+    },
+    {
+      "file": "frontend/dist/favicon.ico",
+      "bytes": 87227,
+      "sha256": "c4b88531a598c3a23d2879db0f625807bcc20d0941e1ec022e490e0ff30ee5a0"
+    },
+    {
+      "file": "frontend/dist/index.html",
+      "bytes": 625,
+      "sha256": "6d800e8560f11142530d2e7b169d4d976ce4c29c005d30abd9d269e1244988eb"
+    },
+    {
+      "file": "native/bin/daguerre-develop-cli.exe",
+      "bytes": 53878272,
+      "sha256": "a08fd029e6f9ff6a9bbd666dd8215cf3e861e94947a3e64472eabbafc4925a46"
+    },
+    {
+      "file": "native/bin/daguerre-develop.exe",
+      "bytes": 56599552,
+      "sha256": "e08528eda864fae2c0f6d67cca3f6f0a2150cc68e009d0939de16ddd4981ed62"
+    },
+    {
+      "file": "native/bin/daguerre-layers-cli.exe",
+      "bytes": 26709504,
+      "sha256": "c12019eef460ab119f409606b08b80579dc889dc7c093398a7583df39c0ab5e1"
+    },
+    {
+      "file": "native/bin/daguerre-layers.exe",
+      "bytes": 46145024,
+      "sha256": "2c4a93964a8f0fa4ae5c8866837ab17a00a0a078dc2dbcb7a7f01d8ff68a6e98"
+    }
+  ],
+  "limits": "Owned source builds only; no installed package or CUA certification"
+}
