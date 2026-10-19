@@ -3,6 +3,7 @@ import json
 import httpx
 import pytest
 from daguerre_hoard import global_model
+from daguerre_hoard.hoard_link import BackendError
 from daguerre_hoard.hoard_link.config import LinkConfig,CapabilityConfig
 
 
@@ -43,6 +44,25 @@ def test_stale_or_truncated_global_response_has_no_retry(monkeypatch,status,fini
         return httpx.Response(status,json={'choices':[{'message':{'role':'assistant','content':'partial'},'finish_reason':finish}]})
     link=global_model.GlobalLink(LinkConfig(),client=httpx.AsyncClient(transport=httpx.MockTransport(transport)))
     try:
-        with global_model.scope(),pytest.raises(Exception):link.sync.chat([{'role':'user','content':'inert'}])
+        with global_model.scope(),pytest.raises(BackendError):link.sync.chat([{'role':'user','content':'inert'}])
+        assert len(calls)==1
+    finally:link.sync.close()
+
+
+def test_truncated_global_caption_retains_native_caption_error_contract(tmp_path,monkeypatch):
+    from PIL import Image
+    from daguerre_hoard.captions import LinkCaptioner
+    monkeypatch.setattr(global_model,'descriptor',lambda _:dict(endpoint_id='e',model='m',connection_revision='r',
+        vision=True,url='http://faustus.invalid/api/global-model/v1/chat/completions',headers={}))
+    calls=[]
+    def transport(request):
+        calls.append(request)
+        return httpx.Response(200,json={'choices':[{'message':{'role':'assistant','content':'partial'},'finish_reason':'length'}]})
+    link=global_model.GlobalLink(LinkConfig(),client=httpx.AsyncClient(transport=httpx.MockTransport(transport)))
+    source=tmp_path/'synthetic.png';Image.new('RGB',(32,32),(30,60,90)).save(source)
+    try:
+        result=LinkCaptioner(link).caption(source)
+        assert not result.ok and result.caption is None
+        assert result.error and 'completó' in result.error
         assert len(calls)==1
     finally:link.sync.close()

@@ -96,28 +96,20 @@ está en [docs/USABILITY_REPORT.md](docs/USABILITY_REPORT.md)):
 | Valoraciones, etiquetas, palabras clave y recetas de retoque | Por foto: de 0 a 5 estrellas (o descartada), una etiqueta, palabras clave y una pequeña receta de revelado no destructiva, guardadas en Daguerre y, si lo activas, también como un `.xmp` estándar junto a la foto; los `.xmp` que ya existan (y el XMP incrustado en JPEG/TIFF/PNG/WebP) se leen en cada escaneo. Detalles más abajo | Daguerre solo renderiza la exposición de una receta (con Daguerre Develop); el resto son datos para los reveladores RAW. La escritura de `.xmp` está desactivada por defecto |
 | Interfaz | Interfaz React de escritorio: cuadrícula de miniaturas con carga continua, visor con zoom y desplazamiento sobre una vista previa grande (1600 px) del original, panel EXIF, fotos parecidas, inglés y español, tema claro y oscuro | Las secciones de la barra lateral no tienen URL propia |
 | Integración con el asistente | `faustus-plugin.json`, 22 herramientas MCP por stdio y cada llamada del agente registrada en «Actividad del asistente» | El agente puede añadir una carpeta, pero no quitarla |
-| Modelos compartidos | Las descripciones y la traducción de búsquedas usan el modelo que ya tenga en marcha Faustus, o un Ollama/llama.cpp/servidor local compatible con OpenAI (Ajustes -> Modelos compartidos muestra qué se resolvió y por qué, con un ajuste manual) | La búsqueda de imágenes (CLIP) siempre es local: no es un modelo de chat que cubra el backend compartido |
+| Modelos compartidos | Las descripciones y la traducción usan la selección global exacta de Faustus; Ajustes muestra disponibilidad y configuración anterior conservada | La búsqueda de imágenes (CLIP) siempre es local: no es un modelo de chat que cubra el backend compartido |
 
 ## Modelos compartidos
 
-Daguerre nunca carga su propia copia de un modelo de lenguaje o de visión.
-Dos funciones pasan por [HoardLink](https://github.com/Luissalet/HoardLink),
-un pequeño resolutor que llevan incluido las aplicaciones que comparten
-modelos en el mismo equipo: las
-**descripciones** de foto (capacidad `vision`) y la **traducción
-automática** de la búsqueda (capacidad `llm`). El orden de resolución es
-siempre el mismo: primero un ajuste manual guardado en Ajustes, luego un
-Faustus en marcha, luego un servidor local Ollama / llama.cpp / compatible
-con OpenAI que ya esté sirviendo un modelo adecuado -- así Daguerre nunca le
-pide a la GPU que cargue una segunda copia. Si nada se resuelve, ambas funciones lo
-dicen claramente y se quedan desactivadas (sus botones aparecen
-deshabilitados con el motivo); el resto de Daguerre (indexado,
-búsqueda, duplicados, cronología, lugares, álbumes) funciona sin conexión
-y sin ningún modelo. Más detalle en
-[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#shared-model-backend-hoard-link).
+Las descripciones y la traducción de búsquedas utilizan el modelo global exacto
+seleccionado en Faustus mediante una composición propia del SDK HoardLink intacto.
+Cada trabajo fija endpoint, modelo y revisión; una selección no disponible u obsoleta
+produce un error. Daguerre no elige alternativas locales ni carga modelos de texto
+o visión. Los nombres y URL anteriores se conservan para continuidad. El resto de
+funciones fotográficas y la edición vectorial funcionan sin un modelo de chat.
+Véase el [manual del estudio](docs/STUDIO930.md).
 
 ![Pantalla de Ajustes con el panel de Modelos compartidos](docs/media/settings.png)
-*Aplicación real: en esta demostración no hay ni Faustus ni un Ollama/llama.cpp local en marcha, así que ambas capacidades informan honestamente «No disponible» junto con el motivo.*
+*Captura histórica de los ajustes compartidos. El estudio actual solo utiliza el servicio global configurado en Faustus.*
 
 ## Conectarlo a Faustus
 
@@ -289,7 +281,9 @@ Los mismos pasos a mano:
 ```powershell
 python -m venv .venv
 .venv\Scripts\python -m pip install -r requirements-lock.txt
-cd frontend; npm ci; npm run build; cd ..
+.venv\Scripts\python scripts/build_studio_assets.py
+.venv\Scripts\python scripts/build_engines.py
+.venv\Scripts\python daguerre_hoard/studio_native/durer/scripts/build_engine.py
 .venv\Scripts\python -m daguerre_hoard --demo     # biblioteca sintética en data-demo\
 .venv\Scripts\python -m daguerre_hoard            # tu propia biblioteca, http://127.0.0.1:8814
 ```
@@ -301,7 +295,9 @@ git clone https://github.com/Luissalet/DaguerresHoard.git
 cd DaguerresHoard
 python3 -m venv .venv
 .venv/bin/python -m pip install -r requirements-lock.txt
-(cd frontend && npm ci && npm run build)
+.venv/bin/python scripts/build_studio_assets.py
+.venv/bin/python scripts/build_engines.py
+.venv/bin/python daguerre_hoard/studio_native/durer/scripts/build_engine.py
 .venv/bin/python -m daguerre_hoard --demo --no-browser   # biblioteca sintética en data-demo/
 curl http://127.0.0.1:8814/api/health                 # {"service":"daguerres-hoard",...}
 ```
@@ -328,7 +324,7 @@ flowchart LR
     ENG --> DB[("SQLite (WAL)<br/>índice, álbumes, registro")]
     ENG --> CLIP["CLIP ViT-B/32<br/>ONNX Runtime"]
     ENG -->|"solo lectura"| PICS[/"Tus carpetas de fotos"/]
-    ENG --> HL["HoardLink"] -->|"solo loopback"| LLM["Faustus / Ollama /<br/>llama.cpp"]
+    ENG --> HL["HoardLink"] -->|"solo loopback"| LLM["Modelo global de Faustus"]
 ```
 
 ![Duplicados aproximados con la copia recomendada](docs/media/duplicates.png)
@@ -342,7 +338,9 @@ flowchart LR
 ```bash
 .venv/bin/python -m pytest -q            # pruebas locales, sin descargar modelos ni GPU
 .venv/bin/python -m pytest -q -m model   # 1 test opcional con el modelo CLIP real (lo descarga si falta)
-(cd frontend && npm ci && npm run build) # TypeScript estricto
+.venv/bin/python scripts/build_studio_assets.py
+.venv/bin/python scripts/build_engines.py
+.venv/bin/python daguerre_hoard/studio_native/durer/scripts/build_engine.py # TypeScript estricto
 ```
 
 (En Windows: `.venv\Scripts\python -m pytest -q`.)
@@ -388,9 +386,8 @@ Python 3.11, 3.12 y 3.13, compila la interfaz con Node 22 y prueba
   `data/mcp-token`. Sin CORS y sin telemetría.
 - Las únicas peticiones a internet son las que lanzas en Ajustes: el
   modelo CLIP desde Hugging Face y los datos de GeoNames. Las
-  descripciones y la traducción de búsquedas solo hablan con servidores de
-  modelos en loopback (Faustus, Ollama, llama.cpp u otro compatible con
-  OpenAI).
+  descripciones y la traducción utilizan el servicio familiar de Faustus
+  configurado; las credenciales del proveedor permanecen allí.
 - Cada llamada del asistente queda registrada en **Actividad del
   asistente** (herramienta, argumentos, duración, resultado o error); los
   clics de la propia interfaz van por otras rutas y no se mezclan.

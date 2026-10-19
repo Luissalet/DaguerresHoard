@@ -24,6 +24,7 @@ class Module:
         self.automatic = False
         self.requests = {}
         self.transition = None
+        self.context_failed = False
 
     def status(self):
         return dict(id=self.name, enabled=self.phase == 'on', phase=self.phase, automatic=self.automatic,
@@ -51,6 +52,7 @@ class Module:
                 context = app.router.lifespan_context(app)
                 await context.__aenter__()
                 self.app, self.context, self.automatic = app, context, bool(automatic)
+                self.context_failed = False
                 self.phase = 'on'
             except BaseException:
                 if app is not None and hasattr(app.state, 'shutdown'):
@@ -66,7 +68,21 @@ class Module:
                 disconnect.set()
             if active:
                 await asyncio.gather(*(t for t, _ in active), return_exceptions=True)
-            await self.context.__aexit__(None, None, None)
+            try:
+                if self.context_failed:
+                    # An async-generator context is exhausted after a failed
+                    # finally. Re-exiting it does not retry resource cleanup.
+                    shutdown=getattr(getattr(self.app,'state',None),'shutdown',None)
+                    if not callable(shutdown):
+                        raise ValueError('The previous close failed; native resources remain owned.')
+                    await asyncio.to_thread(shutdown)
+                else:
+                    await self.context.__aexit__(None, None, None)
+            except BaseException as error:
+                self.context_failed = True
+                if isinstance(error,Exception):
+                    raise ValueError(f'{self.name} close is incomplete: {error}') from error
+                raise
             self.app = self.context = None
             self.phase, self.automatic = 'off', False
         return self.status()

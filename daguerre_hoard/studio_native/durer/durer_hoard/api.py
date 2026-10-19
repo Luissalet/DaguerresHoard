@@ -261,6 +261,10 @@ def create_app(config):
     from ....hoard_link.tokens import read_or_create_token
     from ....hoard_link.copilot import install_copilot
     configure_owner(config)
+    def shutdown():
+        sessions.close()
+        from .native import close_guis
+        close_guis()
     @asynccontextmanager
     async def lifetime(app):
         await asyncio.to_thread(config.data_dir.mkdir, parents=True, exist_ok=True)
@@ -268,10 +272,9 @@ def create_app(config):
         try:
             yield
         finally:
-            await asyncio.to_thread(sessions.close)
-            from .native import close_guis
-            await asyncio.to_thread(close_guis)
+            await asyncio.to_thread(shutdown)
     app = FastAPI(title='Daguerre · Vector',version='0.1.0',lifespan=lifetime)
+    app.state.shutdown = shutdown
     app.include_router(router)
     app.mount('/static',StaticFiles(directory=ROOT/'durer_hoard'/'static'),name='static')
     family.install_fastapi(app,'durer',str(config.data_dir),contract=True,

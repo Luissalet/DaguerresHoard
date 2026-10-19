@@ -12,7 +12,7 @@ import threading
 
 import httpx
 
-from .hoard_link import Link
+from .hoard_link import BackendError, Link
 from .hoard_link._sync import SyncFacade
 from .hoard_link.types import Resolution
 from .hoard_link.reasoning import timeout_for
@@ -126,9 +126,13 @@ class GlobalLink(Link):
     async def _post_chat(self, provider, url, body, level):
         choice = self._selection.get()
         if choice is None or url != choice['url']:
-            raise RuntimeError('La llamada no coincide con el modelo global fijado.')
+            raise BackendError('global',409,'La llamada no coincide con el modelo global fijado.')
         response = await super()._post_json(provider, url, payload(body,choice),
             timeout=timeout_for(120,level), headers=choice['headers'])
-        if response.json()['choices'][0].get('finish_reason') != 'stop':
-            raise RuntimeError('El modelo global no completó la respuesta.')
+        try:
+            finish=response.json()['choices'][0]['finish_reason']
+        except (ValueError,KeyError,IndexError,TypeError) as error:
+            raise BackendError('global',502,'La respuesta global no tiene una finalización válida.') from error
+        if finish != 'stop':
+            raise BackendError('global',502,'El modelo global no completó la respuesta.')
         return response

@@ -67,3 +67,28 @@ async def test_repeated_caller_cancellation_cannot_release_native_work_before_of
         await request
     await stopping
     assert closed.is_set() and module.phase == 'off' and not module.requests
+
+
+@pytest.mark.asyncio
+async def test_failed_async_generator_close_retries_owned_cleanup_before_off(tmp_path):
+    repaired=threading.Event()
+    calls=[]
+    def shutdown():
+        calls.append('close')
+        if not repaired.is_set():raise RuntimeError('owned window is unavailable')
+    @asynccontextmanager
+    async def lifetime(_app):
+        yield
+        shutdown()
+    async def factory(*_args):
+        return SimpleNamespace(router=SimpleNamespace(lifespan_context=lifetime),state=SimpleNamespace(shutdown=shutdown))
+    module=Module('vector',factory,tmp_path,1,False)
+    await module.set(True)
+    for count in (1,2):
+        with pytest.raises(ValueError,match='close is incomplete'):
+            await module.set(False)
+        assert module.phase=='stopping' and module.app is not None
+        assert len(calls)==count
+    repaired.set()
+    await module.set(False)
+    assert len(calls)==3 and module.phase=='off' and module.app is None

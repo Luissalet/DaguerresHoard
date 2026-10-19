@@ -1,3 +1,13 @@
+# Studio operations
+
+The cold owner adds seven common operations to the retained31 photo operations
+and57 vector aliases (95 total). Connecting/discovering starts no native engine;
+use `visual_module_set` explicitly. Full vector schemas and659 commands are frozen
+at source build time. Common projects bind real native IDs and revisions; see
+[STUDIO930.md](STUDIO930.md) for the transfer/export/download flow and its current
+verification limits. The photographic reference below remains applicable inside
+Photos; originals, reference matching, Layers and Develop are preserved.
+
 # MCP tools
 
 Daguerre's Hoard exposes 31 photo-library and local Craft-engine tools over stdio
@@ -161,10 +171,9 @@ model, lens, f_number, exposure_time, iso, focal_length, orientation,
 gps_lat, gps_lon, city, region, country, caption}`; fields without data
 are omitted. `date_source` is `exif` or `file_mtime` (no EXIF date). With
 `caption=true` and no caption yet, the photo (downscaled to 1024 px) is
-sent to whatever the shared model backend resolves for the `vision`
-capability (Faustus, a loopback Ollama/llama.cpp/OpenAI-compatible
-server, or the app's own configured Ollama override -- see the README's
-"Shared models" section); if nothing resolves the result carries
+sent to the exact configured Faustus global vision model, with endpoint/model/
+connection revision pinned for the job (see the README's "Shared models" section).
+If the global service is unavailable or its completion is incomplete, the result carries
 `caption_error` instead of failing the call.
 
 ## photos_duplicates

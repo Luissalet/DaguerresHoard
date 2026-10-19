@@ -272,6 +272,7 @@ def create_app(data_dir: Path, static_dir: Path | None = None, port: int = 8814,
     # name or a tailnet). strict_ports keeps the old rule that the Host names this app's own port.
     install_guard(app, port_getter=lambda: port, allowed_env="DAGUERRE_ALLOWED_HOSTS", strict_ports=True)
     app.state.library = lib
+    app.state.shutdown = lib.close
 
     @app.on_event('shutdown')
     async def close_library():

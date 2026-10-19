@@ -87,29 +87,25 @@ real MCP stdio by a script that plays a small local model
 | Search | Text to image with CLIP ViT-B/32 (English queries work best; the tools tell the model to translate), similar photos, filters (date range, year, month, place, folder, camera, orientation, megapixels, GPS). Hybrid with captions when they exist | The model (about 600 MB) is downloaded only when the user clicks it in Settings. Until then a colour-only fallback is active and every result says so |
 | Duplicates | Exact (BLAKE2b) and near (pHash, Hamming distance up to 6, exact multi-index lookup, union-find) with a suggested keeper (the original, not the backup or chat-app copy) and the space that extra copies use | Read-only by design: "Copy paths of the extra copies" and "Open folder", deleting is up to you. A near group can join different look-alike photos, so its space is shown as "up to" |
 | Places and time | Offline reverse geocoding (bundled 10-city table, or GeoNames `cities1000` on request, where a neighbourhood is labelled with the city it belongs to: "Alfama, Lisbon, Portugal"), countries and cities with photo counts, timeline by year and month, "on this day" | No map tiles, to avoid any network request for a view. The bundled table places nothing more than 50 km from its 10 cities |
-| Captions | Optional, from a local vision model found through the shared backend (see below), per photo or as a background batch, stored in a full-text index for hybrid search | Off by default; never generated during indexing |
+| Captions | Optional, from the configured Faustus global vision model (see below), per photo or as a background batch, stored in a full-text index for hybrid search | Off by default; never generated during indexing |
 | Albums | Created by you or the agent from the lightbox or by tool call; the agent can only add | No nested albums |
 | Ratings, labels, keywords, retouch recipes | Per photo: 0-5 stars (or rejected), a label, keywords and a small non-destructive develop recipe, stored in Daguerre and, if you turn it on, kept as a standard `.xmp` sidecar next to the photo; existing sidecars (and XMP embedded in JPEG/TIFF/PNG/WebP) are read on every scan. Details below | Daguerre renders only the exposure of a recipe (through Daguerre Develop); the rest is data for RAW developers. Sidecar writing is off by default |
 | Interface | React desktop-style UI: thumbnail grid with infinite scroll, lightbox with zoom and pan on a large (1600 px) preview of the original, EXIF panel, similar strip, English and Spanish, light and dark | Sidebar sections are not deep-linkable URLs |
 | Assistant integration | `faustus-plugin.json`, 30 MCP tools over stdio, every agent call audited in "Assistant activity" | The agent can add a folder but not remove one |
-| Shared models | Captions and query translation share whatever model server Faustus or a local Ollama/llama.cpp/OpenAI-compatible server already has running (Settings -> Shared models shows what resolved and why, with a manual override) | Image search itself (CLIP) is always local, never shared: it is not a chat model the shared backend covers |
+| Shared models | Captions and query translation use the exact Faustus global selection; Settings shows availability and retained legacy configuration | Image search itself (CLIP) is always local, never shared: it is not a chat model the shared backend covers |
 
 ## Shared models
 
-Daguerre never loads its own copy of a language or vision model. Two features
-go through [HoardLink](https://github.com/Luissalet/HoardLink), a small
-resolver vendored into each app that shares models on the same machine: photo **captions** (the `vision` capability) and
-automatic **query translation** for the search box (the `llm` capability).
-Resolution order is always the same: an explicit override set in Settings,
-then a running Faustus, then a loopback Ollama / llama.cpp / OpenAI-compatible
-server -- whichever is already serving a fitting model, so Daguerre never
-asks a GPU to load a second copy. Both features simply say so and stay off
-when nothing resolves (their buttons are disabled with the reason); the rest of Daguerre (indexing, search, duplicates,
-timeline, places, albums) works fully offline with no model at all. See
-[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#shared-model-backend-hoard-link).
+Photo captions and query translation use the exact global model selected in
+Faustus through an owned composition of the unchanged HoardLink SDK. Each job
+pins endpoint, model and connection revision; unavailable or stale selection is an
+error. Daguerre never chooses a local fallback or loads a text/vision model.
+Saved legacy local URLs/model names remain readable for continuity. Other photo
+functions and vector editing work without a chat model. See the
+[studio manual](docs/STUDIO930.md).
 
 ![Settings screen showing the Shared models panel](docs/media/settings.png)
-*Actual application: neither Faustus nor a local Ollama/llama.cpp server is running in this demo, so both capabilities honestly report "Not available" with the reason why.*
+*Historical screenshot of the shared-model settings. The current studio uses only the configured Faustus global service.*
 
 ## Connect it to Faustus
 
@@ -275,7 +271,9 @@ The same steps by hand:
 ```powershell
 python -m venv .venv
 .venv\Scripts\python -m pip install -r requirements-lock.txt
-cd frontend; npm ci; npm run build; cd ..
+.venv\Scripts\python scripts/build_studio_assets.py
+.venv\Scripts\python scripts/build_engines.py
+.venv\Scripts\python daguerre_hoard/studio_native/durer/scripts/build_engine.py
 .venv\Scripts\python -m daguerre_hoard --demo     # synthetic library in data-demo\
 .venv\Scripts\python -m daguerre_hoard            # your own library, http://127.0.0.1:8814
 ```
@@ -287,7 +285,9 @@ git clone https://github.com/Luissalet/DaguerresHoard.git
 cd DaguerresHoard
 python3 -m venv .venv
 .venv/bin/python -m pip install -r requirements-lock.txt
-(cd frontend && npm ci && npm run build)
+.venv/bin/python scripts/build_studio_assets.py
+.venv/bin/python scripts/build_engines.py
+.venv/bin/python daguerre_hoard/studio_native/durer/scripts/build_engine.py
 .venv/bin/python -m daguerre_hoard --demo --no-browser   # synthetic library in data-demo/
 curl http://127.0.0.1:8814/api/health                 # {"service":"daguerres-hoard",...}
 ```
@@ -313,7 +313,7 @@ flowchart LR
     ENG --> DB[("SQLite (WAL)<br/>index, albums, audit")]
     ENG --> CLIP["CLIP ViT-B/32<br/>ONNX Runtime"]
     ENG -->|"read only"| PICS[/"Your photo folders"/]
-    ENG --> HL["HoardLink"] -->|"loopback only"| LLM["Faustus / Ollama /<br/>llama.cpp"]
+    ENG --> HL["HoardLink"] -->|"loopback only"| LLM["Faustus global model"]
 ```
 
 ![Near duplicates with the suggested keeper](docs/media/duplicates.png)
@@ -327,7 +327,9 @@ flowchart LR
 ```bash
 .venv/bin/python -m pytest -q            # local tests, no model downloads or GPU
 .venv/bin/python -m pytest -q -m model   # 1 opt-in test with the real CLIP model (downloads it if missing)
-(cd frontend && npm ci && npm run build) # TypeScript strict
+.venv/bin/python scripts/build_studio_assets.py
+.venv/bin/python scripts/build_engines.py
+.venv/bin/python daguerre_hoard/studio_native/durer/scripts/build_engine.py # TypeScript strict
 ```
 
 (On Windows: `.venv\Scripts\python -m pytest -q`.)
@@ -365,8 +367,7 @@ Python 3.11, 3.12 and 3.13, builds the UI with Node 22, and drives
   `data/mcp-token`. No CORS, no telemetry.
 - The only internet requests are the ones you start in Settings: the CLIP
   model from Hugging Face and the GeoNames dataset. Captions and query
-  translation only talk to model servers on loopback (Faustus, Ollama,
-  llama.cpp or another OpenAI-compatible server).
+  translation use the configured Faustus family service; provider credentials stay there.
 - Every assistant call is recorded under **Assistant activity** (tool,
   arguments, duration, result or error); the interface's own clicks use
   separate routes and are not mixed in.

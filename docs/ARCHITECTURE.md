@@ -42,8 +42,8 @@
 - `backend.py` -- `Backend`: builds the vendored Hoard Link `Link` from
   `data/backend.json` plus environment overrides, and maps the legacy
   `ollama_base_url`/`ollama_model` settings into the `vision` capability's
-  explicit override once the owner has actually saved one. See "Shared
-  model backend" below.
+  saved configuration once the owner has actually saved one. GlobalLink does
+  not use it to select inference; see "Shared model backend" below.
 - `lang.py` -- a dependency-free stopword heuristic (`detect_non_english`)
   that decides whether the UI should offer to translate a search query.
 - `hoard_link/` -- vendored copy of the shared Hoard Link library (never
@@ -126,8 +126,8 @@ lock: a second request waits for the first instead of racing it.
    drive does not lose albums or captions.
 
 Progress (files/s and ETA) and stats are written to the job row and
-polled by the UI. Jobs still `running` when the process stopped are
-marked `interrupted` on the next start.
+polled by the UI. In the studio, prior running jobs are shown as held without
+rewriting their historical rows. Legacy recovery is explicit automatic maintenance.
 
 Daguerre never opens an original for writing and never renames, moves or
 deletes anything under a root; all writes go to the data folder. Tested
@@ -201,58 +201,33 @@ Daguerre Develop CLIs, each launched with isolated application data and file pat
 
 ## Shared model backend (Hoard Link)
 
-Daguerre uses two of Hoard Link's eight capabilities: `vision` (captions) and
-`llm` (UI-only query translation). `Library.backend` is one
-`daguerre_hoard.backend.Backend`, built once in `Library.__init__` and
-rebuilt (`backend.reload()`) whenever `data/backend.json` changes or the
-legacy Ollama settings are saved. `Backend._build_link()` loads
-`LinkConfig` from `data/backend.json` + environment, then -- only when
-that file sets no explicit `vision` override *and* a row for
-`ollama_base_url` actually exists in the `settings` table (a fresh install
-has neither) -- maps the legacy value into `vision`'s explicit
-`CapabilityConfig`. This is a one-way migration path, not a permanent
-coupling: setting a `vision` override in `data/backend.json` (via
-`PUT /api/backend/config`) always wins over the legacy field.
+Daguerre uses `vision` for captions and `llm` for UI query translation. The
+owned `Backend` retains backend.json/environment and legacy saved settings, but
+constructs `GlobalLink`: the unchanged SDK is composed with the exact Faustus938
+GET descriptor and authenticated POST completion contract. The first call in a
+request/job pins endpoint ID, model and connection revision, including any repair
+calls. No local override, fallback model, provider credential or model-load request
+participates in this inference path. Native creative engines are independent.
 
-`Library._captioner()` -- the seam `tests/test_engine_edge_cases.py` and
-`tests/test_caption_batch.py` monkeypatch -- returns a `LinkCaptioner`
-wrapping `self.backend.link`. It calls
-`link.sync.chat(images=[jpeg], capability="vision")`, so a caption is
-served by whatever resolves: the legacy/explicit Ollama address, a running
-Faustus, or a loopback probe -- never a private, Ollama-only connection.
-`start_caption_batch` calls `link.sync.wait_idle("vision", max_wait_s=30)`
-before every photo, so a background batch yields to whatever the owner is
-doing with the shared model instead of racing it; if the model stays busy
-for 20 rounds (~10 minutes) the batch postpones -- it stops, keeps what it
-already captioned and reports the rest as `postponed` in its stats and job
-message. The lightbox button and `photos_describe(caption=true)` are
-foreground calls and never wait.
+`Library._captioner()` returns `LinkCaptioner`, calling the owned sync facade with
+JPEG bytes. A stale/malformed/truncated completion becomes BackendError, preserving
+native caption_error behaviour and never saving partial text. Query translation
+retains its existing translate_error/original-search-text behaviour on backend
+errors; it does not select another model. The batch wait interface remains present,
+but global provider scheduling belongs to Faustus: the consumer does not probe
+individual servers or claim it can measure their idle slots.
 
-`Library.search_translated` (used only by the UI's `/api/search`, never
-by `/api/agent/photos_search` -- the MCP tool's docstring tells the agent
-to translate the query itself) runs `lang.detect_non_english` on the
-query and, only when it looks confidently non-English, asks the `llm`
-capability for a short English CLIP phrase via `link.sync.chat(...,
-capability="llm")`. `Unavailable`/`BackendError` fall back silently to
-searching with the original text and surface a `translate_error` field;
-nothing ever blocks a search on the shared model being absent.
+Reload builds a fresh owned Link, retains the180-second retirement grace period,
+and strictly joins retired/current sync loops at shutdown. A malformed backend.json
+reports config_error and uses global Faustus configuration from the environment.
+Legacy local URLs/model names remain saved/readable without affecting global
+selection. `GET /api/backend` preserves all eight capability fields: only the two
+used modalities resolve the global descriptor, while unused capabilities are
+reported as unused without probes. Token presence, saved overrides without token,
+configuration errors and local image-search status remain in the same response.
 
-`Backend.reload()` (Re-check, saving overrides or the legacy Ollama
-fields) builds a fresh `Link` -- an empty probe cache -- and closes the
-replaced one after a 180 s grace period, longer than a chat call's
-timeout, so an in-flight caption or translation finishes; each `Link`'s
-sync facade owns a thread, an event loop and an HTTP client, so they are
-never left behind. `LinkCaptioner` reads the current `Link` on every call,
-so a running batch follows a reload. A `backend.json` that is not valid
-JSON or has a malformed key does not stop the app: it falls back to
-environment + automatic detection and reports `config_error`.
-
-`GET /api/backend` returns `Backend.status()` (Hoard Link's `Resolution`
-for all eight capabilities, `token_set`, the saved `overrides` without the
-token, `config_error`, `used_capabilities`) plus
-`image_search` (the local CLIP embedder's name and whether it is the real
-model or the colour-only fallback) -- CLIP is never shared: it is not a
-chat/embeddings-text model any of Hoard Link's capabilities cover.
+The full studio lifecycle, path layout and source build instructions are in
+`STUDIO930.md`; actual data movement has not been performed.
 
 ## Key decisions
 
@@ -275,8 +250,8 @@ chat/embeddings-text model any of Hoard Link's capabilities cover.
 - **A saved-row check, not just "is `vision` explicit", to migrate the
   legacy Ollama fields.** `get_setting(..., default=None)` distinguishes
   "the owner configured this" from "nothing was ever saved", so a fresh
-  install benefits from Faustus/loopback resolution instead of being
-  pinned to the built-in Ollama address forever.
+  install does not invent a saved legacy setting. Effective inference is
+  always the configured Faustus global selection.
 
 ## Incorporated native image engines
 
