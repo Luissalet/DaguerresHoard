@@ -1,4 +1,1 @@
-"""Native capabilities incorporated into Daguerre.
-
-Imported only after explicit module activation.
-"""
+"""Owned native visual modules; importing this package starts no engine."""

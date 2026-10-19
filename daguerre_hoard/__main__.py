@@ -28,12 +28,14 @@ def _setup_logging(logs_dir: Path) -> None:
 
 
 def main() -> None:
+    from .runtime_entry import bootstrap
     parser = argparse.ArgumentParser(prog="daguerre_hoard")
     parser.add_argument("--port", type=int, default=DEFAULT_PORT)
     parser.add_argument("--data-dir", type=str, default=None)
     parser.add_argument("--demo", action="store_true")
     parser.add_argument("--no-browser", action="store_true")
     args = parser.parse_args()
+    bootstrap(args.data_dir)
 
     data_dir = resolve_data_dir(args.data_dir, args.demo, REPO_ROOT)
     data_dir.mkdir(parents=True, exist_ok=True)

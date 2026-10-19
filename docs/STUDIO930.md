@@ -85,6 +85,36 @@ and all30 original optional photo/compositor checks now pass, including actual D
 exposure/export and original-byte preservation. Explicit metadata discovery of owned
 production binaries matches all18 Layers and243 Develop schemas. The final general
 suite passes265 with15 skips and one model deselection in92.10s; real-factory regressions
-verify failed close retry and retained resources. Browser behaviour, GUI save dialogues, installed
-packaging and real data continuity are not established by these CPU tests. The migration
+verify failed close retry and retained resources. Browser behaviour, GUI save dialogues
+and real data continuity are not established by these CPU tests. The migration
 inventory is `MIGRATION930.json`; it records expectations rather than a migration receipt.
+
+## Installed Windows package
+
+Build the existing owned assets and six native release binaries first, then run
+`python -m build --wheel --no-isolation` with setuptools/wheel/build installed in
+the development environment. Wheel assembly does not run Cargo, Node or a model.
+The wheel is Windows x64 specific and contains the photo frontend, vector static
+client, common UI/fonts/licences, frozen catalogues, bundled SDK data and all six
+executables. It contains no profile, model weights or former checkout dependency.
+
+`scripts/install_studio.py --wheel <wheel> --target <new-directory> --python
+<external-python> --profile <profile-directory>` installs the locked dependencies
+and owned payload to a new target outside the checkout. Installation does not
+open or migrate the profile. Start `daguerre-run.cmd --no-browser` explicitly;
+`daguerre-mcp.cmd` is the stdio entrypoint and only discovers tools until called.
+The wheel also declares `daguerre-hoard` and `daguerre-mcp` console entrypoints.
+The generated launchers use an external Python with isolation, not the source venv.
+
+Installed resources are read-only product payload under `daguerre_hoard/resources`;
+mutable data defaults to `%LOCALAPPDATA%/DaguerresHoard/data`, outside the target.
+An explicit CLI data directory or `DAGUERRE_DATA_DIR` selects a profile, including
+demo QA. `launch.json` may provide its default; caller environment wins. The selected
+profile's `.env` fills missing environment variables without overwriting caller values.
+Existing development flags, valid master token and backend configuration are retained.
+No scan, job recovery, module activation or live inference is performed by installation.
+
+The owned global sync close propagates an inner HTTP close failure and retains its
+same client/loop/thread for another OFF. A retiring backend is removed from its owner
+registry only after success. Real installed photo factories are probed with two close
+failures and a successful third OFF; ON cannot replace the retained owner.

@@ -27,7 +27,7 @@ from .hoard_link.atomic import write_json_atomic
 ENGINES = ("photocraft", "lightcraft")  # Historical public keys remain aliases.
 ENGINE_NAMES = {"layers": "photocraft", "develop": "lightcraft", "photocraft": "photocraft", "lightcraft": "lightcraft"}
 OWN_NAMES = {"photocraft": "layers", "lightcraft": "develop"}
-ROOT = Path(__file__).resolve().parents[1]
+from .resources import ROOT
 _APPDATA_KEYS = ("APPDATA", "LOCALAPPDATA")
 
 

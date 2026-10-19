@@ -1,0 +1,69 @@
+HTTP Request: GET http://127.0.0.1:64846/api/agent/tools "HTTP/1.1 200 OK"
+Processing request of type ListToolsRequest
+Processing request of type CallToolRequest
+HTTP Request: POST http://127.0.0.1:64846/api/agent/call "HTTP/1.1 200 OK"
+Processing request of type CallToolRequest
+HTTP Request: POST http://127.0.0.1:64846/api/agent/call "HTTP/1.1 200 OK"
+Processing request of type CallToolRequest
+HTTP Request: POST http://127.0.0.1:64846/api/agent/call "HTTP/1.1 200 OK"
+Processing request of type CallToolRequest
+HTTP Request: POST http://127.0.0.1:64846/api/agent/call "HTTP/1.1 200 OK"
+HTTP Request: GET http://127.0.0.1:64846/ "HTTP/1.1 200 OK"
+HTTP Request: GET http://127.0.0.1:64846/api/copilot/launcher.js "HTTP/1.1 200 OK"
+HTTP Request: GET http://127.0.0.1:64846/studio-assets/app-icon.png "HTTP/1.1 200 OK"
+HTTP Request: GET http://127.0.0.1:64846/studio-assets/studio.css "HTTP/1.1 200 OK"
+HTTP Request: GET http://127.0.0.1:64846/studio-assets/studio.js "HTTP/1.1 200 OK"
+HTTP Request: GET http://127.0.0.1:64846/photos/ "HTTP/1.1 200 OK"
+HTTP Request: GET http://127.0.0.1:64846/photos/api/copilot/launcher.js "HTTP/1.1 200 OK"
+HTTP Request: GET http://127.0.0.1:64846/photos/assets/index-BWDjhvda.css "HTTP/1.1 404 Not Found"
+  + Exception Group Traceback (most recent call last):
+  |   File "D:\LocalAI\worktrees\daguerre-fisiones930\scripts\probe_installed_studio.py", line 148, in <module>
+  |     if __name__=='__main__':main()
+  |                             ~~~~^^
+  |   File "D:\LocalAI\worktrees\daguerre-fisiones930\scripts\probe_installed_studio.py", line 145, in main
+  |     asyncio.run(exercise(args.target.resolve(),args.profile.resolve(),args.port,args.manifest.resolve()))
+  |     ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |   File "C:\Python313\Lib\asyncio\runners.py", line 195, in run
+  |     return runner.run(main)
+  |            ~~~~~~~~~~^^^^^^
+  |   File "C:\Python313\Lib\asyncio\runners.py", line 118, in run
+  |     return self._loop.run_until_complete(task)
+  |            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  |   File "C:\Python313\Lib\asyncio\base_events.py", line 725, in run_until_complete
+  |     return future.result()
+  |            ~~~~~~~~~~~~~^^
+  |   File "D:\LocalAI\worktrees\daguerre-fisiones930\scripts\probe_installed_studio.py", line 77, in exercise
+  |     async with stdio_client(params) as (read,write),ClientSession(read,write) as session:
+  |                ~~~~~~~~~~~~^^^^^^^^
+  |   File "C:\Python313\Lib\contextlib.py", line 235, in __aexit__
+  |     await self.gen.athrow(value)
+  |   File "D:\LocalAI\installed-qa\daguerre-fisiones930-cas2\mcp\client\stdio\__init__.py", line 173, in stdio_client
+  |     anyio.create_task_group() as tg,
+  |     ~~~~~~~~~~~~~~~~~~~~~~~^^
+  |   File "D:\LocalAI\installed-qa\daguerre-fisiones930-cas2\anyio\_backends\_asyncio.py", line 847, in __aexit__
+  |     raise BaseExceptionGroup(
+  |         "unhandled errors in a TaskGroup", self._exceptions
+  |     ) from None
+  | ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception)
+  +-+---------------- 1 ----------------
+    | Exception Group Traceback (most recent call last):
+    |   File "D:\LocalAI\installed-qa\daguerre-fisiones930-cas2\mcp\client\stdio\__init__.py", line 179, in stdio_client
+    |     yield read_stream, write_stream
+    |   File "D:\LocalAI\worktrees\daguerre-fisiones930\scripts\probe_installed_studio.py", line 77, in exercise
+    |     async with stdio_client(params) as (read,write),ClientSession(read,write) as session:
+    |                                                     ~~~~~~~~~~~~~^^^^^^^^^^^^
+    |   File "D:\LocalAI\installed-qa\daguerre-fisiones930-cas2\mcp\shared\session.py", line 218, in __aexit__
+    |     return await self._task_group.__aexit__(exc_type, exc_val, exc_tb)
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "D:\LocalAI\installed-qa\daguerre-fisiones930-cas2\anyio\_backends\_asyncio.py", line 847, in __aexit__
+    |     raise BaseExceptionGroup(
+    |         "unhandled errors in a TaskGroup", self._exceptions
+    |     ) from None
+    | ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception)
+    +-+---------------- 1 ----------------
+      | Traceback (most recent call last):
+      |   File "D:\LocalAI\worktrees\daguerre-fisiones930\scripts\probe_installed_studio.py", line 94, in exercise
+      |     assert fetched.status_code==200,(path,resource,fetched.status_code)
+      |            ^^^^^^^^^^^^^^^^^^^^^^^^
+      | AssertionError: ('/photos/', '/photos/assets/index-BWDjhvda.css', 404)
+      +------------------------------------

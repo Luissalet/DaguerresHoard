@@ -14,9 +14,16 @@ surface, and turns base64 JPEG fields into real mcp.types.ImageContent.
 import base64
 import json
 import os
+import sys
 from pathlib import Path
 from typing import Literal
 from urllib.parse import urlparse
+
+# The absolute installed script also works with an isolated system Python. Its
+# dependencies live in the installation root, not a checkout or development venv.
+_installed = (Path(__file__).resolve().parent/'resources'/'installed.json').is_file()
+if _installed:
+    sys.path.insert(0,str(Path(__file__).resolve().parent.parent))
 
 import httpx
 from mcp.server.fastmcp import FastMCP
@@ -49,7 +56,12 @@ def _token_file() -> Path:
     if explicit:
         return Path(explicit)
     data = os.environ.get("DAGUERRE_DATA_DIR", "").strip()
-    return (Path(data) if data else Path(__file__).resolve().parent.parent / "data") / "mcp-token"
+    if data:
+        return Path(data)/'mcp-token'
+    if _installed:
+        base=Path(os.environ.get('LOCALAPPDATA') or Path.home()/'AppData'/'Local') if os.name=='nt' else Path(os.environ.get('XDG_DATA_HOME') or Path.home()/'.local'/'share')
+        return base/'DaguerresHoard'/'data'/'mcp-token'
+    return Path(__file__).resolve().parent.parent/'data'/'mcp-token'
 
 
 def _token() -> str:

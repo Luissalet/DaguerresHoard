@@ -11,7 +11,7 @@ from .studio_lifecycle import Module
 from .studio_projects import Projects
 from .studio_response import NativeResponse
 
-ROOT = Path(__file__).resolve().parents[1]
+from .resources import ROOT
 VECTOR = Path(__file__).with_name('studio_native')/'durer'
 
 
@@ -199,7 +199,10 @@ class Studio:
             {'kind':'vector_to_photo','sha256':sha,'file':str(export),'photo_id':row['id'],'result':result})
 
     async def native(self,module,path,scope,receive,send):
-        child=dict(scope,path=path,raw_path=path.encode(),root_path='/'+module)
+        # This dispatcher strips the owner prefix itself. Native middleware and
+        # nested StaticFiles mounts must see an ordinary application scope;
+        # response/runtime URL adapters add the public prefix exactly once.
+        child=dict(scope,path=path,raw_path=path.encode(),root_path='')
         child['asgi']={**scope.get('asgi',{}),'spec_version':'2.3'}
         await self.modules[module].request(child,receive,NativeResponse(send,module,self.port))
 

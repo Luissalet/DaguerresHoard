@@ -71,12 +71,11 @@ class Settings:
 
 
 def resolve_data_dir(cli_value: str | None, demo: bool, repo_root: Path) -> Path:
-    """Resolve the data directory: CLI flag > env var > default, with --demo override."""
-    if demo:
-        return repo_root / "data-demo"
+    """Explicit CLI/environment profile wins, including synthetic demo instances."""
     if cli_value:
         return Path(cli_value).expanduser().resolve()
     env_value = os.environ.get("DAGUERRE_DATA_DIR")
     if env_value:
         return Path(env_value).expanduser().resolve()
-    return repo_root / "data"
+    from .resources import default_profile_root
+    return default_profile_root(repo_root) / ('data-demo' if demo else 'data')

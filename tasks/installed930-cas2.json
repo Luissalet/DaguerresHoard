@@ -1,0 +1,129 @@
+{
+  "result": "PASS",
+  "target": "D:\\LocalAI\\installed-qa\\daguerre-fisiones930-cas2c",
+  "catalogue": 95,
+  "initial_modules": "OFF/OFF",
+  "artifact_fingerprints": 63,
+  "profile_hashes_preserved": {
+    ".env": "f4165ecc9a87e6ac4dda35b458a016518464a5a2d06dcb69474097d4314fbe9b",
+    "mcp-token": "64b33257b4d5d15689c0cf1415f4baaf5052592b3a9f50d9790f435af906eef2",
+    "backend.json": "56d113a5f0704a285b4392384540484a27bf81d69d75788b840b769a05cdd835"
+  },
+  "surfaces": {
+    "/": {
+      "sha256": "f2b720a5092c26458f88f4c51a457d3e40452032ba50e995c6ce5ca69b3f51ac",
+      "bytes": 1479,
+      "resources": [
+        {
+          "url": "/api/copilot/launcher.js",
+          "bytes": 21882,
+          "sha256": "7ae62b4ee941b5ed3874d0ae6c79ea9b3bedbe9b4fd7ae989beb22f642745774"
+        },
+        {
+          "url": "/studio-assets/app-icon.png",
+          "bytes": 187062,
+          "sha256": "918fcaadfda8bd9bb9b2c55ec992e11e69f1b04fa988b2f8f055a7d0840115e2"
+        },
+        {
+          "url": "/studio-assets/studio.css",
+          "bytes": 2166,
+          "sha256": "efd4d2de112acbb5a9b17837ead29b9fe0d12c8de4036beb4830cd6462337e3a"
+        },
+        {
+          "url": "/studio-assets/studio.js",
+          "bytes": 5188,
+          "sha256": "c29814ac7841ef00dd309d6eda34f4cd4732a86bbcae6240e48d707d57078704"
+        }
+      ]
+    },
+    "/photos/": {
+      "sha256": "14bd04aad353256e664ef1ac58f3a44f4ad7ac9b612fefc589b793b6cee54935",
+      "bytes": 1036,
+      "resources": [
+        {
+          "url": "/photos/api/copilot/launcher.js",
+          "bytes": 21882,
+          "sha256": "7ae62b4ee941b5ed3874d0ae6c79ea9b3bedbe9b4fd7ae989beb22f642745774"
+        },
+        {
+          "url": "/photos/assets/index-BWDjhvda.css",
+          "bytes": 50695,
+          "sha256": "19239dc81b336af57e2667b17bd4d117e53002b41f01c9b517a47890d0866072"
+        },
+        {
+          "url": "/photos/assets/index-D5iWzPra.js",
+          "bytes": 288957,
+          "sha256": "37458eab7d6c5246ed59bed405629bf37f0f572f5125c88169d7c9dec7d78472"
+        },
+        {
+          "url": "/photos/favicon-192.png",
+          "bytes": 29083,
+          "sha256": "bcb4c56b849114a4e1f2c3c64b8e89bacba731f1d83d5c6cf7d76823d2105cfd"
+        },
+        {
+          "url": "/photos/favicon.ico",
+          "bytes": 87227,
+          "sha256": "c4b88531a598c3a23d2879db0f625807bcc20d0941e1ec022e490e0ff30ee5a0"
+        },
+        {
+          "url": "/studio-assets/app-icon.png",
+          "bytes": 187062,
+          "sha256": "918fcaadfda8bd9bb9b2c55ec992e11e69f1b04fa988b2f8f055a7d0840115e2"
+        },
+        {
+          "url": "/studio-assets/native.js",
+          "bytes": 1087,
+          "sha256": "345ec5e5503115df1f02e976ec3a4cd74f8c3184058b80bdc2071c42d13d7d61"
+        },
+        {
+          "url": "/studio-assets/studio.css",
+          "bytes": 2166,
+          "sha256": "efd4d2de112acbb5a9b17837ead29b9fe0d12c8de4036beb4830cd6462337e3a"
+        }
+      ]
+    },
+    "/vector/": {
+      "sha256": "d914245bfa309b51d497de79791bb10817bc68c20f61da7bbc5af6c9c25564a9",
+      "bytes": 10507,
+      "resources": [
+        {
+          "url": "/studio-assets/app-icon.png",
+          "bytes": 187062,
+          "sha256": "918fcaadfda8bd9bb9b2c55ec992e11e69f1b04fa988b2f8f055a7d0840115e2"
+        },
+        {
+          "url": "/studio-assets/native.js",
+          "bytes": 1087,
+          "sha256": "345ec5e5503115df1f02e976ec3a4cd74f8c3184058b80bdc2071c42d13d7d61"
+        },
+        {
+          "url": "/studio-assets/studio.css",
+          "bytes": 2166,
+          "sha256": "efd4d2de112acbb5a9b17837ead29b9fe0d12c8de4036beb4830cd6462337e3a"
+        },
+        {
+          "url": "/vector/api/copilot/launcher.js",
+          "bytes": 21882,
+          "sha256": "7ae62b4ee941b5ed3874d0ae6c79ea9b3bedbe9b4fd7ae989beb22f642745774"
+        },
+        {
+          "url": "/vector/static/app.js",
+          "bytes": 22773,
+          "sha256": "7a535bdd084c25d2691883ba721ef53a624392269bc492938db61cc4b11b205e"
+        },
+        {
+          "url": "/vector/static/copilot.js",
+          "bytes": 10900,
+          "sha256": "e37197f8a1ea03740ad8b71e0fd65a5f6dc92063c1ff3384ea52f8d24ab00a8e"
+        },
+        {
+          "url": "/vector/static/style.css",
+          "bytes": 12613,
+          "sha256": "91e0cce1ccf30edafc9b1fbd4be5852122943a6ca5adcf33c1a3c69a22c8d79b"
+        }
+      ]
+    }
+  },
+  "native_transfer": "photo/vector/PNG/photoID, persisted and Range206 after both OFF",
+  "limits": "No GUI, live model, real profile, old checkout, integration or deployment"
+}

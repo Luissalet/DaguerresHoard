@@ -11,6 +11,11 @@ explica compilación, API/MCP, datos y límites de verificación. Texto y visió
 el modelo global configurado en Faustus; las opciones locales guardadas se conservan,
 pero no seleccionan un modelo alternativo.
 
+El paquete Windows x64 incorpora las tres interfaces web, recursos y seis motores
+nativos. La instalación usa un perfil externo y arranque explícito; véanse las
+instrucciones del manual. Las pruebas CPU instaladas conservan configuración/token
+y completan foto→vector→PNG; los diálogos de escritorio requieren validación visual.
+
 El visor permite [igualar exposición y color a una referencia](docs/REFERENCE_MATCHING.md),
 creando copias PNG de una foto o una serie. Interfaz, HTTP y MCP comparten la
 operación y los parámetros guardados; originales y recetas permanecen intactos.

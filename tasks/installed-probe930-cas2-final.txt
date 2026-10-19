@@ -1,0 +1,290 @@
+HTTP Request: GET http://127.0.0.1:64846/api/agent/tools "HTTP/1.1 200 OK"
+Processing request of type ListToolsRequest
+Processing request of type CallToolRequest
+HTTP Request: POST http://127.0.0.1:64846/api/agent/call "HTTP/1.1 200 OK"
+Processing request of type CallToolRequest
+HTTP Request: POST http://127.0.0.1:64846/api/agent/call "HTTP/1.1 200 OK"
+Processing request of type CallToolRequest
+HTTP Request: POST http://127.0.0.1:64846/api/agent/call "HTTP/1.1 200 OK"
+Processing request of type CallToolRequest
+HTTP Request: POST http://127.0.0.1:64846/api/agent/call "HTTP/1.1 200 OK"
+HTTP Request: POST http://127.0.0.1:64846/photos/api/agent/photos_library "HTTP/1.1 401 Unauthorized"
+HTTP Request: POST http://127.0.0.1:64846/vector/api/agent/call "HTTP/1.1 401 Unauthorized"
+HTTP Request: GET http://127.0.0.1:64846/vector/openapi.json "HTTP/1.1 200 OK"
+HTTP Request: GET http://127.0.0.1:64846/ "HTTP/1.1 200 OK"
+HTTP Request: GET http://127.0.0.1:64846/api/copilot/launcher.js "HTTP/1.1 200 OK"
+HTTP Request: GET http://127.0.0.1:64846/studio-assets/app-icon.png "HTTP/1.1 200 OK"
+HTTP Request: GET http://127.0.0.1:64846/studio-assets/studio.css "HTTP/1.1 200 OK"
+HTTP Request: GET http://127.0.0.1:64846/studio-assets/studio.js "HTTP/1.1 200 OK"
+HTTP Request: GET http://127.0.0.1:64846/photos/ "HTTP/1.1 200 OK"
+HTTP Request: GET http://127.0.0.1:64846/photos/api/copilot/launcher.js "HTTP/1.1 200 OK"
+HTTP Request: GET http://127.0.0.1:64846/photos/assets/index-BWDjhvda.css "HTTP/1.1 200 OK"
+HTTP Request: GET http://127.0.0.1:64846/photos/assets/index-D5iWzPra.js "HTTP/1.1 200 OK"
+HTTP Request: GET http://127.0.0.1:64846/photos/favicon-192.png "HTTP/1.1 200 OK"
+HTTP Request: GET http://127.0.0.1:64846/photos/favicon.ico "HTTP/1.1 200 OK"
+HTTP Request: GET http://127.0.0.1:64846/studio-assets/app-icon.png "HTTP/1.1 200 OK"
+HTTP Request: GET http://127.0.0.1:64846/studio-assets/native.js "HTTP/1.1 200 OK"
+HTTP Request: GET http://127.0.0.1:64846/studio-assets/studio.css "HTTP/1.1 200 OK"
+HTTP Request: GET http://127.0.0.1:64846/vector/ "HTTP/1.1 200 OK"
+HTTP Request: GET http://127.0.0.1:64846/studio-assets/app-icon.png "HTTP/1.1 200 OK"
+HTTP Request: GET http://127.0.0.1:64846/studio-assets/native.js "HTTP/1.1 200 OK"
+HTTP Request: GET http://127.0.0.1:64846/studio-assets/studio.css "HTTP/1.1 200 OK"
+HTTP Request: GET http://127.0.0.1:64846/vector/api/copilot/launcher.js "HTTP/1.1 200 OK"
+HTTP Request: GET http://127.0.0.1:64846/vector/static/app.js "HTTP/1.1 200 OK"
+HTTP Request: GET http://127.0.0.1:64846/vector/static/copilot.js "HTTP/1.1 200 OK"
+HTTP Request: GET http://127.0.0.1:64846/vector/static/style.css "HTTP/1.1 200 OK"
+HTTP Request: GET http://127.0.0.1:64846/studio-assets/fonts/cinzel-latin-400-normal.woff2 "HTTP/1.1 200 OK"
+HTTP Request: GET http://127.0.0.1:64846/studio-assets/fonts/cinzel-LICENSE.txt "HTTP/1.1 200 OK"
+HTTP Request: GET http://127.0.0.1:64846/studio-assets/fonts/source-sans-3-latin-400-normal.woff2 "HTTP/1.1 200 OK"
+HTTP Request: GET http://127.0.0.1:64846/studio-assets/fonts/source-sans-3-LICENSE.txt "HTTP/1.1 200 OK"
+Processing request of type CallToolRequest
+HTTP Request: POST http://127.0.0.1:64846/api/agent/call "HTTP/1.1 200 OK"
+Processing request of type CallToolRequest
+HTTP Request: POST http://127.0.0.1:64846/api/agent/photos_library "HTTP/1.1 200 OK"
+HTTP Request: GET http://127.0.0.1:64846/api/studio/objects "HTTP/1.1 200 OK"
+Processing request of type CallToolRequest
+HTTP Request: POST http://127.0.0.1:64846/api/agent/photos_library "HTTP/1.1 200 OK"
+HTTP Request: GET http://127.0.0.1:64846/api/studio/objects "HTTP/1.1 200 OK"
+Processing request of type CallToolRequest
+HTTP Request: POST http://127.0.0.1:64846/api/agent/photos_library "HTTP/1.1 200 OK"
+HTTP Request: GET http://127.0.0.1:64846/api/studio/objects "HTTP/1.1 200 OK"
+Processing request of type CallToolRequest
+HTTP Request: POST http://127.0.0.1:64846/api/agent/photos_library "HTTP/1.1 200 OK"
+HTTP Request: GET http://127.0.0.1:64846/api/studio/objects "HTTP/1.1 200 OK"
+Processing request of type CallToolRequest
+HTTP Request: POST http://127.0.0.1:64846/api/agent/photos_library "HTTP/1.1 200 OK"
+HTTP Request: GET http://127.0.0.1:64846/api/studio/objects "HTTP/1.1 200 OK"
+Processing request of type CallToolRequest
+HTTP Request: POST http://127.0.0.1:64846/api/agent/photos_library "HTTP/1.1 200 OK"
+HTTP Request: GET http://127.0.0.1:64846/api/studio/objects "HTTP/1.1 200 OK"
+Processing request of type CallToolRequest
+HTTP Request: POST http://127.0.0.1:64846/api/agent/photos_library "HTTP/1.1 200 OK"
+HTTP Request: GET http://127.0.0.1:64846/api/studio/objects "HTTP/1.1 200 OK"
+Processing request of type CallToolRequest
+HTTP Request: POST http://127.0.0.1:64846/api/agent/photos_library "HTTP/1.1 200 OK"
+HTTP Request: GET http://127.0.0.1:64846/api/studio/objects "HTTP/1.1 200 OK"
+Processing request of type CallToolRequest
+HTTP Request: POST http://127.0.0.1:64846/api/agent/photos_library "HTTP/1.1 200 OK"
+HTTP Request: GET http://127.0.0.1:64846/api/studio/objects "HTTP/1.1 200 OK"
+HTTP Request: GET http://127.0.0.1:64846/api/studio/objects "HTTP/1.1 200 OK"
+Processing request of type CallToolRequest
+durer-cli: MCP server on stdio (headless)
+HTTP Request: POST http://127.0.0.1:64846/api/agent/call "HTTP/1.1 200 OK"
+Processing request of type CallToolRequest
+HTTP Request: POST http://127.0.0.1:64846/api/agent/call "HTTP/1.1 200 OK"
+Processing request of type CallToolRequest
+HTTP Request: POST http://127.0.0.1:64846/api/agent/photos_describe "HTTP/1.1 200 OK"
+Processing request of type CallToolRequest
+HTTP Request: POST http://127.0.0.1:64846/api/agent/call "HTTP/1.1 200 OK"
+Processing request of type CallToolRequest
+HTTP Request: POST http://127.0.0.1:64846/api/agent/call "HTTP/1.1 200 OK"
+Processing request of type CallToolRequest
+HTTP Request: POST http://127.0.0.1:64846/api/agent/call "HTTP/1.1 200 OK"
+HTTP Request: GET http://127.0.0.1:64846/api/studio/artifacts/79f3ee2b8ffe45798007f7265003d973/ea55d266d32e4bdf14b4ca10222c80aa66b4e83f17accd407cc871b96497f798 "HTTP/1.1 206 Partial Content"
+Processing request of type CallToolRequest
+HTTP Request: POST http://127.0.0.1:64846/api/agent/call "HTTP/1.1 200 OK"
+{
+  "result": "PASS",
+  "target": "D:\\LocalAI\\installed-qa\\daguerre-fisiones930-cas2c",
+  "catalogue": 95,
+  "initial_modules": "OFF/OFF",
+  "artifact_fingerprints": 63,
+  "profile_hashes_preserved": {
+    ".env": "f4165ecc9a87e6ac4dda35b458a016518464a5a2d06dcb69474097d4314fbe9b",
+    "mcp-token": "64b33257b4d5d15689c0cf1415f4baaf5052592b3a9f50d9790f435af906eef2",
+    "backend.json": "56d113a5f0704a285b4392384540484a27bf81d69d75788b840b769a05cdd835"
+  },
+  "surfaces": {
+    "/": {
+      "sha256": "f2b720a5092c26458f88f4c51a457d3e40452032ba50e995c6ce5ca69b3f51ac",
+      "bytes": 1479,
+      "resources": [
+        {
+          "url": "/api/copilot/launcher.js",
+          "bytes": 21882,
+          "sha256": "7ae62b4ee941b5ed3874d0ae6c79ea9b3bedbe9b4fd7ae989beb22f642745774"
+        },
+        {
+          "url": "/studio-assets/app-icon.png",
+          "bytes": 187062,
+          "sha256": "918fcaadfda8bd9bb9b2c55ec992e11e69f1b04fa988b2f8f055a7d0840115e2"
+        },
+        {
+          "url": "/studio-assets/studio.css",
+          "bytes": 2166,
+          "sha256": "efd4d2de112acbb5a9b17837ead29b9fe0d12c8de4036beb4830cd6462337e3a"
+        },
+        {
+          "url": "/studio-assets/studio.js",
+          "bytes": 5188,
+          "sha256": "c29814ac7841ef00dd309d6eda34f4cd4732a86bbcae6240e48d707d57078704"
+        }
+      ]
+    },
+    "/photos/": {
+      "sha256": "14bd04aad353256e664ef1ac58f3a44f4ad7ac9b612fefc589b793b6cee54935",
+      "bytes": 1036,
+      "resources": [
+        {
+          "url": "/photos/api/copilot/launcher.js",
+          "bytes": 21882,
+          "sha256": "7ae62b4ee941b5ed3874d0ae6c79ea9b3bedbe9b4fd7ae989beb22f642745774"
+        },
+        {
+          "url": "/photos/assets/index-BWDjhvda.css",
+          "bytes": 50695,
+          "sha256": "19239dc81b336af57e2667b17bd4d117e53002b41f01c9b517a47890d0866072"
+        },
+        {
+          "url": "/photos/assets/index-D5iWzPra.js",
+          "bytes": 288957,
+          "sha256": "37458eab7d6c5246ed59bed405629bf37f0f572f5125c88169d7c9dec7d78472"
+        },
+        {
+          "url": "/photos/favicon-192.png",
+          "bytes": 29083,
+          "sha256": "bcb4c56b849114a4e1f2c3c64b8e89bacba731f1d83d5c6cf7d76823d2105cfd"
+        },
+        {
+          "url": "/photos/favicon.ico",
+          "bytes": 87227,
+          "sha256": "c4b88531a598c3a23d2879db0f625807bcc20d0941e1ec022e490e0ff30ee5a0"
+        },
+        {
+          "url": "/studio-assets/app-icon.png",
+          "bytes": 187062,
+          "sha256": "918fcaadfda8bd9bb9b2c55ec992e11e69f1b04fa988b2f8f055a7d0840115e2"
+        },
+        {
+          "url": "/studio-assets/native.js",
+          "bytes": 1087,
+          "sha256": "345ec5e5503115df1f02e976ec3a4cd74f8c3184058b80bdc2071c42d13d7d61"
+        },
+        {
+          "url": "/studio-assets/studio.css",
+          "bytes": 2166,
+          "sha256": "efd4d2de112acbb5a9b17837ead29b9fe0d12c8de4036beb4830cd6462337e3a"
+        }
+      ]
+    },
+    "/vector/": {
+      "sha256": "d914245bfa309b51d497de79791bb10817bc68c20f61da7bbc5af6c9c25564a9",
+      "bytes": 10507,
+      "resources": [
+        {
+          "url": "/studio-assets/app-icon.png",
+          "bytes": 187062,
+          "sha256": "918fcaadfda8bd9bb9b2c55ec992e11e69f1b04fa988b2f8f055a7d0840115e2"
+        },
+        {
+          "url": "/studio-assets/native.js",
+          "bytes": 1087,
+          "sha256": "345ec5e5503115df1f02e976ec3a4cd74f8c3184058b80bdc2071c42d13d7d61"
+        },
+        {
+          "url": "/studio-assets/studio.css",
+          "bytes": 2166,
+          "sha256": "efd4d2de112acbb5a9b17837ead29b9fe0d12c8de4036beb4830cd6462337e3a"
+        },
+        {
+          "url": "/vector/api/copilot/launcher.js",
+          "bytes": 21882,
+          "sha256": "7ae62b4ee941b5ed3874d0ae6c79ea9b3bedbe9b4fd7ae989beb22f642745774"
+        },
+        {
+          "url": "/vector/static/app.js",
+          "bytes": 22773,
+          "sha256": "7a535bdd084c25d2691883ba721ef53a624392269bc492938db61cc4b11b205e"
+        },
+        {
+          "url": "/vector/static/copilot.js",
+          "bytes": 10900,
+          "sha256": "e37197f8a1ea03740ad8b71e0fd65a5f6dc92063c1ff3384ea52f8d24ab00a8e"
+        },
+        {
+          "url": "/vector/static/style.css",
+          "bytes": 12613,
+          "sha256": "91e0cce1ccf30edafc9b1fbd4be5852122943a6ca5adcf33c1a3c69a22c8d79b"
+        }
+      ]
+    }
+  },
+  "loaded_owned_modules": {
+    "daguerre_hoard": "D:\\LocalAI\\installed-qa\\daguerre-fisiones930-cas2c\\daguerre_hoard\\__init__.py",
+    "daguerre_hoard.resources": "D:\\LocalAI\\installed-qa\\daguerre-fisiones930-cas2c\\daguerre_hoard\\resources.py",
+    "daguerre_hoard.runtime_entry": "D:\\LocalAI\\installed-qa\\daguerre-fisiones930-cas2c\\daguerre_hoard\\runtime_entry.py",
+    "daguerre_hoard.config": "D:\\LocalAI\\installed-qa\\daguerre-fisiones930-cas2c\\daguerre_hoard\\config.py",
+    "daguerre_hoard.cancellation": "D:\\LocalAI\\installed-qa\\daguerre-fisiones930-cas2c\\daguerre_hoard\\cancellation.py",
+    "daguerre_hoard.studio_lifecycle": "D:\\LocalAI\\installed-qa\\daguerre-fisiones930-cas2c\\daguerre_hoard\\studio_lifecycle.py",
+    "daguerre_hoard.studio_projects": "D:\\LocalAI\\installed-qa\\daguerre-fisiones930-cas2c\\daguerre_hoard\\studio_projects.py",
+    "daguerre_hoard.studio_response": "D:\\LocalAI\\installed-qa\\daguerre-fisiones930-cas2c\\daguerre_hoard\\studio_response.py",
+    "daguerre_hoard.studio": "D:\\LocalAI\\installed-qa\\daguerre-fisiones930-cas2c\\daguerre_hoard\\studio.py",
+    "daguerre_hoard.mcp_server": "D:\\LocalAI\\installed-qa\\daguerre-fisiones930-cas2c\\daguerre_hoard\\mcp_server.py",
+    "daguerre_hoard.hoard_link.types": "D:\\LocalAI\\installed-qa\\daguerre-fisiones930-cas2c\\daguerre_hoard\\hoard_link\\types.py",
+    "daguerre_hoard.hoard_link.config": "D:\\LocalAI\\installed-qa\\daguerre-fisiones930-cas2c\\daguerre_hoard\\hoard_link\\config.py",
+    "daguerre_hoard.hoard_link.errors": "D:\\LocalAI\\installed-qa\\daguerre-fisiones930-cas2c\\daguerre_hoard\\hoard_link\\errors.py",
+    "daguerre_hoard.hoard_link.gpu": "D:\\LocalAI\\installed-qa\\daguerre-fisiones930-cas2c\\daguerre_hoard\\hoard_link\\gpu.py",
+    "daguerre_hoard.hoard_link._hubclient": "D:\\LocalAI\\installed-qa\\daguerre-fisiones930-cas2c\\daguerre_hoard\\hoard_link\\_hubclient.py",
+    "daguerre_hoard.hoard_link.browser_lane": "D:\\LocalAI\\installed-qa\\daguerre-fisiones930-cas2c\\daguerre_hoard\\hoard_link\\browser_lane.py",
+    "daguerre_hoard.hoard_link.lease": "D:\\LocalAI\\installed-qa\\daguerre-fisiones930-cas2c\\daguerre_hoard\\hoard_link\\lease.py",
+    "daguerre_hoard.hoard_link.family": "D:\\LocalAI\\installed-qa\\daguerre-fisiones930-cas2c\\daguerre_hoard\\hoard_link\\family.py",
+    "daguerre_hoard.hoard_link": "D:\\LocalAI\\installed-qa\\daguerre-fisiones930-cas2c\\daguerre_hoard\\hoard_link\\__init__.py",
+    "daguerre_hoard.hoard_link.guard": "D:\\LocalAI\\installed-qa\\daguerre-fisiones930-cas2c\\daguerre_hoard\\hoard_link\\guard.py",
+    "daguerre_hoard.hoard_link.atomic": "D:\\LocalAI\\installed-qa\\daguerre-fisiones930-cas2c\\daguerre_hoard\\hoard_link\\atomic.py",
+    "daguerre_hoard.hoard_link.tokens": "D:\\LocalAI\\installed-qa\\daguerre-fisiones930-cas2c\\daguerre_hoard\\hoard_link\\tokens.py",
+    "daguerre_hoard.db": "D:\\LocalAI\\installed-qa\\daguerre-fisiones930-cas2c\\daguerre_hoard\\db.py",
+    "daguerre_hoard.hoard_link.launch": "D:\\LocalAI\\installed-qa\\daguerre-fisiones930-cas2c\\daguerre_hoard\\hoard_link\\launch.py",
+    "daguerre_hoard.hoard_link.proc": "D:\\LocalAI\\installed-qa\\daguerre-fisiones930-cas2c\\daguerre_hoard\\hoard_link\\proc.py",
+    "daguerre_hoard.craft_engines": "D:\\LocalAI\\installed-qa\\daguerre-fisiones930-cas2c\\daguerre_hoard\\craft_engines.py",
+    "daguerre_hoard.hoard_link.copilot": "D:\\LocalAI\\installed-qa\\daguerre-fisiones930-cas2c\\daguerre_hoard\\hoard_link\\copilot.py",
+    "daguerre_hoard.captions": "D:\\LocalAI\\installed-qa\\daguerre-fisiones930-cas2c\\daguerre_hoard\\captions.py",
+    "daguerre_hoard.hoard_link._faustus": "D:\\LocalAI\\installed-qa\\daguerre-fisiones930-cas2c\\daguerre_hoard\\hoard_link\\_faustus.py",
+    "daguerre_hoard.hoard_link._probes": "D:\\LocalAI\\installed-qa\\daguerre-fisiones930-cas2c\\daguerre_hoard\\hoard_link\\_probes.py",
+    "daguerre_hoard.hoard_link._comfy": "D:\\LocalAI\\installed-qa\\daguerre-fisiones930-cas2c\\daguerre_hoard\\hoard_link\\_comfy.py",
+    "daguerre_hoard.hoard_link._sync": "D:\\LocalAI\\installed-qa\\daguerre-fisiones930-cas2c\\daguerre_hoard\\hoard_link\\_sync.py",
+    "daguerre_hoard.hoard_link.reasoning": "D:\\LocalAI\\installed-qa\\daguerre-fisiones930-cas2c\\daguerre_hoard\\hoard_link\\reasoning.py",
+    "daguerre_hoard.hoard_link.routes": "D:\\LocalAI\\installed-qa\\daguerre-fisiones930-cas2c\\daguerre_hoard\\hoard_link\\routes.py",
+    "daguerre_hoard.hoard_link.link": "D:\\LocalAI\\installed-qa\\daguerre-fisiones930-cas2c\\daguerre_hoard\\hoard_link\\link.py",
+    "daguerre_hoard.global_model": "D:\\LocalAI\\installed-qa\\daguerre-fisiones930-cas2c\\daguerre_hoard\\global_model.py",
+    "daguerre_hoard.backend": "D:\\LocalAI\\installed-qa\\daguerre-fisiones930-cas2c\\daguerre_hoard\\backend.py",
+    "daguerre_hoard.contact_sheet": "D:\\LocalAI\\installed-qa\\daguerre-fisiones930-cas2c\\daguerre_hoard\\contact_sheet.py",
+    "daguerre_hoard.hoard_link.docs": "D:\\LocalAI\\installed-qa\\daguerre-fisiones930-cas2c\\daguerre_hoard\\hoard_link\\docs\\__init__.py",
+    "daguerre_hoard.hoard_link.docs.imaging": "D:\\LocalAI\\installed-qa\\daguerre-fisiones930-cas2c\\daguerre_hoard\\hoard_link\\docs\\imaging.py",
+    "daguerre_hoard.phash": "D:\\LocalAI\\installed-qa\\daguerre-fisiones930-cas2c\\daguerre_hoard\\phash.py",
+    "daguerre_hoard.duplicates": "D:\\LocalAI\\installed-qa\\daguerre-fisiones930-cas2c\\daguerre_hoard\\duplicates.py",
+    "daguerre_hoard.xmp": "D:\\LocalAI\\installed-qa\\daguerre-fisiones930-cas2c\\daguerre_hoard\\xmp.py",
+    "daguerre_hoard.edits": "D:\\LocalAI\\installed-qa\\daguerre-fisiones930-cas2c\\daguerre_hoard\\edits.py",
+    "daguerre_hoard.embeddings": "D:\\LocalAI\\installed-qa\\daguerre-fisiones930-cas2c\\daguerre_hoard\\embeddings.py",
+    "daguerre_hoard.formats": "D:\\LocalAI\\installed-qa\\daguerre-fisiones930-cas2c\\daguerre_hoard\\formats.py",
+    "daguerre_hoard.geocode": "D:\\LocalAI\\installed-qa\\daguerre-fisiones930-cas2c\\daguerre_hoard\\geocode.py",
+    "daguerre_hoard.hashing": "D:\\LocalAI\\installed-qa\\daguerre-fisiones930-cas2c\\daguerre_hoard\\hashing.py",
+    "daguerre_hoard.jobs": "D:\\LocalAI\\installed-qa\\daguerre-fisiones930-cas2c\\daguerre_hoard\\jobs.py",
+    "daguerre_hoard.lang": "D:\\LocalAI\\installed-qa\\daguerre-fisiones930-cas2c\\daguerre_hoard\\lang.py",
+    "daguerre_hoard.metadata": "D:\\LocalAI\\installed-qa\\daguerre-fisiones930-cas2c\\daguerre_hoard\\metadata.py",
+    "daguerre_hoard.scanning": "D:\\LocalAI\\installed-qa\\daguerre-fisiones930-cas2c\\daguerre_hoard\\scanning.py",
+    "daguerre_hoard.thumbnails": "D:\\LocalAI\\installed-qa\\daguerre-fisiones930-cas2c\\daguerre_hoard\\thumbnails.py",
+    "daguerre_hoard.video_frames": "D:\\LocalAI\\installed-qa\\daguerre-fisiones930-cas2c\\daguerre_hoard\\video_frames.py",
+    "daguerre_hoard.videos": "D:\\LocalAI\\installed-qa\\daguerre-fisiones930-cas2c\\daguerre_hoard\\videos.py",
+    "daguerre_hoard.library": "D:\\LocalAI\\installed-qa\\daguerre-fisiones930-cas2c\\daguerre_hoard\\library.py",
+    "daguerre_hoard.api": "D:\\LocalAI\\installed-qa\\daguerre-fisiones930-cas2c\\daguerre_hoard\\api.py",
+    "daguerre_hoard.data": "D:\\LocalAI\\installed-qa\\daguerre-fisiones930-cas2c\\daguerre_hoard\\data\\__init__.py",
+    "daguerre_hoard.hoard_link.copilot_launcher": "D:\\LocalAI\\installed-qa\\daguerre-fisiones930-cas2c\\daguerre_hoard\\hoard_link\\copilot_launcher.py",
+    "daguerre_hoard.studio_native": "D:\\LocalAI\\installed-qa\\daguerre-fisiones930-cas2c\\daguerre_hoard\\studio_native\\__init__.py",
+    "daguerre_hoard.studio_native.durer": "D:\\LocalAI\\installed-qa\\daguerre-fisiones930-cas2c\\daguerre_hoard\\studio_native\\durer\\__init__.py",
+    "daguerre_hoard.studio_native.durer.durer_hoard": "D:\\LocalAI\\installed-qa\\daguerre-fisiones930-cas2c\\daguerre_hoard\\studio_native\\durer\\durer_hoard\\__init__.py",
+    "daguerre_hoard.studio_native.durer.durer_hoard.config": "D:\\LocalAI\\installed-qa\\daguerre-fisiones930-cas2c\\daguerre_hoard\\studio_native\\durer\\durer_hoard\\config.py",
+    "daguerre_hoard.studio_native.durer.durer_hoard.native": "D:\\LocalAI\\installed-qa\\daguerre-fisiones930-cas2c\\daguerre_hoard\\studio_native\\durer\\durer_hoard\\native.py",
+    "daguerre_hoard.studio_native.durer.durer_hoard.sessions": "D:\\LocalAI\\installed-qa\\daguerre-fisiones930-cas2c\\daguerre_hoard\\studio_native\\durer\\durer_hoard\\sessions.py",
+    "daguerre_hoard.studio_native.durer.durer_hoard.store": "D:\\LocalAI\\installed-qa\\daguerre-fisiones930-cas2c\\daguerre_hoard\\studio_native\\durer\\durer_hoard\\store.py",
+    "daguerre_hoard.studio_native.durer.durer_hoard.history": "D:\\LocalAI\\installed-qa\\daguerre-fisiones930-cas2c\\daguerre_hoard\\studio_native\\durer\\durer_hoard\\history.py",
+    "daguerre_hoard.studio_native.durer.durer_hoard.thumbnails": "D:\\LocalAI\\installed-qa\\daguerre-fisiones930-cas2c\\daguerre_hoard\\studio_native\\durer\\durer_hoard\\thumbnails.py",
+    "daguerre_hoard.studio_native.durer.durer_hoard.agent_tools": "D:\\LocalAI\\installed-qa\\daguerre-fisiones930-cas2c\\daguerre_hoard\\studio_native\\durer\\durer_hoard\\agent_tools.py",
+    "daguerre_hoard.studio_native.durer.durer_hoard.api": "D:\\LocalAI\\installed-qa\\daguerre-fisiones930-cas2c\\daguerre_hoard\\studio_native\\durer\\durer_hoard\\api.py",
+    "daguerre_hoard.studio_ui": "D:\\LocalAI\\installed-qa\\daguerre-fisiones930-cas2c\\daguerre_hoard\\studio_ui\\__init__.py",
+    "daguerre_hoard.studio_ui.api": "D:\\LocalAI\\installed-qa\\daguerre-fisiones930-cas2c\\daguerre_hoard\\studio_ui\\api.py",
+    "daguerre_hoard.demo": "D:\\LocalAI\\installed-qa\\daguerre-fisiones930-cas2c\\daguerre_hoard\\demo.py",
+    "daguerre_hoard.native_gui": "D:\\LocalAI\\installed-qa\\daguerre-fisiones930-cas2c\\daguerre_hoard\\native_gui.py"
+  },
+  "native_transfer": "photo/vector/PNG/photoID, persisted and Range206 after both OFF",
+  "limits": "No GUI, live model, real profile, old checkout, integration or deployment"
+}

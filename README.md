@@ -11,6 +11,11 @@ for source builds, API/MCP operations, data layout and current verification limi
 Text and vision use the configured Faustus global model; saved local model overrides
 remain readable but cannot select an inference fallback.
 
+The Windows x64 package includes all three web surfaces, assets and six native
+executables. Installation uses an external profile and explicit startup; see the
+manual for commands. Installed CPU checks preserve configuration/token and complete
+photo→vector→PNG; actual desktop save dialogues still require visual verification.
+
 The photo lightbox also [matches exposure and colour to a reference](docs/REFERENCE_MATCHING.md),
 creating PNG copies of the current photo or a series. UI, HTTP and MCP share the
 same operation and saved parameters; originals and retouch recipes stay intact.

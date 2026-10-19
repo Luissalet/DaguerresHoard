@@ -26,12 +26,26 @@ dev = [
     "pytest-asyncio==0.25.1",
 ]
 
+[project.scripts]
+daguerre-hoard = "daguerre_hoard.runtime_entry:app_main"
+daguerre-mcp = "daguerre_hoard.runtime_entry:mcp_main"
+
 [build-system]
-requires = ["setuptools>=68"]
+requires = ["setuptools>=68", "wheel>=0.45"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 include = ["daguerre_hoard*"]
+namespaces = false
+exclude = ["*.tests*", "*.scripts*"]
+
+[tool.setuptools.cmdclass]
+build_py = "build_support.StudioBuild"
+bdist_wheel = "build_support.StudioWheel"
 
 [tool.setuptools.package-data]
 "daguerre_hoard.data" = ["*.tsv"]
+"daguerre_hoard" = ["*-catalog.json", "studio_ui/*.html", "studio_ui/*.js", "studio_ui/*.css", "studio_ui/fonts/*"]
+"daguerre_hoard.hoard_link" = ["ui/*", "ui/**/*", "web/*", "web/**/*", "_data/*", "_data/**/*", "LICENSE", "VENDORED.txt"]
+"daguerre_hoard.studio_native.durer" = ["mcp-catalog.json", "native-catalog.json", "INCORPORATION.json", "LICENSE", "native/bin/*"]
+"daguerre_hoard.studio_native.durer.durer_hoard" = ["static/*"]

@@ -16,3 +16,5 @@ test-results/
 /native/bin/
 /native/*/target/
 /daguerre_hoard/studio_ui/fonts/
+/build/
+/dist/

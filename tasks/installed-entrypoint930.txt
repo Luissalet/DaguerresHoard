@@ -1,0 +1,1 @@
+{"result": "PASS", "target": "D:\\LocalAI\\installed-qa\\daguerre-fisiones930-cas2c", "CLI_profile_precedence": true, "profile_env_loaded": true, "caller_dev_preserved": true, "actual_listener_started": false}

@@ -4,7 +4,7 @@
   document.documentElement.dataset.theme=localStorage.getItem('daguerre-theme')||'dark';
   function scoped(input) {
     const url = new URL(input, location.href);
-    if (url.origin === location.origin && /^\/(api|assets|static|_hoard)\//.test(url.pathname)) url.pathname = prefix + url.pathname;
+    if (url.origin === location.origin && (/^\/(api|assets|static|_hoard)\//.test(url.pathname) || url.pathname === '/openapi.json')) url.pathname = prefix + url.pathname;
     return url.href;
   }
   const fetchNative = window.fetch.bind(window);
