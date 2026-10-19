@@ -1,0 +1,39 @@
+{
+  "task": 930,
+  "owner": "Daguerre's Hoard",
+  "status": "source implementation; no real store migration performed",
+  "source_bases": {
+    "photos_layers_develop": "c769427",
+    "vector": "ff98eb259e0ddd06ee7ca642b6908245f48b14e3"
+  },
+  "preserved": [
+    "Existing photo database, IDs, roots, albums, edits, captions, jobs and backend settings",
+    "Read-only registered original photos and optional existing XMP flow",
+    "Reference exposure/colour matching from the approved photo base",
+    "Layers native .dglayers and historical .pcraft documents, outputs and original-layer import",
+    "Develop native persistent library, recipes, history and outputs",
+    "Vector manifests, IDs, history and historical project.vectorcraft documents; edited copies use project.durer",
+    "Vector imports SVG, PNG, JPEG, WebP and PDF; native SVG, PNG and PDF exports",
+    "All 31 photo MCP operations and 57 vector aliases with native input schemas"
+  ],
+  "new_owned_paths": {
+    "vector": "<data>/vector",
+    "relationships": "<data>/studio-projects.sqlite3",
+    "derived_results": "<data>/studio-artifacts"
+  },
+  "startup": {
+    "photos": "OFF",
+    "vector": "OFF",
+    "scan": "explicit only",
+    "previous_jobs": "held without recovery writes",
+    "editor_pid_restore": "disabled unless automatic maintenance explicitly selected",
+    "model": "exact authenticated Faustus global938 selection; saved legacy overrides cannot select fallback"
+  },
+  "deployment_pending": [
+    "Independent source review and coordinator browser checks",
+    "Installed package and native desktop save-dialogue checks",
+    "Any transfer of former standalone vector data, aliases or Hub registrations belongs to task934",
+    "Per-agent profile reconciliation and real-data continuity are not certified",
+    "No original app, service, model or user store has been restarted or migrated"
+  ]
+}

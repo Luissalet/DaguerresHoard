@@ -1,0 +1,49 @@
+
+> daguerres-hoard-frontend@0.1.0 build
+> tsc -b && vite build
+
+vite v6.4.3 building for production...
+transforming...
+✓ 1602 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                                                     0.63 kB │ gzip:  0.36 kB
+dist/assets/source-sans-3-cyrillic-ext-700-normal-BhUSqjb8.woff2    5.54 kB
+dist/assets/source-sans-3-cyrillic-ext-400-normal-BwJdxs7r.woff2    5.58 kB
+dist/assets/source-sans-3-greek-ext-700-normal-Dd6uIcuy.woff2       6.01 kB
+dist/assets/source-sans-3-greek-ext-400-normal-CpIwTHMM.woff2       6.02 kB
+dist/assets/source-sans-3-vietnamese-700-normal-Bgamivog.woff2      6.14 kB
+dist/assets/source-sans-3-vietnamese-400-normal-CwtaIDr2.woff2      6.22 kB
+dist/assets/source-sans-3-cyrillic-ext-700-normal-COA7LiPB.woff     7.04 kB
+dist/assets/source-sans-3-cyrillic-ext-400-normal-BqOlcezh.woff     7.11 kB
+dist/assets/cinzel-latin-ext-400-normal-XQK_CSAr.woff2              7.86 kB
+dist/assets/source-sans-3-greek-ext-700-normal-KTP46hTS.woff        7.97 kB
+dist/assets/source-sans-3-greek-700-normal-C8Tp2qRF.woff2           7.98 kB
+dist/assets/source-sans-3-greek-ext-400-normal-CN4VBqpr.woff        7.99 kB
+dist/assets/source-sans-3-greek-400-normal-DZReXJla.woff2           8.02 kB
+dist/assets/source-sans-3-vietnamese-700-normal-W-J7ohm4.woff       8.25 kB
+dist/assets/cinzel-latin-ext-700-normal-C24KFjuG.woff2              8.26 kB
+dist/assets/source-sans-3-vietnamese-400-normal-eMQk7hmk.woff       8.28 kB
+dist/assets/cinzel-latin-ext-400-normal-DJ0Lq8y-.woff               9.29 kB
+dist/assets/source-sans-3-cyrillic-400-normal-DjhbW-4D.woff2        9.60 kB
+dist/assets/source-sans-3-cyrillic-700-normal-CIuudVLB.woff2        9.60 kB
+dist/assets/cinzel-latin-ext-700-normal-CORa-yIv.woff               9.81 kB
+dist/assets/source-sans-3-greek-700-normal-C-sAg5NG.woff           10.10 kB
+dist/assets/source-sans-3-greek-400-normal-DyO2Yfz5.woff           10.12 kB
+dist/assets/source-sans-3-cyrillic-700-normal-D_p3L75o.woff        12.00 kB
+dist/assets/source-sans-3-cyrillic-400-normal-DkNBMcYd.woff        12.10 kB
+dist/assets/cinzel-latin-400-normal-DnUIPmzd.woff2                 14.13 kB
+dist/assets/cinzel-latin-700-normal-Dkw14w9r.woff2                 15.18 kB
+dist/assets/source-sans-3-latin-700-normal-CkzU-mV9.woff2          15.60 kB
+dist/assets/source-sans-3-latin-400-normal-DQi5PRDE.woff2          15.70 kB
+dist/assets/cinzel-latin-400-normal-C8jUSQqm.woff                  16.62 kB
+dist/assets/cinzel-latin-700-normal-C-gK7hA8.woff                  17.52 kB
+dist/assets/source-sans-3-latin-700-normal-B-h9tW5h.woff           19.91 kB
+dist/assets/source-sans-3-latin-400-normal-RR2C27NP.woff           19.99 kB
+dist/assets/source-sans-3-latin-ext-700-normal-6Xi0A2be.woff2      32.96 kB
+dist/assets/source-sans-3-latin-ext-400-normal-UNsKFIBq.woff2      33.02 kB
+dist/assets/source-sans-3-latin-ext-700-normal-C1ecyfgK.woff       43.40 kB
+dist/assets/source-sans-3-latin-ext-400-normal-D5P-Ud2J.woff       43.74 kB
+dist/assets/index-BWDjhvda.css                                     50.70 kB │ gzip:  9.88 kB
+dist/assets/index-D5iWzPra.js                                     288.96 kB │ gzip: 87.53 kB
+✓ built in 2.51s

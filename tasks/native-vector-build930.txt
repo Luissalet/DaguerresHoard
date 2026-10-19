@@ -1,0 +1,1 @@
+[{"file": "durer-cli.exe", "sha256": "517b739f89a446eca19a147962b27e7b5d47b04df9b39417beb28ecfe46862d2"}, {"file": "durer.exe", "sha256": "9f80f3df5a5dadb3d829cac27b23c4af8df62889b7bc341c5c085865578fe2db"}]

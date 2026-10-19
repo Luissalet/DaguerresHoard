@@ -6,6 +6,7 @@ from pathlib import Path
 import subprocess
 import sys
 import threading
+import os
 
 import httpx
 import pytest
@@ -47,15 +48,27 @@ async def test_http_catalogue_and_off_project_reads_are_cold(tmp_path):
 
 
 @pytest.mark.asyncio
-async def test_photo_vector_photo_retains_originals_revisions_and_native_ids(tmp_path,monkeypatch):
+@pytest.mark.parametrize('native', [False, pytest.param(True, marks=pytest.mark.skipif(
+    os.environ.get('DAGUERRE_VECTOR_NATIVE_TESTS') != '1', reason='explicit owned native CPU check'))])
+async def test_photo_vector_photo_retains_originals_revisions_and_native_ids(tmp_path,monkeypatch,native):
     from daguerre_hoard.studio_native.durer.durer_hoard.sessions import sessions
+    if native and os.environ.get('DAGUERRE_VECTOR_BUILD_QA') == '1':
+        from daguerre_hoard.studio_native.durer.durer_hoard import native as engine
+        from daguerre_hoard.studio_native.durer.durer_hoard import sessions as session_module
+        target = engine.ROOT/'native/target/release'/('durer-cli.exe' if os.name=='nt' else 'durer-cli')
+        assert target.is_file()
+        # Explicit build QA of this checkout's completed CLI while GUI links.
+        # Production executable resolution continues to use native/bin only.
+        monkeypatch.setattr(engine,'executable',lambda:target)
+        monkeypatch.setattr(session_module,'executable',lambda:target)
     def execute(project,path,actions,**kwargs):
         path.parent.mkdir(parents=True,exist_ok=True)
         path.write_bytes(b'synthetic-native-document')
         for action in actions:
             if action['name']=='export': Image.new('RGB',(64,64),(30,90,140)).save(action['arguments']['path'])
         return [{'name':action['name'],'is_error':False,'result':{}} for action in actions]
-    monkeypatch.setattr(sessions,'execute',execute)
+    if not native:
+        monkeypatch.setattr(sessions,'execute',execute)
     studio=Studio(tmp_path/'data',port=64838)
     sources=tmp_path/'originals';sources.mkdir()
     original=sources/'photo.png'

@@ -31,7 +31,9 @@ async def test_stdio_cold_contract_and_native_store_roundtrip(tmp_path,monkeypat
         for action in actions:
             if action['name']=='export': Image.new('RGB',(64,64),(120,60,20)).save(action['arguments']['path'])
         return [{'name':a['name'],'is_error':False,'result':{}} for a in actions]
-    monkeypatch.setattr(sessions,'execute',worker)
+    native = os.environ.get('DAGUERRE_VECTOR_NATIVE_TESTS') == '1'
+    if not native:
+        monkeypatch.setattr(sessions,'execute',worker)
     data=tmp_path/'data'
     app=create_app(data,port=64846,demo=True)
     server=uvicorn.Server(uvicorn.Config(app,host='127.0.0.1',port=64846,log_level='warning'))
@@ -67,6 +69,23 @@ async def test_stdio_cold_contract_and_native_store_roundtrip(tmp_path,monkeypat
             await call('visual_module_set',{'module':'vector','enabled':True})
             retained=await call('illustration_inspect',{'project_id':vector_id})
             assert retained['illustration']['id']==vector_id
+            if native:
+                await call('visual_module_set',{'module':'photos','enabled':True})
+                await call('visual_demo_prepare',{})
+                lib=app.studio.modules['photos'].app.state.library
+                async with asyncio.timeout(20):
+                    while await asyncio.to_thread(lib.jobs.running): await asyncio.sleep(.02)
+                photo=(await asyncio.to_thread(lib.list_photos))['results'][0]
+                moved=await call('visual_project_photo',{'project':project['id'],'photo_id':photo['id']})
+                illustration=moved['transfers'][-1]['receipt']['illustration']
+                exported=await call('visual_project_export',{'project':project['id'],'illustration':illustration})
+                receipt=exported['transfers'][-1]['receipt']
+                assert (await asyncio.to_thread(lib.describe,receipt['photo_id']))['id']==receipt['photo_id']
+                await call('visual_module_set',{'module':'photos','enabled':False})
+                import httpx
+                async with httpx.AsyncClient() as client:
+                    response=await client.get(f"http://127.0.0.1:64846/api/studio/artifacts/{project['id']}/{receipt['sha256']}",headers={'Range':'bytes=0-7'})
+                    assert response.status_code==206 and response.content==b'\x89PNG\r\n\x1a\n'
             await call('visual_module_set',{'module':'vector','enabled':False})
     finally:
         server.should_exit=True

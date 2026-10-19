@@ -68,10 +68,15 @@ errors. Effective service deployment and live inference remain external acceptan
 requirements; inert transport tests are not a live-model certification.
 
 Current evidence is recorded under `tasks/`: cold discovery, lifecycle, exact global
-pins, reference matching, real stdio discovery and a synthetic photo/vector/photo
-roundtrip with an inert vector worker. Initial full photo suite: 250 pass, five contract
-failures, ten skips, one model deselection in120.24s while native Rust builds ran.
-Follow-up contract verification is recorded separately, preserving that initial result.
-Native binaries and real native transfer still need their own completed receipts before
-formal submission. Browser behaviour, GUI save dialogues, installed packaging and real
-data continuity are not established by these CPU tests.
+pins, reference matching and causal cancellation/drain checks. Initial full photo suite:
+250 pass, five contract failures, ten skips, one model deselection in120.24s while native
+Rust builds ran. Follow-up contract verification passed31 tests; the final general suite
+passed258 with13 skips and one model deselection in115.33s. Both results are preserved.
+The vector CLI and editor were built from this checkout; six actual headless checks pass
+against its production `native/bin`, including full schema/command parity, historical
+copy/edit/undo/redo/reopen, SVG/PNG/PDF exports and real photo/vector/photo transfer.
+Real owner stdio MCP also passes that complete transfer, reopen, OFF and retained PNG
+Range206 download. No native editor window was opened. Layers/Develop builds and their
+optional native checks are still pending. Browser behaviour, GUI save dialogues, installed
+packaging and real data continuity are not established by these CPU tests. The migration
+inventory is `MIGRATION930.json`; it records expectations rather than a migration receipt.

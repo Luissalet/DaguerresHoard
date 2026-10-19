@@ -281,3 +281,14 @@ chat/embeddings-text model any of Hoard Link's capabilities cover.
 ## Incorporated native image engines
 
 `native/layers` and `native/develop` contain complete detached Rust engines and desktop editors with their own crates, formats and resource namespaces. `scripts/build_engines.py` builds owned executables in `native/bin`; `CraftEngines` selects only these paths. No external app, repository or CLI discovery remains. The public historical keys and tool names remain aliases. New layered bundles use `.dglayers`; historical format readers and one-way catalog/preferences copy preserve original data. Full engine schemas and operations remain discoverable, and generated copies open in full owned editors with native tools connected to the live editor.
+# Visual owner930
+
+`studio.py` is the cold ASGI entry point. It reads frozen catalogues and creates
+neither photo nor vector engine until explicit activation. The original photo
+FastAPI factory remains intact inside Photos, including Layers, Develop and
+reference matching. The incorporated vector factory owns its full client and
+native runtime under `/vector/`. `studio_lifecycle.py` owns request leases and
+joined transitions; `studio_projects.py` persists native IDs, snapshots, revisions
+and transfer receipts. `global_model.py` composes the unchanged SDK with the exact
+authenticated Faustus938 descriptor/completion contract. See `STUDIO930.md` for
+build instructions, data placement and verification limits.

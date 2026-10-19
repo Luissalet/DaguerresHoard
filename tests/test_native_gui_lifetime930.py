@@ -1,5 +1,6 @@
 """Native close/save barriers with fake owned processes; no window is opened."""
 import threading
+import pytest
 from daguerre_hoard import native_gui
 from daguerre_hoard.config import Settings
 from daguerre_hoard.embeddings import FakeEmbedder
@@ -32,3 +33,27 @@ def test_library_waits_for_owned_editor_save_and_exit_before_stores_close(tmp_pa
     assert not closing.is_alive() and library._closed
     assert saved.read_bytes()==b'completed native save'
     assert not library.craft_engines._editors
+
+
+def test_failed_vector_control_start_keeps_editor_owned_until_normal_join(tmp_path,monkeypatch):
+    from daguerre_hoard.studio_native.durer.durer_hoard import native
+    from daguerre_hoard.studio_native.durer.durer_hoard.config import Settings
+    binary=tmp_path/'owned-editor.exe';binary.write_bytes(b'inert')
+    monkeypatch.setattr(native,'gui_executable',lambda:binary)
+    monkeypatch.setattr(native,'settings',lambda:Settings(tmp_path/'data',None,None))
+    class Process:
+        pid=12345
+        def poll(self):return None
+        def terminate(self):raise AssertionError('unsaved editor was force-terminated')
+    process=Process()
+    monkeypatch.setattr(native.subprocess,'Popen',lambda *_a,**_k:process)
+    ticks=iter((0,21))
+    monkeypatch.setattr(native.time,'monotonic',lambda:next(ticks))
+    closed=[]
+    def close(owned):
+        assert native._gui_processes['isolated'][0] is owned is process
+        closed.append(True)
+    monkeypatch.setattr(native_gui,'close_owned',close)
+    with pytest.raises(RuntimeError,match='control channel did not start'):
+        native.launch_gui('isolated')
+    assert closed==[True] and 'isolated' not in native._gui_processes

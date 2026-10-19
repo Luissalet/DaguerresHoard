@@ -155,6 +155,9 @@ def launch_gui(project_id: str) -> dict[str, Any]:
     finally:
         log.close()
     address = f"127.0.0.1:{port}"
+    # Own the process even when its control socket never becomes ready.
+    # A startup error cannot leave an untracked editor or discard its document.
+    _gui_processes[project_id] = (process, address)
     deadline = time.monotonic() + 20
     while time.monotonic() < deadline and process.poll() is None:
         try:
@@ -164,8 +167,9 @@ def launch_gui(project_id: str) -> dict[str, Any]:
                         "log": str(log_path), "reused": False}
         except OSError:
             time.sleep(0.2)
-    if process.poll() is None:
-        process.terminate()
+    from ....native_gui import close_owned
+    close_owned(process)
+    _gui_processes.pop(project_id, None)
     raise RuntimeError(f"VectorCraft GUI control channel did not start. See {log_path}")
 
 

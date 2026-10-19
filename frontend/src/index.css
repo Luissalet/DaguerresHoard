@@ -1,4 +1,7 @@
-@import "@fontsource-variable/plus-jakarta-sans";
+@import "@fontsource/source-sans-3/400.css";
+@import "@fontsource/source-sans-3/700.css";
+@import "@fontsource/cinzel/400.css";
+@import "@fontsource/cinzel/700.css";
 
 /* Dark by default through the shared Hoard tokens (hoard-theme.css);
    the original light palette stays available via data-theme="light". */
@@ -57,7 +60,7 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
-  font-family: "Plus Jakarta Sans Variable", system-ui, sans-serif;
+  font-family: "Source Sans 3", system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -1445,7 +1448,7 @@ table.activity-table td {
 }
 
 /* ---- Hoard family chrome (matches the shared look) ---- */
-body { font-family: "Plus Jakarta Sans Variable", var(--hoard-font-sans); }
+body { font-family: var(--hoard-font-sans); }
 .sidebar { padding: 0 12px 12px; background: var(--hoard-surface); color: var(--hoard-text-muted); border-right: 1px solid var(--hoard-border); }
 .sidebar-brand { height: var(--hoard-header-h); margin: 0 -12px 12px; padding: 0 16px; border-bottom: 1px solid var(--hoard-border); font-family: var(--hoard-font-serif); font-weight: 700; font-size: 15px; color: var(--hoard-accent); flex-shrink: 0; }
 .brand-icon { width: 32px; height: 32px; border-radius: 8px; }

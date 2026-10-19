@@ -18,6 +18,7 @@ URL_FIELDS = frozenset({
     'waveform_url', 'download_url', 'file_url', 'project_url', 'native_url',
     'render_url', 'media_receive_url', 'image_url', 'audio_url', 'video_url',
     'events_url', 'stream_url', 'source_url', 'poster_url',
+    'sample_thumbnail_url', 'cover_thumbnail_url',
 })
 OPAQUE_FIELDS = frozenset({'snapshot', 'snapshots', 'manifest', 'manifests', 'document', 'doc',
     'native_document', 'prompt', 'prompts', 'metadata', 'provenance', 'params', 'parameters',
