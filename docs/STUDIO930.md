@@ -1,11 +1,12 @@
 # Visual studio
 
-Source candidate930 is under development and has not been independently reviewed,
-integrated, installed or checked in a browser. No real user store has been opened.
+The studio preserves the original modules under one cold owner. The historical
+source-build notes below are complemented by [retained figures](FIGURES.md), which
+adds import/inspection/download while OFF and explicit native raster copies.
 The inherited photo functionality, including reference matching, Layers and Develop,
 remains in the Photos module. The incorporated vector editor retains its own complete
 client, native document format, 25 native tools, 659 commands and 57 public MCP aliases.
-The owner's cold catalogue exposes 31 photo tools, 57 vector aliases and seven common
+The owner's cold catalogue exposes 31 photo tools, 57 vector aliases and eight common
 operations. Static catalogues are source build outputs, not runtime engine discovery.
 
 ## Build and launch from source

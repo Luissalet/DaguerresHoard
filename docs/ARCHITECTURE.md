@@ -2,6 +2,12 @@
 
 ## Modules (`daguerre_hoard/`)
 
+- `figures.py` validates complete portable diagram captures and decodes PNG pixels
+  without native engines or network calls. `studio_projects.py` retains immutable
+  complete-source snapshots with an explicit import transaction; `studio.py`
+  serves their PNG/source while OFF and owns explicit Vector/Layers copies through
+  the destination module's lease. See [FIGURES.md](FIGURES.md).
+
 - `config.py` -- paths, port, supported extensions. One `Settings`
   dataclass; only the two entry points (`__main__.py`, `mcp_server.py`)
   read environment variables.

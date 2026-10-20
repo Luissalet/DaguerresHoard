@@ -28,3 +28,7 @@ html[data-theme] body:has(#inputForm) :is(.modal-card, .inspector) :is(input, te
 }
 html[data-theme] body:has(#inputForm) .catalog-item pre { background: var(--paper); color: var(--ink); }
 html[data-theme] body:has(#inputForm) .tool:not(:hover):not(.active) { color: var(--muted); }
+
+#project{min-width:0}#error{overflow-wrap:anywhere}.figure-import{margin:24px 0}.figure-import label{display:flex;flex-direction:column;align-items:start;gap:8px}.figure-import input{max-width:100%}
+.project-figure{margin:24px 0;padding-bottom:24px;border-bottom:1px solid var(--border)}.studio-home .figure-image{display:block;width:100%;height:auto;padding:0;border:0;background:transparent}.figure-image img{display:block;width:100%;max-height:240px;object-fit:contain}.project-figure figcaption{margin:12px 0;overflow-wrap:anywhere}.figure-actions{display:flex;flex-wrap:wrap;align-items:center;gap:12px}.figure-actions a{padding:8px 0}.figure-actions button:disabled{cursor:default;opacity:.55}.studio-home :focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.figure-dialog{width:calc(100vw - 32px);height:calc(100dvh - 32px);max-width:none;max-height:none;padding:16px;border:1px solid var(--border);background:var(--bg);color:var(--ink);font:inherit}.figure-dialog[open]{display:grid;grid-template-rows:auto minmax(0,1fr);gap:16px}.figure-dialog::backdrop{background:#000b}.figure-pan{overflow:auto;min-width:0;min-height:0}.figure-pan img{display:block;margin:auto;object-fit:contain}

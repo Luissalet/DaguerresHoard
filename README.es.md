@@ -11,6 +11,11 @@ explica compilación, API/MCP, datos y límites de verificación. Texto y visió
 el modelo global configurado en Faustus; las opciones locales guardadas se conservan,
 pero no seleccionan un modelo alternativo.
 
+Los proyectos también [conservan figuras de diagramas](docs/FIGURES.md): importan
+`.vfigure` completo, amplían su PNG a tamaño real o 2× y descargan su fuente con los
+módulos apagados. Vector y Capas, activados expresamente, crean copias raster en sus
+formatos nativos; documento, revisión y página/estado siguen junto a la captura.
+
 El paquete Windows x64 incorpora las tres interfaces web, recursos y seis motores
 nativos. La instalación usa un perfil externo y arranque explícito; véanse las
 instrucciones del manual. Las pruebas CPU instaladas conservan configuración/token

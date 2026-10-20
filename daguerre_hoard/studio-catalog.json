@@ -3608,6 +3608,44 @@
       }
     },
     {
+      "name": "visual_project_figure",
+      "description": "Retain/get a complete .vfigure diagram capture while modules are OFF, or explicitly create a raster copy in Vector/Layers. Source, revision, page/state and PNG remain together; native copies do not reconstruct semantic shapes. Keywords: diagram, figure, capture, source, diagrama, figura, fuente, estado\nKeywords: photos, vector, project, fotos, vector, proyecto",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "project": {
+            "type": "string"
+          },
+          "action": {
+            "type": "string",
+            "enum": [
+              "import",
+              "get",
+              "vector",
+              "layers"
+            ],
+            "default": "get"
+          },
+          "figure": {
+            "type": "object",
+            "description": "Complete vitruvius.figure/1 JSON including content, origin and base64 PNG preview."
+          },
+          "object_id": {
+            "type": "string",
+            "description": "Retained figure object ID returned by import."
+          }
+        },
+        "required": [
+          "project"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "openWorldHint": false
+      }
+    },
+    {
       "name": "visual_demo_prepare",
       "description": "Explicitly generate and scan synthetic demo photos only in a --demo instance.\nKeywords: photos, vector, project, fotos, vector, proyecto",
       "inputSchema": {

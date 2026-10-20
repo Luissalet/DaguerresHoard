@@ -80,3 +80,63 @@ class Projects:
         self.run(lambda c: c.execute('INSERT INTO transfers VALUES(:id,:project,:source,:target,:receipt,:created)', item))
         return self.get(project)
 
+    def figure(self, project, object_id):
+        item = next((item for item in self.get(project)['objects']
+                     if item['id'] == object_id and item['module'] == 'diagram' and item['kind'] == 'figure'), None)
+        if item is None:
+            raise ValueError('Unknown retained figure in this project.')
+        return item
+
+    def import_figure(self, project, value):
+        from . import figures
+        from .hoard_link.atomic import write_bytes_atomic
+        figure, png, _size = figures.validate(value)  # No files/store before validation.
+        self.get(project)
+        revision = figures.identity(figure)
+        item = dict(id=uuid.uuid4().hex, project=project, module='diagram', kind='figure',
+                    native_id=figure['document_id'], revision=revision,
+                    route='', snapshot=figures.encoded(figure).decode('utf-8'), created=time.time())
+        item['route'] = f"/api/studio/figures/{project}/{item['id']}.png"
+        folder = self.root / 'studio-artifacts' / project / 'figures'
+        created = []
+        with self.lock:
+            conn = self._connect()
+            try:
+                conn.execute('BEGIN IMMEDIATE')
+                existing = conn.execute('SELECT * FROM objects WHERE project=? AND module=? AND kind=? AND native_id=? AND revision=?',
+                    (project, 'diagram', 'figure', item['native_id'], revision)).fetchone()
+                if existing is not None:
+                    return dict(existing) | {'snapshot': json.loads(existing['snapshot'])}
+                folder.mkdir(parents=True, exist_ok=True)
+                for extension, data in (('png', png), ('vfigure', figures.encoded(figure))):
+                    path = folder / f'{revision}.{extension}'
+                    if path.exists():
+                        if path.read_bytes() != data:
+                            raise ValueError('An existing retained figure file differs from its source. Inspect it before importing again.')
+                    else:
+                        created.append(path)
+                        write_bytes_atomic(path, data)
+                conn.execute('INSERT INTO objects VALUES(:id,:project,:module,:kind,:native_id,:revision,:route,:snapshot,:created)', item)
+                conn.commit()
+                return item | {'snapshot': figure}
+            except BaseException:
+                conn.rollback()
+                for path in created:
+                    path.unlink(missing_ok=True)
+                raise
+            finally:
+                conn.close()
+
+    def figure_source(self, project, object_id):
+        """Materialize only the previously retained image, never a caller path."""
+        from . import figures
+        from .hoard_link.atomic import write_bytes_atomic
+        item = self.figure(project, object_id)
+        figure, png, _size = figures.validate(item['snapshot'])
+        path = self.root / 'studio-artifacts' / project / 'figures' / f"{item['revision']}.png"
+        # An explicit native-document action can restore its own retained input.
+        if not path.is_file() or path.read_bytes() != png:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            write_bytes_atomic(path, png)
+        return item, figure, path
+

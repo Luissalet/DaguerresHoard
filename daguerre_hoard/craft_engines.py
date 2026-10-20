@@ -328,11 +328,14 @@ class CraftEngines:
             {"tool": "doc_save", "arguments": {"path": native_rel}},
             {"tool": "doc_export", "arguments": {"path": preview_rel, "format": "png"}},
         ])
-        result = self.call("photocraft", calls)
-        if len(result["calls"]) != len(calls) or any(x["is_error"] for x in result["calls"]):
-            raise CraftEngineError("Daguerre Layers did not complete document creation; inspect returned MCP call errors")
-        if not path.is_file() or not preview.is_file():
-            raise CraftEngineError("Daguerre Layers reported success but the native document or PNG export is missing")
+        try:
+            result = self.call("photocraft", calls)
+            if len(result["calls"]) != len(calls) or any(x["is_error"] for x in result["calls"]):
+                raise CraftEngineError("Daguerre Layers did not complete document creation; inspect returned MCP call errors")
+            if not path.is_file() or not preview.is_file():
+                raise CraftEngineError("Daguerre Layers reported success but the native document or PNG export is missing")
+        except Exception as error:
+            raise CraftEngineError(f"Layers copy {artifact_id} did not complete: {error}. Inspect {path} before retrying; the source is unchanged.") from error
         return {"id": artifact_id, "engine": "layers", "native_path": str(path), "preview_path": str(preview), "preview_url": f"http://127.0.0.1:{self.port}/api/craft/artifacts/{artifact_id}.png", "native_format": ".dglayers", "editable_layers": True, "calls": result["calls"]}
 
     def create_layered_photo(self, source: Path) -> dict[str, Any]:

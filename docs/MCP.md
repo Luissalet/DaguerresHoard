@@ -1,12 +1,17 @@
 # Studio operations
 
-The cold owner adds seven common operations to the retained31 photo operations
-and57 vector aliases (95 total). Connecting/discovering starts no native engine;
+The cold owner adds eight common operations to the retained31 photo operations
+and57 vector aliases (96 total). Connecting/discovering starts no native engine;
 use `visual_module_set` explicitly. Full vector schemas and659 commands are frozen
 at source build time. Common projects bind real native IDs and revisions; see
 [STUDIO930.md](STUDIO930.md) for the transfer/export/download flow and its current
 verification limits. The photographic reference below remains applicable inside
 Photos; originals, reference matching, Layers and Develop are preserved.
+
+`visual_project_figure(project, action, figure?, object_id?)` retains complete
+`.vfigure` captures, reads and downloads them while modules are OFF, or explicitly
+creates a native Vector/Layers raster copy. The source and selected revision,
+page/state remain available; see [the full contract and limits](FIGURES.md).
 
 # MCP tools
 

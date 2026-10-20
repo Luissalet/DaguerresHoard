@@ -1220,6 +1220,20 @@ class Library(VideoMixin, EditsMixin):
         row = self._resolve_photo(photo_id, None)
         return self.craft_engines.create_layered_photo(Path(row["path"]))
 
+    def figure_to_layers(self, figure: dict) -> dict:
+        """Create a native raster/overlay copy while retaining the complete source."""
+        from . import figures
+        from .hoard_link.atomic import write_bytes_atomic
+        figure, png, (width, height) = figures.validate(figure)
+        if not 16 <= width <= 8192 or not 16 <= height <= 8192:
+            raise ValueError('Layers requires a capture between 16 and 8192 pixels per dimension. The retained source is unchanged.')
+        folder = self.settings.data_dir / 'figure-inputs' / figures.identity(figure)
+        folder.mkdir(parents=True, exist_ok=True)
+        source = folder / 'capture.png'
+        write_bytes_atomic(source, png)
+        write_bytes_atomic(folder / 'source.vfigure', figures.encoded(figure))
+        return self.craft_engines.create_layered_document(str(figure.get('title') or 'Diagram')[:100], width, height, '#000000', source)
+
     def craft_develop_photo(self, photo_id: str, exposure: float, output_format: str = "png", long_edge: int = 0) -> dict:
         """Develop an indexed photo through LightCraft from a Daguerre-owned copy."""
         row = self._resolve_photo(photo_id, None)

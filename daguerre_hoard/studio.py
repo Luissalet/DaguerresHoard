@@ -43,6 +43,10 @@ TOOLS = [
         {'project':{'type':'string'},'photo_id':{'type':'string'}},['project','photo_id']),
     tool('visual_project_export','Export a vector revision and index its PNG result in the native photo library.',
         {'project':{'type':'string'},'illustration':{'type':'string'}},['project','illustration']),
+    tool('visual_project_figure','Retain/get a complete .vfigure diagram capture while modules are OFF, or explicitly create a raster copy in Vector/Layers. Source, revision, page/state and PNG remain together; native copies do not reconstruct semantic shapes. Keywords: diagram, figure, capture, source, diagrama, figura, fuente, estado',
+        {'project':{'type':'string'},'action':{'type':'string','enum':['import','get','vector','layers'],'default':'get'},
+         'figure':{'type':'object','description':'Complete vitruvius.figure/1 JSON including content, origin and base64 PNG preview.'},
+         'object_id':{'type':'string','description':'Retained figure object ID returned by import.'}},['project']),
     tool('visual_demo_prepare','Explicitly generate and scan synthetic demo photos only in a --demo instance.'),
 ]
 
@@ -117,6 +121,19 @@ class Studio:
         if name=='visual_projects':
             return await asyncio.to_thread(self.projects.get,args['project']) if args.get('project') else await asyncio.to_thread(self.projects.list)
         if name=='visual_project_create': return await asyncio.to_thread(self.projects.create,args['title'])
+        if name=='visual_project_figure':
+            action=args.get('action','get')
+            if action=='import':
+                item=await asyncio.to_thread(self.projects.import_figure,args['project'],args.get('figure'))
+                return {'id':item['id'],'project':item['project'],'revision':item['revision'],
+                        'png_url':item['route'],'source_url':item['route'].rsplit('.',1)[0]+'.vfigure'}
+            if action=='get':
+                item=await asyncio.to_thread(self.projects.figure,args['project'],args.get('object_id'))
+                return {'id':item['id'],'project':item['project'],'revision':item['revision'],'figure':item['snapshot'],
+                        'png_url':item['route'],'source_url':item['route'].rsplit('.',1)[0]+'.vfigure'}
+            if action=='vector': return await self.modules['vector'].work(self.figure_vector,args)
+            if action=='layers': return await self.modules['photos'].work(self.figure_layers,args)
+            raise ValueError('Figure action must be import, get, vector or layers.')
         if name=='visual_demo_prepare':
             if not self.demo: raise ValueError('Synthetic demo preparation requires an isolated --demo instance.')
             def prepare():
@@ -141,6 +158,38 @@ class Studio:
                 await join_tasks([task])
                 raise
         raise ValueError('Unknown visual control.')
+
+    def figure_vector(self,args):
+        from .studio_native.durer.durer_hoard import store,native
+        from .studio_native.durer.durer_hoard.sessions import sessions
+        source,figure,image=self.projects.figure_source(args['project'],args.get('object_id'))
+        item=store.create(str(figure.get('title') or 'Diagram')[:200],source=image)
+        path=store.project_root(item['id'])/'project.durer'
+        try:
+            result=sessions.execute(item['id'],path,[{'name':'open_file','arguments':{'path':item['source']['path']}}])
+            if native.failed_results(result) or not path.is_file() or not path.stat().st_size:
+                raise ValueError('The native engine did not finish saving the document.')
+        except Exception as error:
+            raise ValueError(f"Vector copy {item['id']} did not complete: {error} Inspect this copy before retrying; the retained diagram is unchanged.") from error
+        target=self.projects.link(args['project'],'vector','illustration',item['id'],'/vector/?project='+item['id'],
+            {'manifest':store.read(item['id']),'sha256':hashlib.sha256(path.read_bytes()).hexdigest(),'figure_object':source['id']})
+        return self.projects.receipt(args['project'],source['id'],target['id'],
+            {'kind':'figure_to_vector','sha256':hashlib.sha256(image.read_bytes()).hexdigest(),'file':str(image),
+             'illustration':item['id'],'result':result})
+
+    def figure_layers(self,args):
+        source,figure,image=self.projects.figure_source(args['project'],args.get('object_id'))
+        result=self.modules['photos'].app.state.library.figure_to_layers(figure)
+        result={**result,'preview_url':f"/photos/api/craft/artifacts/{result['id']}.png",
+                'native_url':f"/photos/api/craft/artifacts/{result['id']}.dglayers"}
+        native=Path(result['native_path'])
+        if not native.is_file() or not native.stat().st_size:
+            raise ValueError('Layers did not save a native document. The diagram capture remains retained.')
+        target=self.projects.link(args['project'],'photos','layers',result['id'],'/photos/',
+            {'artifact':result,'sha256':hashlib.sha256(native.read_bytes()).hexdigest(),'figure_object':source['id']})
+        return self.projects.receipt(args['project'],source['id'],target['id'],
+            {'kind':'figure_to_layers','sha256':hashlib.sha256(image.read_bytes()).hexdigest(),'file':str(image),
+             'artifact':result})
 
     def transfer_photo(self,args):
         from .studio_native.durer.durer_hoard import store,native
@@ -238,10 +287,22 @@ class Studio:
             return await self.json(send,await self.control('visual_project_create',await self.body(receive)) if method=='POST' else await self.control('visual_projects',{}))
         if path.startswith('/api/studio/projects/'):
             parts=path.split('/')
-            if len(parts)==6 and method=='POST' and parts[-1] in ('photo','export'):
+            if len(parts)==6 and method=='POST' and parts[-1] in ('photo','export','figure'):
                 return await self.json(send,await self.control('visual_project_'+parts[-1],
                     {'project':parts[4],**await self.body(receive)}))
             return await self.json(send,await self.control('visual_projects',{'project':parts[4]}))
+        if path.startswith('/api/studio/figures/') and method=='GET':
+            from . import figures
+            from starlette.responses import Response
+            parts=path.split('/')
+            if len(parts)!=6 or '.' not in parts[5]: return await self.json(send,{'error':'not_found'},404)
+            object_id,kind=parts[5].rsplit('.',1)
+            if kind not in ('png','vfigure'): return await self.json(send,{'error':'not_found'},404)
+            item=await asyncio.to_thread(self.projects.figure,parts[4],object_id)
+            figure,png,_size=figures.validate(item['snapshot'])
+            data=png if kind=='png' else figures.encoded(figure)
+            headers={} if kind=='png' else {'Content-Disposition':f'attachment; filename="{figure["document_id"]}-r{figure["revision"]}.vfigure"'}
+            return await Response(data,media_type='image/png' if kind=='png' else 'application/json',headers=headers)(scope,receive,send)
         if path.startswith('/api/studio/artifacts/') and method=='GET':
             parts=path.split('/')
             if len(parts)!=6: return await self.json(send,{'error':'not_found'},404)
