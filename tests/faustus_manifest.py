@@ -114,12 +114,6 @@ def validate(data: Any) -> Dict[str, Any]:
     if not isinstance(data.get("notes") or "", str):
         raise ManifestError("'notes' must be a string")
 
-    # Faustus fills `{X_DIR}` from the running app's working directory only
-    # when an mcp arg names a file that exists under it. Without that the
-    # connect form comes up with the directory blank.
-    dir_keys = [p for p in placeholders if p.endswith("_DIR")]
-    if dir_keys and not any("{" + dir_keys[0] + "}" in a for a in args):
-        raise ManifestError(f"no mcp arg is anchored on {{{dir_keys[0]}}}")
     return data
 
 
@@ -127,6 +121,15 @@ def check_repo(root: Path) -> Dict[str, Any]:
     """Validate `<root>/faustus-plugin.json` and that the files it names exist."""
     path = root / "faustus-plugin.json"
     data = validate(json.loads(path.read_text(encoding="utf-8")))
+    args = data["mcp"].get("args", [])
+    if "-m" in args:
+        index = args.index("-m") + 1
+        module = args[index] if index < len(args) else ""
+        if not module or not all(part.isidentifier() for part in module.split(".")):
+            raise ManifestError("mcp -m needs a valid module name")
+        source = root.joinpath(*module.split("."))
+        if not source.with_suffix(".py").is_file() and not (source / "__main__.py").is_file():
+            raise ManifestError(f"mcp module has no source entry point: {module}")
     dir_keys = [p for p in data.get("placeholders", []) if p.endswith("_DIR")]
     if dir_keys:
         token = "{" + dir_keys[0] + "}"
