@@ -1,0 +1,68 @@
+{
+  "schema": 1,
+  "id": "durer",
+  "name": "D\u00fcrer's Hoard \u00b7 Daguerre's Hoard",
+  "purpose": "Local vector illustration workspace with owned editable documents, engine, desktop editor and MCP access.",
+  "capabilities": [
+    "illustration-catalog",
+    "native-durer-documents",
+    "native-durer-mcp-discovery",
+    "native-durer-mcp-dispatch",
+    "persistent-durer-sessions",
+    "svg-png-pdf-exports",
+    "hoard-illustration-references"
+  ],
+  "placeholders": [
+    "COMPAT_DIR",
+    "DAGUERRE_DIR",
+    "OWNER_URL",
+    "APP_URL",
+    "TOKEN_FILE",
+    "DATA_DIR",
+    "PYTHON"
+  ],
+  "defaults": {
+    "DAGUERRE_DIR": "{COMPAT_DIR}/../..",
+    "OWNER_URL": "http://127.0.0.1:8814",
+    "APP_URL": "{OWNER_URL}/compat/vector",
+    "TOKEN_FILE": "{DAGUERRE_DIR}/data/mcp-token",
+    "DATA_DIR": "{DAGUERRE_DIR}/data/vector",
+    "PYTHON": "{DAGUERRE_DIR}/.venv/Scripts/python.exe"
+  },
+  "app": {
+    "url_default": "{APP_URL}",
+    "ui_url": null,
+    "health": {
+      "path": "/api/health",
+      "expect": {
+        "service": "daguerres-hoard"
+      }
+    }
+  },
+  "mcp": {
+    "transport": "stdio",
+    "command": "{PYTHON}",
+    "args": [
+      "-I",
+      "-m",
+      "daguerre_hoard.compat_mcp",
+      "--module",
+      "vector"
+    ],
+    "env": {
+      "DAGUERRE_URL": "{OWNER_URL}",
+      "DAGUERRE_TOKEN_FILE": "{TOKEN_FILE}"
+    }
+  },
+  "x-family": {
+    "standalone": false,
+    "agent_contract": true,
+    "absorbed_by": {
+      "id": "daguerre",
+      "module": "vector",
+      "standalone": false,
+      "repository": "https://github.com/Luissalet/DaguerresHoard"
+    }
+  },
+  "notes": "Capabilities and native data belong to Daguerre's Hoard. Modules are enabled explicitly in the owner."
+}
