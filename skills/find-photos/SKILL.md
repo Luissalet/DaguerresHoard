@@ -89,7 +89,22 @@ read the receipt's omissions and renderer limitation. This supports ungrouped
 groups, masks, text, adjustments and complex transforms are not imported.
 Source bytes remain unchanged; imported outputs and receipts live under data.
 
-## Traps
+## Retained diagram figures in common projects
+
+For a complete `.vfigure` capture, use `visual_project_figure(project, action="import",
+figure=<complete JSON>)`. Do not reduce it to PNG or remove source fields. Import,
+`action="get"` with the returned `object_id`, inspection and source/PNG download
+work while both native modules are OFF. A different source revision, page or state
+is a distinct retained capture even when the PNG is identical.
+
+For an explicitly requested native copy, activate the destination with
+`visual_module_set`: Vector for `action="vector"`, Photos for `action="layers"`.
+These create raster copies, not semantic diagram reconstruction. Layers adds an
+editable overlay; source and selected revision/page/state stay retained. On partial
+native failure inspect the copy ID in the error before retrying. No source fetch or
+automatic origin synchronization is implied. See `docs/FIGURES.md` for the contract.
+
+## Photo search traps
 
 - `indexed_total` is every ranked photo that passed the filters, never a
   count of matches -- results are ranked by similarity, not filtered.
