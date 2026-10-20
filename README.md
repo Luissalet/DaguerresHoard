@@ -412,3 +412,8 @@ Design notes from the use-case walkthroughs: [docs/USE_CASES.md](docs/USE_CASES.
 ## Incorporated image engines
 
 Daguerre contains complete layered-image and development engines and desktop editors, built from detached source with own names and formats. The photo lightbox creates copies, develops them, exports results and opens the full editor. Thirty public MCP tools preserve all22 previous names; historical projects remain importable and originals untouched. See [the engine guide](docs/CRAFT-ENGINES.md) for builds, formats, provenance and verified scope.
+
+
+## Native connections
+
+Former MCP and Hub identities can use the incorporated cold compatibility adapters without the retired repositories. See [native connections](docs/NATIVE-CONNECTIONS.md). Modules still require explicit activation.

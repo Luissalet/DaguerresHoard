@@ -306,7 +306,8 @@ def create_app(root,**kwargs):
     from .hoard_link.guard import GuardMiddleware,parse_allowed_hosts
     import os
     studio=Studio(root,**kwargs)
-    app=GuardMiddleware(studio,port_getter=lambda:studio.port,strict_ports=True,
+    from .compat_mcp import install
+    app=GuardMiddleware(install(studio),port_getter=lambda:studio.port,strict_ports=True,
         allowed=parse_allowed_hosts(os.environ.get('DAGUERRE_ALLOWED_HOSTS','')))
     app.studio=studio
     return app
