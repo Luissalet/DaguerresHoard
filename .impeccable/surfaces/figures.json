@@ -1,0 +1,84 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-20",
+  "title": "Retained project figures",
+  "extensions": {
+    "scope": {
+      "mode": "Operate",
+      "task": 1061,
+      "designRecord": "docs/design/figures.md",
+      "artifacts": ["daguerre_hoard/studio_ui/studio.js", "daguerre_hoard/studio_ui/studio.css"],
+      "authority": "Incumbent common-project workbench; scoped extension. Root PRODUCT.md and DESIGN.md retain their older photo-library/lightbox scope.",
+      "discovery": "Scoped companion record at the assigned path; not a replacement for .impeccable/design.json or a claim that the skill's Markdown surface-brief loader discovers this JSON."
+    },
+    "breakpoints": [{"name": "single-column-workbench", "value": "700px"}],
+    "focus": [{"name": "workbench-keyboard-focus", "value": "2px solid var(--accent); outline-offset:3px", "purpose": "Visible focus for workbench controls and the capture opener."}],
+    "elevation": [{"name": "inspector-backdrop", "value": "#000b", "purpose": "Dim the underlying project during local modal inspection; no added decorative shadow."}],
+    "interaction": {
+      "inspection": "Native modal dialog opens at actual PNG size; Fit, Actual size and Zoom 2× resize the retained image inside a keyboard-focusable scroll region. Close or Escape returns focus to the connected opener.",
+      "offState": "Import, retention, download and inspection work with both destination modules off. Each native-copy button requires its own module to be on and is disabled while busy.",
+      "copyTruth": "Vector and Layers documents use the retained raster. Complete semantic diagram source stays with the capture; these actions do not reconstruct editable diagram objects or structural layers.",
+      "origin": "Optional stored HTTP(S) origin is an explicit link; importing and inspecting do not fetch it."
+    },
+    "evidence": {
+      "directory": "D:/LocalAI/research-inbox/expansiones-fusiones-20261020/qa1061",
+      "captures": ["figure-1440-dark.png", "figure-390-dark.png", "figure-1440-light.png", "figure-390-light.png", "preview-1440.png", "preview-390.png", "native-ui-1440.png", "native-ui-390.png"],
+      "receipts": ["cold-results.json", "cold-native.json", "native-target-results.json", "native-ui-result.json"],
+      "finishReview": "D:/LocalAI/research-inbox/expansiones-fusiones-20261020/daguerre1061-finish.txt",
+      "disposition": "ship",
+      "provenance": "Author-supplied QA captures of synthetic projects and a retained test diagram; inspected by the documenter. No new shipping raster asset was created or copied.",
+      "limit": "The documenter read receipts and inspected supplied captures; no app starts or repeated test execution. Verdict covers the added figure flow, not every inherited surface."
+    }
+  },
+  "components": [
+    {
+      "name": "Capture action",
+      "kind": "button",
+      "refersTo": "button",
+      "description": "Neutral workbench control; disabled native-copy actions keep their labels visible.",
+      "html": "<button class=\"ds-figure-action\">Ampliar figura</button><button class=\"ds-figure-action\" disabled>Crear en Vector</button>",
+      "css": ".ds-figure-action{font:16px 'Source Sans 3',sans-serif;padding:10px;border:1px solid var(--border,#354243);border-radius:8px;background:var(--panel,#1b2425);color:var(--ink,#e1ebec);cursor:pointer}.ds-figure-action:hover{border-color:var(--accent,#45bccb)}.ds-figure-action:focus-visible{outline:2px solid var(--accent,#45bccb);outline-offset:3px}.ds-figure-action:disabled{cursor:default;opacity:.55}"
+    },
+    {
+      "name": "Capture file input",
+      "kind": "input",
+      "refersTo": "file-input",
+      "description": "Native file input with a stacked label, following the workbench's form treatment.",
+      "html": "<label class=\"ds-figure-import\">Importar figura (.vfigure)<input type=\"file\" accept=\".vfigure,application/json\"></label>",
+      "css": ".ds-figure-import{display:flex;flex-direction:column;align-items:start;gap:8px;font:16px 'Source Sans 3',sans-serif;color:var(--ink,#e1ebec)}.ds-figure-import input{font:inherit;max-width:100%;padding:10px;border:1px solid var(--border,#354243);border-radius:8px;background:var(--panel,#1b2425);color:var(--ink,#e1ebec)}.ds-figure-import input:focus-visible{outline:2px solid var(--accent,#45bccb);outline-offset:3px}"
+    },
+    {
+      "name": "Project navigation",
+      "kind": "nav",
+      "description": "Incumbent vertical project controls remain before the selected project on narrow screens.",
+      "html": "<nav class=\"ds-figure-projects\" aria-label=\"Proyectos\"><button>Proyecto visual</button><button>Otra captura</button></nav>",
+      "css": ".ds-figure-projects{display:flex;gap:8px;flex-direction:column}.ds-figure-projects button{font:16px 'Source Sans 3',sans-serif;padding:10px;border:1px solid var(--border,#354243);border-radius:8px;background:var(--panel,#1b2425);color:var(--ink,#e1ebec);cursor:pointer}.ds-figure-projects button:hover{border-color:var(--accent,#45bccb)}.ds-figure-projects button:focus-visible{outline:2px solid var(--accent,#45bccb);outline-offset:3px}"
+    },
+    {
+      "name": "Capture identity and actions",
+      "kind": "custom",
+      "description": "Identity wraps with its download and copy controls; the retained image itself is supplied by the project, not synthesized by this snippet.",
+      "html": "<figure class=\"ds-project-figure\"><figcaption>Diagrama · Revisión 3 · Estado inside</figcaption><div class=\"ds-figure-actions\"><a href=\"#retained-package\">Descargar figura y fuente</a><button disabled>Crear en Capas</button></div></figure>",
+      "css": ".ds-project-figure{margin:24px 0;padding-bottom:24px;border-bottom:1px solid var(--border,#354243);font:16px 'Source Sans 3',sans-serif;color:var(--ink,#e1ebec)}.ds-project-figure figcaption{margin:12px 0;overflow-wrap:anywhere}.ds-figure-actions{display:flex;flex-wrap:wrap;align-items:center;gap:12px}.ds-figure-actions a{padding:8px 0;color:var(--accent,#45bccb)}.ds-figure-actions button{font:inherit;padding:10px;border:1px solid var(--border,#354243);border-radius:8px;background:var(--panel,#1b2425);color:var(--ink,#e1ebec)}.ds-figure-actions button:hover{border-color:var(--accent,#45bccb)}.ds-figure-actions button:disabled{opacity:.55;cursor:default}.ds-figure-actions :focus-visible{outline:2px solid var(--accent,#45bccb);outline-offset:3px}"
+    },
+    {
+      "name": "Retained result links",
+      "kind": "custom",
+      "description": "Native results retain project links, revision text and explicit Layers download/editor access.",
+      "html": "<div class=\"ds-figure-results\"><a href=\"#native-result\">vector · documento</a><p>Revisión 2ec17b225f6d</p><a href=\"#layers-download\">Descargar documento de Capas</a><button>Abrir editor de Capas</button><a href=\"#retained-result\">Descargar resultado conservado</a></div>",
+      "css": ".ds-figure-results{font:16px 'Source Sans 3',sans-serif;color:var(--ink,#e1ebec)}.ds-figure-results>a{display:block;margin:10px 0;color:var(--accent,#45bccb)}.ds-figure-results button{font:inherit;padding:10px;border:1px solid var(--border,#354243);border-radius:8px;background:var(--panel,#1b2425);color:var(--ink,#e1ebec);cursor:pointer}.ds-figure-results button:hover{border-color:var(--accent,#45bccb)}.ds-figure-results :focus-visible{outline:2px solid var(--accent,#45bccb);outline-offset:3px}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Common Project Workbench",
+    "overview": "This Operate surface keeps a retained diagram capture beside the project's existing Photos and Vector results. The addition follows the current workbench, including its teal/charcoal and light themes, Cinzel headings, Source Sans 3 controls and native form elements. It does not establish a replacement visual world.",
+    "keyCharacteristics": ["Retained image, complete diagram source and capture identity stay together.", "Inspection works locally while both destination modules are off.", "Vector and Layers copies explicitly use the retained raster image.", "Existing module controls, project navigation and transfer forms remain available."],
+    "rules": [
+      {"name": "The Source Theme Rule", "body": "Extend the workbench's theme variables and native controls; preserve the retained image's pixels.", "section": "colors"},
+      {"name": "The Retained Capture Rule", "body": "Keep the exact PNG and complete diagram source together; older captures remain available when a different revision or selection is imported.", "section": "components"},
+      {"name": "The Explicit Copy Rule", "body": "Describe these actions as copies using the image; do not imply reconstruction of the diagram's editable semantic objects or structural layers.", "section": "components"}
+    ],
+    "dos": ["**Do** keep capture identity, source download, inspection and explicit copy actions together.", "**Do** allow retained import, download, reopening and inspection while destination modules remain off.", "**Do** preserve both themes, the wrapping action row and the inspector's local scroll region.", "**Do** preserve the complete Photos/Vector clients and the existing project and transfer functions."],
+    "donts": ["**Don't** present raster copies as semantic diagram reconstruction.", "**Don't** fetch the origin or activate a destination as a side effect of importing or inspecting a capture.", "**Don't** turn the scoped finish verdict into certification of every inherited surface or native editor."]
+  }
+}
