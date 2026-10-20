@@ -142,7 +142,13 @@ class JobManager:
         value=_row_to_dict(row)
         with self._lock:
             if value['status']=='running' and value['id'] not in self._active:
-                value.update(status='held',original_status='running',message='Previous lifetime; not resumed automatically.')
+                # The SELECT may predate a worker's final commit and removal
+                # from _active. Re-read before classifying it as a past lifetime.
+                current = self._conn().execute('SELECT * FROM jobs WHERE id = ?', (value['id'],)).fetchone()
+                if current is not None:
+                    value = _row_to_dict(current)
+                if value['status']=='running':
+                    value.update(status='held',original_status='running',message='Previous lifetime; not resumed automatically.')
         return value
 
     def list(self, limit: int = 10) -> list[dict]:
