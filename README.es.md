@@ -2,6 +2,10 @@
 
 # Daguerre's Hoard
 
+En la valoración de una foto, **Marcar como rechazada** guarda el valor nativo -1;
+**Quitar rechazo** lo deja en 0 (sin valoración). No borra ni mueve la foto.
+Conserva los borradores de etiqueta/palabras clave y los recibos nativos de guardado.
+
 En pantallas estrechas, la barra lateral conserva la navegación compacta y un
 indicador del estado del modelo. Cada destino mantiene su nombre accesible,
 ayuda y marca de página actual; el indicador abre Ajustes. La fototeca se ajusta

@@ -221,6 +221,9 @@ export interface Dict {
   edits_title: string;
   edits_rating: string;
   edits_rejected: string;
+  edits_reject: string;
+  edits_unreject: string;
+  edits_reject_help: string;
   edits_label: string;
   edits_keywords: string;
   edits_save: string;
@@ -474,6 +477,9 @@ export const dict: Record<Lang, Dict> = {
     edits_title: "Rating and retouch",
     edits_rating: "Rating",
     edits_rejected: "Rejected",
+    edits_reject: "Mark as rejected",
+    edits_unreject: "Clear rejection",
+    edits_reject_help: "This rating mark does not delete or move the photo. Clearing it leaves the photo unrated.",
     edits_label: "Label (for example Red)",
     edits_keywords: "Keywords, separated by commas",
     edits_save: "Save",
@@ -725,6 +731,9 @@ export const dict: Record<Lang, Dict> = {
     edits_title: "Valoración y retoque",
     edits_rating: "Valoración",
     edits_rejected: "Descartada",
+    edits_reject: "Marcar como rechazada",
+    edits_unreject: "Quitar rechazo",
+    edits_reject_help: "Esta marca de valoración no borra ni mueve la foto. Quitarla deja la foto sin valoración.",
     edits_label: "Etiqueta (por ejemplo Rojo)",
     edits_keywords: "Palabras clave, separadas por comas",
     edits_save: "Guardar",

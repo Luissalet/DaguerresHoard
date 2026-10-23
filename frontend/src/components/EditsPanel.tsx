@@ -126,6 +126,16 @@ export default function EditsPanel({ photoId, t, onExposure }: Props) {
         ))}
         {rating < 0 && <span className="muted small">{t.edits_rejected}</span>}
       </div>
+      <button
+        type="button"
+        className="btn"
+        aria-pressed={rating < 0}
+        disabled={busy}
+        onClick={() => run(() => api.setEdits(photoId, { rating: rating < 0 ? 0 : -1 }))}
+      >
+        {rating < 0 ? t.edits_unreject : t.edits_reject}
+      </button>
+      <p className="muted small">{t.edits_reject_help}</p>
       <form
         className="edits-form"
         onSubmit={(e) => {

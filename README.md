@@ -2,6 +2,10 @@
 
 # Daguerre's Hoard
 
+In a photo's rating panel, **Mark as rejected** stores the native rating -1;
+**Clear rejection** sets it to 0 (unrated). Neither action deletes or moves the
+photo. Label/keyword drafts stay editable, and native save/sidecar receipts apply.
+
 On narrow screens, the sidebar keeps compact navigation and a model-status
 indicator. Every destination retains its translated accessible name, hover help
 and current-page marker; the status indicator opens Settings. The photo workspace
