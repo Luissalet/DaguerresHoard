@@ -2,6 +2,11 @@
 
 # Daguerre's Hoard
 
+On narrow screens, the sidebar keeps compact navigation and a model-status
+indicator. Every destination retains its translated accessible name, hover help
+and current-page marker; the status indicator opens Settings. The photo workspace
+fits below the Studio header so the footer remains visible.
+
 **Compare photos** in Library and Search opens an inline A/B panel over the
 currently loaded list. Select either photo by name/folder, swap A/B or open its
 existing detail viewer. Desktop shows both native previews side by side; mobile

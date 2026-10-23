@@ -56,6 +56,11 @@ body,
   height: 100%;
 }
 
+/* Studio's existing 42px owner navigation shares the viewport with Photos. */
+.studio-owner + #root {
+  height: calc(100% - 42px);
+}
+
 body {
   margin: 0;
   background: var(--bg);
@@ -78,7 +83,7 @@ a {
 
 .app-shell {
   display: flex;
-  height: 100vh;
+  height: 100%;
   overflow: hidden;
 }
 
@@ -1426,13 +1431,23 @@ table.activity-table td {
 }
 
 @media (max-width: 720px) {
-  :root {
+  :root,
+  :root[data-theme="light"] {
     --sidebar-w: 72px;
   }
   .sidebar-item span.label {
     display: none;
   }
   .sidebar-brand span.label {
+    display: none;
+  }
+  .sidebar-status {
+    min-height: 40px;
+    justify-content: center;
+    gap: 0;
+    padding: 8px;
+  }
+  .sidebar-status span.label {
     display: none;
   }
 }

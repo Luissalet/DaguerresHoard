@@ -45,7 +45,7 @@ const ITEMS: { id: Page; icon: typeof Images; labelKey: keyof Dict }[] = [
 export default function Sidebar({ page, onNavigate, t, status }: Props) {
   const semantic = status?.embedder.semantic ?? false;
   return (
-    <nav className="sidebar">
+    <nav className="sidebar" aria-label={t.appName}>
       <div className="sidebar-brand">
         <img src="/app-icon.png" width={28} height={28} alt="" className="brand-icon" />
         <span className="label">{t.appName}</span>
@@ -57,6 +57,9 @@ export default function Sidebar({ page, onNavigate, t, status }: Props) {
             <button
               key={item.id}
               className={`sidebar-item${page === item.id ? " active" : ""}`}
+              aria-label={t[item.labelKey] as string}
+              title={t[item.labelKey] as string}
+              aria-current={page === item.id ? "page" : undefined}
               onClick={() => onNavigate(item.id)}
             >
               <Icon size={17} />
@@ -70,6 +73,7 @@ export default function Sidebar({ page, onNavigate, t, status }: Props) {
           className={`sidebar-status${semantic ? "" : " warn"}`}
           onClick={() => onNavigate("settings")}
           title={semantic ? t.model_semantic : t.model_fallback}
+          aria-label={`${t.nav_settings}: ${semantic ? t.model_semantic : t.model_fallback}`}
         >
           <span className="dot" />
           <span className="label">{semantic ? "CLIP ViT-B/32" : t.fallback_title}</span>

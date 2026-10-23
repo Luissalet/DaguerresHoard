@@ -2,6 +2,11 @@
 
 # Daguerre's Hoard
 
+En pantallas estrechas, la barra lateral conserva la navegación compacta y un
+indicador del estado del modelo. Cada destino mantiene su nombre accesible,
+ayuda y marca de página actual; el indicador abre Ajustes. La fototeca se ajusta
+bajo la cabecera de Studio para mantener visible el pie.
+
 **Comparar fotos**, en Biblioteca y Búsqueda, abre un panel A/B dentro de la
 galería. Los selectores usan las fotos de la lista cargada y muestran nombre y
 carpeta; puedes cambiar B, intercambiar A/B o abrir la ficha correspondiente.
