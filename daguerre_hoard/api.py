@@ -681,6 +681,10 @@ def create_app(data_dir: Path, static_dir: Path | None = None, port: int = 8814,
             raise ApiError(404, "not_found", "Export file not found")
         return FileResponse(path)
 
+    @app.post("/api/photos/export")
+    def export_selection(body: ExportBody):
+        return run(lambda: lib.export_photos(body.ids, body.title))
+
     @app.post("/api/agent/photos_export", dependencies=agent_auth)
     def agent_export(body: ExportBody):
         return run(lambda: lib.export_photos(body.ids, body.title), tool="photos_export", args=body.model_dump())

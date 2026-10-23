@@ -253,7 +253,10 @@ class Studio:
         # response/runtime URL adapters add the public prefix exactly once.
         child=dict(scope,path=path,raw_path=path.encode(),root_path='')
         child['asgi']={**scope.get('asgi',{}),'spec_version':'2.3'}
-        await self.modules[module].request(child,receive,NativeResponse(send,module,self.port))
+        # Exported galleries and manifests are portable artifacts, not editor
+        # pages. Keep their original bytes and embedded resources intact.
+        output = send if module == 'photos' and path.startswith('/api/exports/') else NativeResponse(send,module,self.port)
+        await self.modules[module].request(child,receive,output)
 
     async def http(self,scope,receive,send):
         path,method=scope['path'],scope['method']

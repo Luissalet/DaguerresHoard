@@ -2,7 +2,7 @@ import { useRef, useState } from "react";
 import { AlertTriangle, Search as SearchIcon } from "lucide-react";
 import { api, errorText } from "../api";
 import Lightbox from "../components/Lightbox";
-import PhotoGrid from "../components/PhotoGrid";
+import PhotoSelection from "../components/PhotoSelection";
 import { useCopilotForm, useCopilotOpen, useCopilotRefresh } from "../copilot-hooks";
 import type { Dict } from "../i18n";
 import type { Photo, SearchResult } from "../types";
@@ -169,7 +169,7 @@ export default function SearchPage({ t, platformIsWindows, onOpenSettings }: Pro
               ? t.photos_count(results.length)
               : t.ranked_count(result.returned, result.indexed_total)}
           </p>
-          <PhotoGrid photos={results} onOpen={setOpenIndex} />
+          <PhotoSelection photos={results} onOpen={setOpenIndex} t={t} />
         </>
       )}
       {openIndex !== null && results.length > 0 && (

@@ -25,6 +25,12 @@ The photo lightbox also [matches exposure and colour to a reference](docs/REFERE
 creating PNG copies of the current photo or a series. UI, HTTP and MCP share the
 same operation and saved parameters; originals and retouch recipes stay intact.
 
+The library, search results and albums can now [export a photo selection](docs/SELECTION_EXPORT.md)
+as a standalone HTML gallery, numbered JPEG contact sheet and JSON manifest.
+Select up to 20 photos, name the gallery, then open or download the actual outputs.
+The UI uses the existing native `photos_export` capability; previews are up to
+512 px and originals are unchanged.
+
 *Named after Louis Daguerre, whose 1839 daguerreotype was the first practical photograph.*
 
 A local photo library with indexing, editing, vector illustration and ranked search.

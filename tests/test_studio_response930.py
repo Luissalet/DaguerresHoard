@@ -24,3 +24,27 @@ async def test_partial_native_binary_response_retains_status_headers_and_exact_b
     body={'type':'http.response.body','body':b'\x00\xff\x88\x01','more_body':False}
     await response(start);await response(body)
     assert messages==[start,body]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('path,portable', [('/api/exports/selection/gallery.html', True),
+    ('/api/exports/selection/manifest.json', True), ('/', False)])
+async def test_photo_exports_keep_artifact_bytes_outside_editor_shell(tmp_path,path,portable):
+    from types import SimpleNamespace
+    from daguerre_hoard.studio import Studio
+    messages=[]
+    payload=b'<html><body><img src="data:image/jpeg;base64,abcd"></body></html>'
+    async def send(message):messages.append(message)
+    async def receive():return {'type':'http.request','body':b''}
+    async def request(scope,receive,output):
+        assert scope['path']==path and scope['root_path']==''
+        await output({'type':'http.response.start','status':200,'headers':[(b'content-type',b'text/html')]})
+        await output({'type':'http.response.body','body':payload})
+    studio=Studio(tmp_path/'cold',port=63397)
+    studio.modules['photos']=SimpleNamespace(request=request)
+    await studio.native('photos',path,{'path':'/photos'+path},receive,send)
+    body=b''.join(message.get('body',b'') for message in messages)
+    if portable:
+        assert body==payload
+    else:
+        assert b'/studio-assets/' in body

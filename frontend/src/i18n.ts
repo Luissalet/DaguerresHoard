@@ -93,6 +93,19 @@ export interface Dict {
   failed: string;
   select: string;
   selected: string;
+  export_selection: string;
+  export_title: string;
+  export_note: string;
+  export_choose: string;
+  export_first: string;
+  export_clear: string;
+  export_working: string;
+  export_gallery: string;
+  export_download: string;
+  export_sheet: string;
+  export_manifest: string;
+  export_result: (returned: number, requested: number) => string;
+  export_omitted: (n: number) => string;
   make_album_from_selection: string;
   places_empty: string;
   places_approximate_note: (n: number) => string;
@@ -302,6 +315,19 @@ export const dict: Record<Lang, Dict> = {
     failed: "Failed",
     select: "Select",
     selected: "selected",
+    export_selection: "Export selection",
+    export_title: "Gallery title",
+    export_note: "Create a standalone HTML gallery, JPEG contact sheet and JSON manifest from up to 20 photos. Previews are up to 512 px; originals are not included or changed.",
+    export_choose: "Choose photos in the order you want them to appear.",
+    export_first: "Select first 20 loaded",
+    export_clear: "Clear selection",
+    export_working: "Creating gallery…",
+    export_gallery: "Open gallery",
+    export_download: "Download HTML",
+    export_sheet: "Download contact sheet",
+    export_manifest: "Download manifest",
+    export_result: (returned, requested) => `${returned} of ${requested} photos exported`,
+    export_omitted: (n) => `${n} photos could not be included. See the manifest for details.`,
     make_album_from_selection: "Add to album",
     places_empty: "No photos with GPS data yet.",
     places_approximate_note: (n) =>
@@ -526,6 +552,19 @@ export const dict: Record<Lang, Dict> = {
     failed: "Fallo",
     select: "Seleccionar",
     selected: "seleccionadas",
+    export_selection: "Exportar selección",
+    export_title: "Título de la galería",
+    export_note: "Crea una galería HTML autónoma, una hoja de contactos JPEG y un manifiesto JSON de hasta 20 fotos. Son vistas previas de hasta 512 px; los originales no se incluyen ni se modifican.",
+    export_choose: "Selecciona las fotos en el orden en que quieras que aparezcan.",
+    export_first: "Seleccionar primeras 20 cargadas",
+    export_clear: "Vaciar selección",
+    export_working: "Creando galería…",
+    export_gallery: "Abrir galería",
+    export_download: "Descargar HTML",
+    export_sheet: "Descargar hoja de contactos",
+    export_manifest: "Descargar manifiesto",
+    export_result: (returned, requested) => `${returned} de ${requested} fotos exportadas`,
+    export_omitted: (n) => `No se han podido incluir ${n} fotos. Consulta el manifiesto para ver el detalle.`,
     make_album_from_selection: "Añadir a álbum",
     places_empty: "Aún no hay fotos con datos GPS.",
     places_approximate_note: (n) =>

@@ -2,6 +2,13 @@
 
 # Daguerre's Hoard
 
+La biblioteca, los resultados de búsqueda y los álbumes permiten **exportar una
+selección** de hasta 20 fotos: galería HTML autónoma, hoja de contactos JPEG y
+manifiesto JSON. Selecciona las fotos en orden, pon un título y abre o descarga
+el resultado real. Se reutiliza el motor nativo `photos_export`; son vistas
+previas de hasta 512 px y los originales permanecen intactos. Ver el
+[flujo y formatos](docs/SELECTION_EXPORT.md).
+
 El estudio conserva Fotos, Layers y Develop e incorpora el editor vectorial completo
 en `/vector/`. Los dos módulos empiezan apagados: consultar herramientas no abre
 motores y activarlos no escanea carpetas, recupera trabajos ni conecta editores previos.

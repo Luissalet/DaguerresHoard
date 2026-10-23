@@ -70,6 +70,15 @@ export interface ReferenceMatchResult {
   omitted: { id: string; reason: string }[];
 }
 
+export interface SelectionExportResult {
+  id: string;
+  title: string;
+  requested: number;
+  returned: number;
+  complete: boolean;
+  omitted: { id: string; requested_n: number; reason: string }[];
+}
+
 function qs(params: Params): string {
   const q = new URLSearchParams();
   for (const [k, v] of Object.entries(params)) if (v !== undefined && v !== "") q.set(k, String(v));
@@ -77,6 +86,7 @@ function qs(params: Params): string {
 }
 
 export const api = {
+  exportSelection: (ids: string[], title: string) => post<SelectionExportResult>("/photos/api/photos/export", { ids, title }),
   matchReference: (reference_id: string, ids: string[], strength: number) => post<ReferenceMatchResult>("/photos/api/photos/match-reference", { reference_id, ids, strength }),
   craftStatus: () => request<CraftEngineStatus>("/photos/api/image-engine/status"),
   craftFromPhoto: (photo_id: string) => post<CraftArtifact>("/photos/api/image-engine/from-photo", { photo_id }),

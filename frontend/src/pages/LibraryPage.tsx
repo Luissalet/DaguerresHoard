@@ -3,7 +3,7 @@ import { Images, Settings } from "lucide-react";
 import { api, errorText } from "../api";
 import Lightbox from "../components/Lightbox";
 import { useCopilotRefresh } from "../copilot-hooks";
-import PhotoGrid from "../components/PhotoGrid";
+import PhotoSelection from "../components/PhotoSelection";
 import type { Dict } from "../i18n";
 import type { LibraryStatus, Photo } from "../types";
 
@@ -102,7 +102,7 @@ export default function LibraryPage({ t, platformIsWindows, status, onOpenSettin
 
   return (
     <div>
-      <PhotoGrid photos={photos} onOpen={setOpenIndex} />
+      <PhotoSelection photos={photos} onOpen={setOpenIndex} t={t} />
       <div ref={sentinelRef} style={{ height: 1 }} />
       {loading && <p className="muted center">{t.loading}</p>}
       {error && <p className="error-text">{error}</p>}

@@ -4,6 +4,7 @@ import { api, ApiError, errorText } from "../api";
 import Lightbox from "../components/Lightbox";
 import { useCopilotForm, useCopilotOpen, useCopilotRefresh } from "../copilot-hooks";
 import PhotoGrid from "../components/PhotoGrid";
+import SelectionExport from "../components/SelectionExport";
 import type { Dict } from "../i18n";
 import type { Album } from "../types";
 
@@ -163,6 +164,9 @@ export default function AlbumsPage({ t, platformIsWindows }: Props) {
             </>
           )}
         </div>
+        {selecting && selected.size > 0 && <SelectionExport
+          photos={[...selected].flatMap(id => { const photo = photos.find(item => item.id === id); return photo ? [photo] : []; })}
+          t={t} initialTitle={openAlbum.name} />}
         {photos.length === 0 ? (
           <p className="muted">{t.no_results}</p>
         ) : (

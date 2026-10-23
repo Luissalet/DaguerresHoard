@@ -42,6 +42,32 @@ def test_health(client):
     assert body["status"] == "ok"
 
 
+def test_selection_export_ui_and_agent_share_real_downloads(client, tmp_path):
+    folder = tmp_path / "selection-originals"
+    original = make_image(folder / "export-demo.jpg", color=(25, 150, 210))
+    before = original.read_bytes()
+    root = client.post("/api/roots", json={"path": str(folder)}).json()
+    job = client.post("/api/scan", json={"root_id": root["id"]}).json()
+    assert _wait_job(client, job["job_id"])["status"] == "done"
+    photo = client.get("/api/photos").json()["results"][0]
+    body = {"ids": [photo["id"]], "title": "Selection export demo"}
+    ui = client.post("/api/photos/export", json=body)
+    assert ui.status_code == 200, ui.text
+    exported = ui.json()
+    assert exported["returned"] == 1 and exported["complete"]
+    agent = client.post("/api/agent/photos_export", json=body)
+    assert agent.status_code == 200 and agent.json()["id"] == exported["id"]
+    prefix = f"/api/exports/{exported['id']}"
+    gallery = client.get(prefix + "/gallery.html")
+    sheet = client.get(prefix + "/contact-sheet.jpg")
+    manifest = client.get(prefix + "/manifest.json")
+    assert gallery.status_code == sheet.status_code == manifest.status_code == 200
+    assert "data:image/jpeg;base64," in gallery.text
+    assert manifest.json()["photos"][0]["id"] == photo["id"]
+    assert sheet.content.startswith(b"\xff\xd8")
+    assert original.read_bytes() == before
+
+
 def test_reference_matching_ui_and_agent_share_outputs_preserve_originals(client, tmp_path):
     from tests.test_reference_matching import series
     lib = client.app.state.library
