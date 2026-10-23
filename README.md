@@ -2,6 +2,10 @@
 
 # Daguerre's Hoard
 
+In a photo's rating and retouch panel, save its recipe exposure (−5 to +5 EV)
+or clear only that setting. Other recipe values and metadata remain. Saving a
+recipe does not render an image; the separate export control remains available.
+
 In a photo's rating panel, **Mark as rejected** stores the native rating -1;
 **Clear rejection** sets it to 0 (unrated). Neither action deletes or moves the
 photo. Label/keyword drafts stay editable, and native save/sidecar receipts apply.

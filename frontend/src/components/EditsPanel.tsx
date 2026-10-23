@@ -5,6 +5,7 @@ import { changedFields, editsPatch, parseKeywords, rebaseForm } from "../copilot
 import { useCopilotForm, useCopilotRefresh } from "../copilot-hooks";
 import type { Dict } from "../i18n";
 import type { PhotoEdits } from "../types";
+import RecipeExposure from "./RecipeExposure";
 
 interface Props {
   photoId: string;
@@ -105,6 +106,7 @@ export default function EditsPanel({ photoId, t, onExposure }: Props) {
       if (updated.sidecar_write?.written) setMsg(t.sidecar_written);
       else if (updated.sidecar_write?.error) setError(updated.sidecar_write.error);
       else setMsg(t.edits_saved);
+      return updated;
     } catch (e) {
       if (isCurrent(scope)) setError(errorText(e));
     } finally {
@@ -165,6 +167,8 @@ export default function EditsPanel({ photoId, t, onExposure }: Props) {
       <p className="muted small edits-recipe" title={t.edits_recipe}>
         {recipe.length ? `${t.edits_recipe}: ${recipe.join(" · ")}` : t.edits_no_recipe}
       </p>
+      <RecipeExposure key={photoId} photoId={photoId} value={edits.recipe.exposure} busy={busy} t={t}
+        onSave={(exposure) => run(() => api.setEdits(photoId, { recipe: { exposure } }), true)} />
       {importedCount > 0 && (
         <p className="muted small" title={Object.keys(edits.imported_not_applied?.crs ?? {}).join(", ")}>
           {t.imported_not_applied(importedCount)}

@@ -230,6 +230,12 @@ export interface Dict {
   edits_saved: string;
   edits_recipe: string;
   edits_no_recipe: string;
+  recipe_exposure: string;
+  recipe_exposure_stored: string;
+  recipe_exposure_absent: string;
+  recipe_exposure_save: string;
+  recipe_exposure_clear: string;
+  recipe_exposure_help: string;
   sidecar_title: string;
   sidecar_none: string;
   sidecar_by_daguerre: string;
@@ -486,6 +492,12 @@ export const dict: Record<Lang, Dict> = {
     edits_saved: "Saved in Daguerre.",
     edits_recipe: "Develop recipe",
     edits_no_recipe: "No develop settings.",
+    recipe_exposure: "Stored recipe exposure (EV)",
+    recipe_exposure_stored: "Saved value",
+    recipe_exposure_absent: "No exposure adjustment",
+    recipe_exposure_save: "Save exposure",
+    recipe_exposure_clear: "Clear exposure only",
+    recipe_exposure_help: "−5 to +5 EV, two decimals. Saves this recipe setting without rendering or changing the original. Other settings remain. The separate export slider has a −3 to +3 EV range.",
     sidecar_title: ".xmp sidecar",
     sidecar_none: "none next to this photo.",
     sidecar_by_daguerre: "written by Daguerre.",
@@ -740,6 +752,12 @@ export const dict: Record<Lang, Dict> = {
     edits_saved: "Guardado en Daguerre.",
     edits_recipe: "Receta de revelado",
     edits_no_recipe: "Sin ajustes de revelado.",
+    recipe_exposure: "Exposición guardada de receta (EV)",
+    recipe_exposure_stored: "Valor guardado",
+    recipe_exposure_absent: "Sin ajuste de exposición",
+    recipe_exposure_save: "Guardar exposición",
+    recipe_exposure_clear: "Quitar sólo exposición",
+    recipe_exposure_help: "De −5 a +5 EV, dos decimales. Guarda este ajuste de receta sin generar una imagen ni cambiar el original. Conserva los demás ajustes. El control separado de exportación tiene rango de −3 a +3 EV.",
     sidecar_title: "Archivo .xmp",
     sidecar_none: "no hay ninguno junto a esta foto.",
     sidecar_by_daguerre: "escrito por Daguerre.",

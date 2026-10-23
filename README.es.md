@@ -2,6 +2,10 @@
 
 # Daguerre's Hoard
 
+En valoración y retoque de una foto, guarda su exposición de receta (−5 a +5 EV)
+o quita sólo ese ajuste. Conserva los demás ajustes y metadatos. Guardar receta
+no genera una imagen; el control de exportación separado sigue disponible.
+
 En la valoración de una foto, **Marcar como rechazada** guarda el valor nativo -1;
 **Quitar rechazo** lo deja en 0 (sin valoración). No borra ni mueve la foto.
 Conserva los borradores de etiqueta/palabras clave y los recibos nativos de guardado.

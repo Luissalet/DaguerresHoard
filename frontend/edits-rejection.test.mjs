@@ -25,7 +25,7 @@ test("reject and clear use rating-only patches, preserve drafts and retain rejec
     };
     await act(async()=>{rendered=create(React.createElement(EditsPanel,{photoId:"qa",t:dict.en,onExposure:value=>exposures.push(value)}));});
     const button=text=>rendered.root.findAllByType("button").find(item=>item.props.children===text);
-    const inputs=()=>rendered.root.findAllByType("input");
+    const inputs=()=>rendered.root.findAllByType("input").filter(input=>input.props.type!=="number");
     await act(async()=>{inputs()[0].props.onChange({target:{value:"Typed label"}});inputs()[1].props.onChange({target:{value:"typed, keep"}});});
     const beforeExposure=exposures.length;
     await act(async()=>{await button(dict.en.edits_reject).props.onClick();});
@@ -69,7 +69,7 @@ test("a pending rejection belongs to its photo and cannot adopt into another pho
     api.setEdits=(id,patch)=>new Promise(resolve=>pending.push({id,patch,resolve}));
     const props=id=>({photoId:id,t:dict.en,onExposure:value=>exposures.push(value)});
     const button=text=>rendered.root.findAllByType("button").find(item=>item.props.children===text);
-    const inputs=()=>rendered.root.findAllByType("input");
+    const inputs=()=>rendered.root.findAllByType("input").filter(input=>input.props.type!=="number");
     await act(async()=>{rendered=create(React.createElement(EditsPanel,props("A")));});
     let operationA;
     await act(async()=>{operationA=button(dict.en.edits_reject).props.onClick();});
