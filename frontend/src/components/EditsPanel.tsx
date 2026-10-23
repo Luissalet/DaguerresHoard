@@ -42,6 +42,11 @@ export default function EditsPanel({ photoId, t, onExposure }: Props) {
   const exposureRef = useRef<unknown>(undefined);
   const currentPhoto = useRef(photoId);
   currentPhoto.current = photoId;
+  const lifetime = useRef({ active: false });
+
+  function isCurrent(scope: { active: boolean }) {
+    return scope.active && currentPhoto.current === photoId;
+  }
 
   function adopt(e: PhotoEdits, keepTyped = false) {
     setEdits(e);
@@ -57,27 +62,30 @@ export default function EditsPanel({ photoId, t, onExposure }: Props) {
   }
 
   useEffect(() => {
+    const scope = { active: true };
+    lifetime.current = scope;
     setEdits(null);
     baseRef.current = null;
+    setBusy(false);
     setMsg(null);
     setError(null);
-    let alive = true;
     api
       .getEdits(photoId)
-      .then((e) => alive && adopt(e))
+      .then((e) => isCurrent(scope) && adopt(e))
       .catch(() => {});
     return () => {
-      alive = false;
+      scope.active = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [photoId]);
 
   // The assistant finished a turn: reload this photo's edits in place; what the user typed stays.
   useCopilotRefresh(() => {
+    const scope = lifetime.current;
     api
       .getEdits(photoId)
       .then((e) => {
-        if (currentPhoto.current === photoId) adopt(e, true);
+        if (isCurrent(scope)) adopt(e, true);
       })
       .catch(() => {});
   });
@@ -86,23 +94,25 @@ export default function EditsPanel({ photoId, t, onExposure }: Props) {
   useCopilotForm(() => (edits ? { kind: "photo-edits", object_id: photoId, dirty: Object.keys(changed()).length > 0, fields: changed() } : null));
 
   async function run(fn: () => Promise<PhotoEdits>, keepTyped = true) {
+    const scope = lifetime.current;
     setBusy(true);
     setMsg(null);
     setError(null);
     try {
       const updated = await fn();
+      if (!isCurrent(scope)) return;
       adopt(updated, keepTyped);
       if (updated.sidecar_write?.written) setMsg(t.sidecar_written);
       else if (updated.sidecar_write?.error) setError(updated.sidecar_write.error);
       else setMsg(t.edits_saved);
     } catch (e) {
-      setError(errorText(e));
+      if (isCurrent(scope)) setError(errorText(e));
     } finally {
-      setBusy(false);
+      if (isCurrent(scope)) setBusy(false);
     }
   }
 
-  if (!edits) return null;
+  if (!edits || edits.photo_id !== photoId) return null;
   const rating = edits.rating ?? 0;
   const recipe = recipeSummary(edits.recipe);
   const sidecar = edits.sidecar;

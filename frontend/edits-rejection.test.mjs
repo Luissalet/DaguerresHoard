@@ -52,3 +52,50 @@ test("reject and clear use rating-only patches, preserve drafts and retain rejec
     await server.close();globalThis.window=previousWindow;delete globalThis.IS_REACT_ACT_ENVIRONMENT;
   }
 });
+
+test("a pending rejection belongs to its photo and cannot adopt into another photo or after unmount", async () => {
+  const previousWindow=globalThis.window;
+  globalThis.window=new EventTarget();
+  globalThis.IS_REACT_ACT_ENVIRONMENT=true;
+  const server=await createServer({configFile:false,appType:"custom",optimizeDeps:{noDiscovery:true,include:[]},server:{middlewareMode:true,hmr:false,watch:null},ssr:{external:["react","react-dom","lucide-react"]}});
+  let rendered;
+  try {
+    const {default:EditsPanel}=await server.ssrLoadModule("/src/components/EditsPanel.tsx");
+    const {api}=await server.ssrLoadModule("/src/api.ts");
+    const {dict}=await server.ssrLoadModule("/src/i18n.ts");
+    const saved=id=>({photo_id:id,rating:3,label:`Saved ${id}`,keywords:[id],recipe:{exposure:id==="A"?1:2},sidecar:{},write_sidecars:false});
+    const pending=[],exposures=[];
+    api.getEdits=async id=>saved(id);
+    api.setEdits=(id,patch)=>new Promise(resolve=>pending.push({id,patch,resolve}));
+    const props=id=>({photoId:id,t:dict.en,onExposure:value=>exposures.push(value)});
+    const button=text=>rendered.root.findAllByType("button").find(item=>item.props.children===text);
+    const inputs=()=>rendered.root.findAllByType("input");
+    await act(async()=>{rendered=create(React.createElement(EditsPanel,props("A")));});
+    let operationA;
+    await act(async()=>{operationA=button(dict.en.edits_reject).props.onClick();});
+    await act(async()=>{rendered.update(React.createElement(EditsPanel,props("B")));});
+    assert.equal(inputs()[0].props.value,"Saved B");
+    assert.equal(button(dict.en.edits_reject).props.disabled,false);
+    await act(async()=>{inputs()[0].props.onChange({target:{value:"Draft B"}});});
+    let operationB;
+    await act(async()=>{operationB=button(dict.en.edits_reject).props.onClick();});
+    await act(async()=>{pending[0].resolve({...saved("A"),rating:-1});await operationA;});
+    assert.equal(inputs()[0].props.value,"Draft B");
+    assert.ok(button(dict.en.edits_reject));
+    assert.equal(button(dict.en.edits_reject).props.disabled,true);
+    assert.deepEqual(exposures,[1,2]);
+    assert.equal(rendered.root.findAllByType("p").some(item=>item.props.children===dict.en.edits_saved),false);
+    await act(async()=>{pending[1].resolve({...saved("B"),rating:-1});await operationB;});
+    assert.ok(button(dict.en.edits_unreject));
+    assert.equal(inputs()[0].props.value,"Draft B");
+    let closing;
+    await act(async()=>{closing=button(dict.en.edits_unreject).props.onClick();});
+    await act(async()=>{rendered.unmount();rendered=null;});
+    await act(async()=>{pending[2].resolve({...saved("B"),rating:0,recipe:{exposure:-1}});await closing;});
+    assert.deepEqual(exposures,[1,2]);
+    assert.deepEqual(pending.map(({id,patch})=>({id,patch})),[{id:"A",patch:{rating:-1}},{id:"B",patch:{rating:-1}},{id:"B",patch:{rating:0}}]);
+  } finally {
+    if(rendered)await act(async()=>rendered.unmount());
+    await server.close();globalThis.window=previousWindow;delete globalThis.IS_REACT_ACT_ENVIRONMENT;
+  }
+});
