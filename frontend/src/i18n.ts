@@ -46,6 +46,10 @@ export interface Dict {
   video_player_failed: string;
   search_placeholder: string;
   search_button: string;
+  search_filter_help: string;
+  filtered_listing_note: string;
+  filtered_listing_limit: string;
+  filtered_count: (returned: number, total: number) => string;
   filters: string;
   filter_year: string;
   filter_place: string;
@@ -287,6 +291,10 @@ export const dict: Record<Lang, Dict> = {
     video_player_failed: "This browser cannot play the video; the key frames still work.",
     search_placeholder: "Describe what you are looking for…",
     search_button: "Search",
+    search_filter_help: "Describe a photo or leave the description blank and use the filters. Filters are combined.",
+    filtered_listing_note: "Photos matching the submitted filters, newest first. No similarity ranking.",
+    filtered_listing_limit: "Up to 50 photos are shown; refine the filters to narrow this list.",
+    filtered_count: (returned, total) => `${returned} shown of ${total} photo${total === 1 ? "" : "s"}`,
     filters: "Filters",
     filter_year: "Year",
     filter_place: "Place",
@@ -299,7 +307,7 @@ export const dict: Record<Lang, Dict> = {
     empty_library_title: "No photos indexed yet",
     empty_library_body: "Add a folder in Settings to start indexing your photos.",
     empty_search_title: "Search your photos",
-    empty_search_body: "Try “sunset on the beach” or “whiteboard notes”. English works best.",
+    empty_search_body: "Use the filters without a description, or describe a photo such as “sunset on the beach”. English works best for content search.",
     no_results: "No photos matched your search.",
     loading: "Loading…",
     photos_count: (n: number) => `${n} photo${n === 1 ? "" : "s"}`,
@@ -548,6 +556,10 @@ export const dict: Record<Lang, Dict> = {
     video_player_failed: "Este navegador no puede reproducir el vídeo; los fotogramas clave siguen funcionando.",
     search_placeholder: "Describe lo que buscas…",
     search_button: "Buscar",
+    search_filter_help: "Describe una foto o deja la descripción vacía y utiliza los filtros. Los filtros se combinan.",
+    filtered_listing_note: "Fotos que cumplen los filtros enviados, de más reciente a más antigua. Sin clasificación por similitud.",
+    filtered_listing_limit: "Se muestran hasta 50 fotos; ajusta los filtros para reducir el listado.",
+    filtered_count: (returned, total) => `${returned} mostrada${returned === 1 ? "" : "s"} de ${total} foto${total === 1 ? "" : "s"}`,
     filters: "Filtros",
     filter_year: "Año",
     filter_place: "Lugar",
@@ -560,7 +572,7 @@ export const dict: Record<Lang, Dict> = {
     empty_library_title: "Aún no hay fotos indexadas",
     empty_library_body: "Añade una carpeta en Ajustes para empezar a indexar tus fotos.",
     empty_search_title: "Busca en tus fotos",
-    empty_search_body: "Prueba «atardecer en la playa» o «notas en la pizarra». En inglés funciona mejor.",
+    empty_search_body: "Utiliza los filtros sin descripción o describe una foto, por ejemplo «atardecer en la playa». En inglés funciona mejor la búsqueda por contenido.",
     no_results: "Ninguna foto coincide con tu búsqueda.",
     loading: "Cargando…",
     photos_count: (n: number) => `${n} foto${n === 1 ? "" : "s"}`,

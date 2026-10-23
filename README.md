@@ -2,6 +2,14 @@
 
 # Daguerre's Hoard
 
+In **Search**, leave the description blank to use the existing date, place,
+folder, camera and orientation filters together. This returns the native
+chronological listing without similarity scores, showing how many photos are
+displayed out of the filtered total (up to 50; refine filters when more remain).
+Editing criteria discards obsolete results and pending responses while keeping
+the form and A/B choices. Description searches keep their existing behavior.
+The existing HTTP search and `photos_search` MCP tool remain unchanged.
+
 In a photo's rating and retouch panel, save its recipe exposure (−5 to +5 EV)
 or clear only that setting. Other recipe values and metadata remain. Saving a
 recipe does not render an image; the separate export control remains available.

@@ -2,6 +2,14 @@
 
 # Daguerre's Hoard
 
+En **Buscar**, deja la descripción vacía para combinar los filtros existentes
+de fecha, lugar, carpeta, cámara y orientación. Se muestra el listado cronológico
+nativo sin puntuaciones de similitud y cuántas fotos se muestran del total
+filtrado (hasta 50; ajusta los filtros si quedan más). Editar criterios retira
+resultados y respuestas pendientes incompatibles, conservando formulario y
+elecciones A/B. La búsqueda con descripción mantiene su comportamiento.
+La API de búsqueda y la herramienta MCP `photos_search` no cambian.
+
 En valoración y retoque de una foto, guarda su exposición de receta (−5 a +5 EV)
 o quita sólo ese ajuste. Conserva los demás ajustes y metadatos. Guardar receta
 no genera una imagen; el control de exportación separado sigue disponible.

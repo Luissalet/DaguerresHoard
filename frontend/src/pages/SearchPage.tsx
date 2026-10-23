@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AlertTriangle, Search as SearchIcon } from "lucide-react";
 import { api, errorText } from "../api";
 import Lightbox from "../components/Lightbox";
@@ -25,6 +25,8 @@ export default function SearchPage({ t, platformIsWindows, onOpenSettings }: Pro
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const requestRevision = useRef(0);
+  useEffect(() => () => { requestRevision.current += 1; }, []);
 
   // The search as it was last submitted (not what is being typed): what the assistant panel sees and what a reload repeats.
   const [submitted, setSubmitted] = useState<{ query: string; filters: Record<string, unknown> } | null>(null);
@@ -34,9 +36,10 @@ export default function SearchPage({ t, platformIsWindows, onOpenSettings }: Pro
   useCopilotRefresh(() => {
     const s = submittedRef.current;
     if (!s || loadingRef.current || openIndex !== null) return; // an open photo must not shift under the user
+    const revision = requestRevision.current;
     api
       .search(s.query, s.filters, 50)
-      .then((r) => submittedRef.current === s && setResult(r))
+      .then((r) => requestRevision.current === revision && submittedRef.current === s && setResult(r))
       .catch(() => {});
   });
   const typed = (): Record<string, unknown> => ({ query, from, to, place, folder, camera, orientation });
@@ -47,11 +50,28 @@ export default function SearchPage({ t, platformIsWindows, onOpenSettings }: Pro
   const loadingRef = useRef(false);
   loadingRef.current = loading;
 
+  // A new draft has no submitted result yet. Keep the selection/comparison host mounted.
+  function edit(setValue: (value: string) => void, value: string) {
+    requestRevision.current += 1;
+    loadingRef.current = false;
+    setLoading(false);
+    setResult(null);
+    setSubmitted(null);
+    setError(null);
+    setOpenIndex(null);
+    setValue(value);
+  }
+  const canSearch = !!(query.trim() || from || to || place.trim() || folder.trim() || camera.trim() || orientation);
+
   async function runSearch(e?: React.FormEvent) {
     e?.preventDefault();
-    if (!query.trim()) return;
+    if (!canSearch) return;
+    const revision = ++requestRevision.current;
+    loadingRef.current = true;
     setLoading(true);
     setError(null);
+    setResult(null);
+    setOpenIndex(null);
     try {
       const filters: Record<string, unknown> = {};
       if (from) filters.taken_after = from;
@@ -61,12 +81,18 @@ export default function SearchPage({ t, platformIsWindows, onOpenSettings }: Pro
       if (camera.trim()) filters.camera = camera.trim();
       if (orientation) filters.orientation = orientation;
       setSubmitted({ query: query.trim(), filters });
-      setResult(await api.search(query.trim(), filters, 50));
+      const next = await api.search(query.trim(), filters, 50);
+      if (requestRevision.current === revision) setResult(next);
     } catch (err) {
-      setError(errorText(err));
-      setResult(null);
+      if (requestRevision.current === revision) {
+        setError(errorText(err));
+        setResult(null);
+      }
     } finally {
-      setLoading(false);
+      if (requestRevision.current === revision) {
+        loadingRef.current = false;
+        setLoading(false);
+      }
     }
   }
 
@@ -81,38 +107,39 @@ export default function SearchPage({ t, platformIsWindows, onOpenSettings }: Pro
             className="input"
             placeholder={t.search_placeholder}
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={(e) => edit(setQuery, e.target.value)}
             autoFocus
           />
         </div>
-        <button className="btn btn-primary btn-lg" type="submit" disabled={loading || !query.trim()}>
+        <button className="btn btn-primary btn-lg" type="submit" disabled={loading || !canSearch}>
           {t.search_button}
         </button>
       </form>
+      <p className="muted small">{t.search_filter_help}</p>
       <div className="filters-panel">
         <label className="field">
           <span>{t.filter_from}</span>
-          <input className="input" type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
+          <input className="input" type="date" value={from} onChange={(e) => edit(setFrom, e.target.value)} />
         </label>
         <label className="field">
           <span>{t.filter_to}</span>
-          <input className="input" type="date" value={to} onChange={(e) => setTo(e.target.value)} />
+          <input className="input" type="date" value={to} onChange={(e) => edit(setTo, e.target.value)} />
         </label>
         <label className="field">
           <span>{t.filter_place}</span>
-          <input className="input" value={place} onChange={(e) => setPlace(e.target.value)} />
+          <input className="input" value={place} onChange={(e) => edit(setPlace, e.target.value)} />
         </label>
         <label className="field">
           <span>{t.filter_folder}</span>
-          <input className="input" value={folder} onChange={(e) => setFolder(e.target.value)} />
+          <input className="input" value={folder} onChange={(e) => edit(setFolder, e.target.value)} />
         </label>
         <label className="field">
           <span>{t.filter_camera}</span>
-          <input className="input" value={camera} onChange={(e) => setCamera(e.target.value)} />
+          <input className="input" value={camera} onChange={(e) => edit(setCamera, e.target.value)} />
         </label>
         <label className="field">
           <span>{t.filter_orientation}</span>
-          <select className="input" value={orientation} onChange={(e) => setOrientation(e.target.value)}>
+          <select className="input" value={orientation} onChange={(e) => edit(setOrientation, e.target.value)}>
             <option value="">{t.orientation_any}</option>
             <option value="landscape">{t.orientation_landscape}</option>
             <option value="portrait">{t.orientation_portrait}</option>
@@ -152,6 +179,7 @@ export default function SearchPage({ t, platformIsWindows, onOpenSettings }: Pro
           </p>
         ))}
       {error && <p className="error-text">{error}</p>}
+      {result?.mode === "filtered_listing" && <p className="muted small">{t.filtered_listing_note}{result.has_more && ` ${t.filtered_listing_limit}`}</p>}
 
       {result === null && !loading && !error && (
         <div className="empty-state">
@@ -162,12 +190,12 @@ export default function SearchPage({ t, platformIsWindows, onOpenSettings }: Pro
       )}
       {loading && <p className="muted">{t.loading}</p>}
       {result !== null && !loading && results.length === 0 && <p className="muted">{t.no_results}</p>}
-      {results.length > 0 && !loading && (
+      {result && !loading && (results.length > 0 || result.mode === "filtered_listing") && (
         <>
           <p className="muted result-count">
-            {result?.mode === "filtered_listing" || !result?.has_more
-              ? t.photos_count(results.length)
-              : t.ranked_count(result.returned, result.indexed_total)}
+            {result?.mode === "filtered_listing"
+              ? t.filtered_count(result.returned, result.indexed_total)
+              : !result?.has_more ? t.photos_count(results.length) : t.ranked_count(result.returned, result.indexed_total)}
           </p>
         </>
       )}
