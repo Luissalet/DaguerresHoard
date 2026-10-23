@@ -2,6 +2,21 @@
 
 # Daguerre's Hoard
 
+**Comparar fotos**, en Biblioteca y Búsqueda, abre un panel A/B dentro de la
+galería. Los selectores usan las fotos de la lista cargada y muestran nombre y
+carpeta; puedes cambiar B, intercambiar A/B o abrir la ficha correspondiente.
+Escritorio muestra ambas vistas previas en paralelo y móvil las apila con el
+scroll normal de la página. Cada foto carga su detalle de forma independiente;
+si deja de estar en la lista, se pide elegir otra sin conservar metadatos ajenos.
+Se muestran ruta, fecha guardada y su origen, dimensiones, tamaño y datos técnicos
+disponibles. Son vistas previas nativas, no resolución original ni comparación
+automática de calidad. No se elige una foto mejor ni se modifica una foto,
+sidecar o receta. Selección/exportación y visor individual siguen disponibles.
+El contexto incluye IDs/orden A/B y los datos cargados; un refresco del asistente
+conserva la selección que siga en la lista. Usa getPhoto/previewUrl y herramientas
+nativas existentes, sin modelo, motor ni API/MCP nuevos. Las cachés, miniaturas
+y registros habituales de la biblioteca conservan su semántica nativa.
+
 La biblioteca, los resultados de búsqueda y los álbumes permiten **exportar una
 selección** de hasta 20 fotos: galería HTML autónoma, hoja de contactos JPEG y
 manifiesto JSON. Selecciona las fotos en orden, pon un título y abre o descarga

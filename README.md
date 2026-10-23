@@ -2,6 +2,20 @@
 
 # Daguerre's Hoard
 
+**Compare photos** in Library and Search opens an inline A/B panel over the
+currently loaded list. Select either photo by name/folder, swap A/B or open its
+existing detail viewer. Desktop shows both native previews side by side; mobile
+stacks them in the normal page scroll. Detail requests are independent and old
+responses never replace a newly selected photo. A selection outside the current
+filtered list asks for a new choice without showing unrelated metadata.
+Saved dates/source, dimensions, file size and available camera/exposure metadata
+remain attached to their photo. Previews do not promise original resolution or
+1:1 inspection. No automatic quality ranking, original/sidecar/recipe edit or new
+API/MCP tool is added. Selection export and the individual viewer stay available;
+copilot receives A/B IDs/order and loaded metadata, and refresh preserves choices
+that remain available. Normal library caches, thumbnails and call logs keep
+their existing behavior.
+
 The visual studio preserves Photos, Layers and Develop and incorporates the complete
 vector editor under `/vector/`. Both modules start OFF; discovery opens no engines
 and activation does not scan folders, recover prior jobs or attach old editor sessions.

@@ -1,6 +1,20 @@
 export type Lang = "en" | "es";
 
 export interface Dict {
+  compare_title: string;
+  compare_scope: string;
+  compare_photo: string;
+  compare_choose: string;
+  compare_not_visible: string;
+  compare_swap: string;
+  compare_open: string;
+  compare_preview: string;
+  compare_retry: string;
+  compare_dimensions: string;
+  compare_size: string;
+  compare_camera: string;
+  compare_exposure: string;
+  compare_not_recorded: string;
   match_title: string;
   match_reference: string;
   match_choose: string;
@@ -230,6 +244,20 @@ export interface Dict {
 
 export const dict: Record<Lang, Dict> = {
   en: {
+    compare_title: "Compare photos",
+    compare_scope: "Compare photos from the currently loaded list. Previews and saved metadata are shown without choosing a better photo or changing your files.",
+    compare_photo: "Photo",
+    compare_choose: "Choose a photo",
+    compare_not_visible: "This selection is no longer in the visible list. Choose another photo.",
+    compare_swap: "Swap A/B",
+    compare_open: "Open photo",
+    compare_preview: "Existing preview; not a full-resolution or 1:1 view.",
+    compare_retry: "Retry this photo",
+    compare_dimensions: "Dimensions",
+    compare_size: "File size",
+    compare_camera: "Camera / lens",
+    compare_exposure: "Exposure",
+    compare_not_recorded: "Not recorded",
     appName: "Daguerre's Hoard",
     nav_library: "Library",
     nav_search: "Search",
@@ -468,6 +496,20 @@ export const dict: Record<Lang, Dict> = {
       "Ratings, labels, keywords and develop recipes are kept in Daguerre. With this on they are also saved as standard .xmp files next to each photo, for RAW developers. The photo itself is never changed, and an existing .xmp is backed up and merged, not replaced.",
   },
   es: {
+    compare_title: "Comparar fotos",
+    compare_scope: "Compara fotos de la lista cargada en esta vista. Muestra vistas previas y metadatos guardados, sin elegir una foto mejor ni cambiar tus archivos.",
+    compare_photo: "Foto",
+    compare_choose: "Elige una foto",
+    compare_not_visible: "Esta selección ya no está en la lista visible. Elige otra foto.",
+    compare_swap: "Intercambiar A/B",
+    compare_open: "Abrir foto",
+    compare_preview: "Vista previa existente; no es una vista a resolución original ni 1:1.",
+    compare_retry: "Reintentar esta foto",
+    compare_dimensions: "Dimensiones",
+    compare_size: "Tamaño",
+    compare_camera: "Cámara / objetivo",
+    compare_exposure: "Exposición",
+    compare_not_recorded: "Sin dato guardado",
     appName: "Daguerre's Hoard",
     nav_library: "Biblioteca",
     nav_search: "Buscar",
