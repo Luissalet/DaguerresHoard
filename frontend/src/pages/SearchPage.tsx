@@ -169,9 +169,11 @@ export default function SearchPage({ t, platformIsWindows, onOpenSettings }: Pro
               ? t.photos_count(results.length)
               : t.ranked_count(result.returned, result.indexed_total)}
           </p>
-          <PhotoSelection photos={results} onOpen={setOpenIndex} t={t} />
         </>
       )}
+      <div hidden={submitted === null || loading} aria-busy={loading}>
+        <PhotoSelection photos={loading ? [] : results} onOpen={setOpenIndex} t={t} />
+      </div>
       {openIndex !== null && results.length > 0 && (
         <Lightbox
           photos={results}
