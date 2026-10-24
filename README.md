@@ -2,6 +2,16 @@
 
 # Daguerre's Hoard
 
+In Library and Search, **Add selection to album** groups the selected loaded
+photos in one action. Enter a new or suggested existing album name; matching
+ignores case and accents. The receipt shows the actual album name/ID, whether it
+was created, newly added relationships, total photos and unknown IDs. Existing
+members are not duplicated. Selection export and A/B comparison remain available.
+Photos are referenced, never copied or moved. This does not select unloaded
+search results or impose the export's 20-photo limit on albums (native maximum:
+500 IDs per call). Errors keep the name/selection for retry; editing the name
+during a request keeps that draft while the receipt identifies the actual album.
+
 In **Search**, leave the description blank to use the existing date, place,
 folder, camera and orientation filters together. This returns the native
 chronological listing without similarity scores, showing how many photos are

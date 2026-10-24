@@ -1,0 +1,11 @@
+.selection-album { margin: 0 0 20px; padding: 18px 0; border-block: 1px solid var(--border); }
+.selection-album h3 { margin: 0 0 8px; font-size: 16px; }
+.selection-album summary { cursor: pointer; margin: 12px 0; }
+.selection-album__photos { max-height: 220px; overflow-y: auto; padding-left: 20px; }
+.selection-album__photos li { margin-block: 8px; overflow-wrap: anywhere; }
+.selection-album__photos small { display: block; }
+.selection-album__form { display: flex; align-items: end; gap: 12px; flex-wrap: wrap; margin-top: 12px; }
+.selection-album__form label { display: grid; gap: 6px; flex: 1 1 240px; max-width: 500px; min-width: 0; font-size: 13px; }
+.selection-album__form input { min-width: 0; width: 100%; }
+.selection-album__result { margin-top: 18px; overflow-wrap: anywhere; }
+@media(max-width:600px) { .selection-album__form label { max-width: none; flex-basis: 100%; } .selection-album .btn { min-height: 40px; } }

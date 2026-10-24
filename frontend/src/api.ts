@@ -1,5 +1,6 @@
 import type {
   Album,
+  AlbumAddResult,
   AgentCall,
   BackendConfigInput,
   BackendStatus,
@@ -127,7 +128,7 @@ export const api = {
   timeline: () => request<TimelineResult>("/photos/api/timeline?samples=4"),
   listAlbums: () => request<Album[]>("/photos/api/albums"),
   getAlbum: (id: string) => request<Album>(`/photos/api/albums/${id}`),
-  albumAdd: (name: string, photo_ids: string[]) => post<Album>("/photos/api/albums", { name, photo_ids }),
+  albumAdd: (name: string, photo_ids: string[]) => post<AlbumAddResult>("/photos/api/albums", { name, photo_ids }),
   albumRemove: (id: string, photo_ids: string[]) => post<Album>(`/photos/api/albums/${id}/remove`, { photo_ids }),
   deleteAlbum: (id: string) => request<{ ok: boolean }>(`/photos/api/albums/${id}`, { method: "DELETE" }),
   getSettings: () =>

@@ -115,6 +115,15 @@ export interface Dict {
   export_title: string;
   export_note: string;
   export_choose: string;
+  album_selection: string;
+  album_selection_note: string;
+  album_selection_empty: string;
+  album_selection_review: (n: number) => string;
+  album_selection_working: string;
+  album_selection_created: string;
+  album_selection_existing: string;
+  album_selection_result: (added: number, total: number) => string;
+  album_selection_unknown: string;
   export_first: string;
   export_clear: string;
   export_working: string;
@@ -364,6 +373,15 @@ export const dict: Record<Lang, Dict> = {
     export_title: "Gallery title",
     export_note: "Create a standalone HTML gallery, JPEG contact sheet and JSON manifest from up to 20 photos. Previews are up to 512 px; originals are not included or changed.",
     export_choose: "Choose photos in the order you want them to appear.",
+    album_selection: "Add selection to album",
+    album_selection_note: "Choose loaded photos below and enter a new or existing album name. Photos are referenced, never copied or moved. Matching names ignore case and accents.",
+    album_selection_empty: "Select photos in the grid to add them together.",
+    album_selection_review: (n) => `Review selected photos (${n})`,
+    album_selection_working: "Adding…",
+    album_selection_created: "Album created",
+    album_selection_existing: "Existing album",
+    album_selection_result: (added, total) => `${added} newly added · ${total} in the album`,
+    album_selection_unknown: "Unknown photo IDs",
     export_first: "Select first 20 loaded",
     export_clear: "Clear selection",
     export_working: "Creating gallery…",
@@ -628,6 +646,15 @@ export const dict: Record<Lang, Dict> = {
     export_title: "Título de la galería",
     export_note: "Crea una galería HTML autónoma, una hoja de contactos JPEG y un manifiesto JSON de hasta 20 fotos. Son vistas previas de hasta 512 px; los originales no se incluyen ni se modifican.",
     export_choose: "Selecciona las fotos en el orden en que quieras que aparezcan.",
+    album_selection: "Añadir selección a álbum",
+    album_selection_note: "Selecciona fotos cargadas y escribe un nombre de álbum nuevo o existente. Las fotos se vinculan, nunca se copian ni mueven. Los nombres coinciden sin distinguir mayúsculas ni acentos.",
+    album_selection_empty: "Selecciona fotos en la cuadrícula para añadirlas juntas.",
+    album_selection_review: (n) => `Revisar fotos seleccionadas (${n})`,
+    album_selection_working: "Añadiendo…",
+    album_selection_created: "Álbum creado",
+    album_selection_existing: "Álbum existente",
+    album_selection_result: (added, total) => `${added} ${added === 1 ? "foto incorporada" : "fotos incorporadas"} ahora · ${total} en el álbum`,
+    album_selection_unknown: "IDs de fotos desconocidos",
     export_first: "Seleccionar primeras 20 cargadas",
     export_clear: "Vaciar selección",
     export_working: "Creando galería…",

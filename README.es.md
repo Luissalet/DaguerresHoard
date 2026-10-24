@@ -2,6 +2,16 @@
 
 # Daguerre's Hoard
 
+En Biblioteca y Búsqueda, **Añadir selección a álbum** agrupa las fotos cargadas
+seleccionadas en una acción. Escribe un nombre nuevo o sugerido existente; la
+coincidencia ignora mayúsculas y acentos. El recibo muestra nombre/ID reales,
+si se creó, incorporaciones nuevas, total e IDs desconocidos. No duplica miembros
+existentes. Exportar selección y comparar A/B siguen disponibles. Las fotos se
+vinculan, nunca se copian ni mueven. No selecciona resultados no cargados ni aplica
+a álbumes el límite de 20 de exportación (máximo nativo: 500 IDs por llamada). Ante
+error conserva nombre/selección para reintentar; editar el nombre durante un envío
+conserva ese borrador y el recibo identifica el álbum realmente utilizado.
+
 En **Buscar**, deja la descripción vacía para combinar los filtros existentes
 de fecha, lugar, carpeta, cámara y orientación. Se muestra el listado cronológico
 nativo sin puntuaciones de similitud y cuántas fotos se muestran del total

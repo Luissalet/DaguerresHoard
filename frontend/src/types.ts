@@ -178,6 +178,13 @@ export interface Album {
   photos?: Photo[];
 }
 
+export interface AlbumAddResult extends Album {
+  created: boolean;
+  added: number;
+  unknown_ids: string[];
+  has_more?: boolean;
+}
+
 export interface ResolutionInfo {
   capability: string;
   provider: string | null;

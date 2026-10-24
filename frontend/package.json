@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "test": "node --test copilot-context.test.mjs comparison-state.test.mjs search-comparison.test.mjs filtered-search.test.mjs edits-rejection.test.mjs recipe-exposure.test.mjs"
+    "test": "node --test copilot-context.test.mjs comparison-state.test.mjs search-comparison.test.mjs filtered-search.test.mjs edits-rejection.test.mjs recipe-exposure.test.mjs selection-album.test.mjs"
   },
   "dependencies": {
     "@fontsource-variable/plus-jakarta-sans": "5.1.1",
