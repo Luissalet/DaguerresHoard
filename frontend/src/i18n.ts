@@ -256,6 +256,14 @@ export interface Dict {
   recipe_exposure_save: string;
   recipe_exposure_clear: string;
   recipe_exposure_help: string;
+  recipe_wb_title: string;
+  recipe_wb_temperature: string;
+  recipe_wb_tint: string;
+  recipe_wb_absent: string;
+  recipe_wb_save: string;
+  recipe_wb_clear_temperature: string;
+  recipe_wb_clear_tint: string;
+  recipe_wb_help: string;
   sidecar_title: string;
   sidecar_none: string;
   sidecar_by_daguerre: string;
@@ -533,6 +541,14 @@ export const dict: Record<Lang, Dict> = {
     edits_recipe: "Develop recipe",
     edits_no_recipe: "No develop settings.",
     recipe_exposure: "Stored recipe exposure (EV)",
+    recipe_wb_title: "Recipe white balance",
+    recipe_wb_temperature: "Recipe temperature (K)",
+    recipe_wb_tint: "Recipe tint",
+    recipe_wb_absent: "No adjustment",
+    recipe_wb_save: "Save white balance changes",
+    recipe_wb_clear_temperature: "Clear temperature only",
+    recipe_wb_clear_tint: "Clear tint only",
+    recipe_wb_help: "Temperature 2000–50000 K; tint −150 to +150, whole numbers. Empty is not zero: use Clear to remove a saved setting. Saves recipe settings for compatible developers; Daguerre does not render them in the preview. These are not measured Kelvin values for JPEG/TIFF. XMP writing follows the current setting below.",
     recipe_exposure_stored: "Saved value",
     recipe_exposure_absent: "No exposure adjustment",
     recipe_exposure_save: "Save exposure",
@@ -813,6 +829,14 @@ export const dict: Record<Lang, Dict> = {
     edits_recipe: "Receta de revelado",
     edits_no_recipe: "Sin ajustes de revelado.",
     recipe_exposure: "Exposición guardada de receta (EV)",
+    recipe_wb_title: "Balance de blancos de la receta",
+    recipe_wb_temperature: "Temperatura de receta (K)",
+    recipe_wb_tint: "Matiz de receta",
+    recipe_wb_absent: "Sin ajuste",
+    recipe_wb_save: "Guardar cambios de balance",
+    recipe_wb_clear_temperature: "Quitar sólo temperatura",
+    recipe_wb_clear_tint: "Quitar sólo matiz",
+    recipe_wb_help: "Temperatura de 2000 a 50000 K; matiz de −150 a +150, enteros. Vacío no es cero: usa Quitar para retirar un ajuste guardado. Guarda la receta para reveladores compatibles; Daguerre no renderiza estos ajustes en la vista previa. No son Kelvin medidos del JPEG/TIFF. La escritura XMP sigue el ajuste actual indicado debajo.",
     recipe_exposure_stored: "Valor guardado",
     recipe_exposure_absent: "Sin ajuste de exposición",
     recipe_exposure_save: "Guardar exposición",

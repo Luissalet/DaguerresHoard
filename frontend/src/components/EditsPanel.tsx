@@ -6,6 +6,7 @@ import { useCopilotForm, useCopilotRefresh } from "../copilot-hooks";
 import type { Dict } from "../i18n";
 import type { PhotoEdits } from "../types";
 import RecipeExposure from "./RecipeExposure";
+import RecipeWhiteBalance from "./RecipeWhiteBalance";
 
 interface Props {
   photoId: string;
@@ -169,6 +170,8 @@ export default function EditsPanel({ photoId, t, onExposure }: Props) {
       </p>
       <RecipeExposure key={photoId} photoId={photoId} value={edits.recipe.exposure} busy={busy} t={t}
         onSave={(exposure) => run(() => api.setEdits(photoId, { recipe: { exposure } }), true)} />
+      <RecipeWhiteBalance key={`wb:${photoId}`} photoId={photoId} recipe={edits.recipe} busy={busy} t={t}
+        onSave={(recipe) => run(() => api.setEdits(photoId, { recipe }), true)} />
       {importedCount > 0 && (
         <p className="muted small" title={Object.keys(edits.imported_not_applied?.crs ?? {}).join(", ")}>
           {t.imported_not_applied(importedCount)}

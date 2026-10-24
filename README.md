@@ -256,6 +256,13 @@ lightbox (**Rating and retouch**), with `PUT /api/photos/{id}/edits` or with the
 | rating, label, keywords | -1/0-5, text, list | `xmp:Rating`, `xmp:Label`, `dc:subject` |
 | the whole recipe | | `daguerre:Recipe` (JSON) and `daguerre:Version`, in Daguerre's own namespace, so nothing is lost on a round trip |
 
+The lightbox's **Recipe white balance** fields edit stored temperature and tint.
+Save sends only changed settings; Clear removes only that setting. A missing
+setting is distinct from tint zero. These settings are saved for compatible RAW
+developers; Daguerre does not render them in its preview, and the Kelvin field
+does not measure the temperature of JPEG/TIFF pixels. Existing XMP writing
+preferences apply. Pending label, keyword and exposure drafts remain separate.
+
 **Writing is opt-in.** Settings -> *Write .xmp sidecars next to edited photos*
 (off by default; an assistant cannot turn it on). With it on, every edit also
 writes `IMG_0001.xmp` next to `IMG_0001.jpg` (the RAW-developer convention; an
