@@ -7,6 +7,7 @@ import { useCopilotForm, useCopilotOpen, useCopilotRefresh } from "../copilot-ho
 import EditsPanel from "./EditsPanel";
 import ReferenceMatch from "./ReferenceMatch";
 import FrameStrip from "./FrameStrip";
+import SimilarPhotos from "./SimilarPhotos";
 import { frameAsPhoto, type Album, type Photo, type PhotoDetail, type VideoDetail } from "../types";
 
 interface Props {
@@ -26,7 +27,6 @@ export default function Lightbox({ photos, index, onClose, onIndexChange, t, pla
   const [detached, setDetached] = useState<Photo | null>(null);
   const photo = detached ?? photos[index];
   const [detail, setDetail] = useState<PhotoDetail | null>(null);
-  const [similar, setSimilar] = useState<Photo[]>([]);
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [fullLoaded, setFullLoaded] = useState(false);
@@ -59,7 +59,6 @@ export default function Lightbox({ photos, index, onClose, onIndexChange, t, pla
     setZoom(1);
     setPan({ x: 0, y: 0 });
     setDetail(null);
-    setSimilar([]);
     setFullLoaded(false);
     setFullFailed(false);
     setCaptionError(null);
@@ -68,10 +67,6 @@ export default function Lightbox({ photos, index, onClose, onIndexChange, t, pla
     setCraftError(null);
     if (!photo) return;
     api.getPhoto(photo.id).then(setDetail).catch(() => {});
-    api
-      .similar(photo.id, 12)
-      .then((r) => setSimilar(r.results))
-      .catch(() => {});
   }, [photo?.id]);
 
   // A key frame of a video: load the video's other frames, and keep an open player on this frame's time.
@@ -471,31 +466,11 @@ export default function Lightbox({ photos, index, onClose, onIndexChange, t, pla
           )}
         </section>
 
-        {similar.length > 0 && (
-          <section className="side-section">
-            <div className="side-label">{t.similar_photos}</div>
-            <div className="similar-strip">
-              {similar.map((s) => (
-                <button
-                  key={s.id}
-                  className="similar-thumb"
-                  title={fileName(s.path)}
-                  onClick={() => {
-                    const i = photos.findIndex((p) => p.id === s.id);
-                    if (i >= 0) {
-                      setDetached(null);
-                      onIndexChange(i);
-                    } else {
-                      setDetached(s);
-                    }
-                  }}
-                >
-                  <img src={s.thumbnail_url} alt="" loading="lazy" />
-                </button>
-              ))}
-            </div>
-          </section>
-        )}
+        <SimilarPhotos key={photo.id} photo={photo} t={t} onOpen={(s) => {
+          const i = photos.findIndex((p) => p.id === s.id);
+          if (i >= 0) { setDetached(null); onIndexChange(i); }
+          else setDetached(s);
+        }} />
       </aside>
     </div>
   );

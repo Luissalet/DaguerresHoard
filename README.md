@@ -2,6 +2,12 @@
 
 # Daguerre's Hoard
 
+The photo viewer pages through already indexed similar photos, twelve at a time,
+with names, folders, native relevance bands and index notes. The displayed total
+is the number ranked by the current index, not a count of confirmed matches.
+Load more keeps earlier pages on error and uses the engine's next offset. This
+does not start indexing, download a model or alter original images.
+
 In Library and Search, **Add selection to album** groups the selected loaded
 photos in one action. Enter a new or suggested existing album name; matching
 ignores case and accents. The receipt shows the actual album name/ID, whether it

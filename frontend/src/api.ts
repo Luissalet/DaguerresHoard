@@ -120,7 +120,7 @@ export const api = {
   getJob: (id: string) => request<Job>(`/photos/api/jobs/${id}`),
   search: (query: string, filters: Record<string, unknown>, limit = 50) =>
     post<SearchResult>("/photos/api/search", { query, filters, limit }),
-  similar: (photo_id: string, limit = 12) => post<SearchResult>("/photos/api/similar", { photo_id, limit }),
+  similar: (photo_id: string, limit = 12, offset = 0) => post<SearchResult>("/photos/api/similar", { photo_id, limit, offset }),
   duplicates: (kind: "exact" | "near", limit = 50) => post<DuplicatesResult>("/photos/api/duplicates", { kind, limit }),
   listVideos: (params: Params = {}) => request<VideoListResult>(`/photos/api/videos?${qs(params)}`),
   getVideo: (id: string) => request<VideoDetail>(`/photos/api/videos/${id}`),

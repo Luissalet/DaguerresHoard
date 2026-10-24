@@ -2,6 +2,12 @@
 
 # Daguerre's Hoard
 
+El visor permite explorar las fotos similares ya indexadas en tandas de doce,
+con nombres, carpetas, grado de parecido y notas del índice nativo. El total
+indica fotos ordenadas por el índice actual, no coincidencias confirmadas.
+Cargar más conserva las páginas anteriores si falla y usa el siguiente offset
+del motor. No inicia indexación, descarga modelos ni modifica los originales.
+
 En Biblioteca y Búsqueda, **Añadir selección a álbum** agrupa las fotos cargadas
 seleccionadas en una acción. Escribe un nombre nuevo o sugerido existente; la
 coincidencia ignora mayúsculas y acentos. El recibo muestra nombre/ID reales,

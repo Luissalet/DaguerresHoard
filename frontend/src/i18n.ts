@@ -69,6 +69,13 @@ export interface Dict {
   ranked_count: (returned: number, total: number) => string;
   open_in_explorer: string;
   similar_photos: string;
+  similar_source: string;
+  similar_index: string;
+  similar_progress: (shown: number, total: number) => string;
+  similar_more: string;
+  similar_retry: string;
+  similar_empty: string;
+  similar_band: Record<"strong" | "medium" | "weak", string>;
   close: string;
   exact_duplicates: string;
   near_duplicates: string;
@@ -325,6 +332,13 @@ export const dict: Record<Lang, Dict> = {
     ranked_count: (returned, total) => `the best ${returned} of ${total} photo${total === 1 ? "" : "s"}, ranked`,
     open_in_explorer: "Open in Explorer",
     similar_photos: "Similar photos",
+    similar_source: "Source photo",
+    similar_index: "Current index",
+    similar_progress: (shown, total) => `${shown} shown of ${total} indexed · ordered by similarity`,
+    similar_more: "Load more similar photos",
+    similar_retry: "Retry this page",
+    similar_empty: "No other photos are indexed for the current model.",
+    similar_band: { strong: "Strong similarity", medium: "Medium similarity", weak: "Weak similarity" },
     close: "Close",
     exact_duplicates: "Exact duplicates",
     near_duplicates: "Near duplicates",
@@ -598,6 +612,13 @@ export const dict: Record<Lang, Dict> = {
       `las ${returned} mejores de ${total} foto${total === 1 ? "" : "s"}, por similitud`,
     open_in_explorer: "Abrir en el Explorador",
     similar_photos: "Fotos similares",
+    similar_source: "Foto de origen",
+    similar_index: "Índice actual",
+    similar_progress: (shown, total) => `${shown} mostradas de ${total} indexadas · ordenadas por parecido`,
+    similar_more: "Cargar más fotos similares",
+    similar_retry: "Reintentar esta página",
+    similar_empty: "No hay otras fotos indexadas para el modelo actual.",
+    similar_band: { strong: "Parecido alto", medium: "Parecido medio", weak: "Parecido bajo" },
     close: "Cerrar",
     exact_duplicates: "Duplicados exactos",
     near_duplicates: "Duplicados aproximados",
