@@ -325,6 +325,24 @@ def videos_describe(video_id: str, frames_limit: int | None = None) -> list:
     return [_text(_call("videos_describe", {"video_id": video_id, "frames_limit": frames_limit}))]
 
 
+@mcp.tool(annotations=CRAFT_WRITE)
+def videos_export_clip(video_id: str, start_s: float, end_s: float) -> list:
+    """Export one indexed video interval as a derived MP4. Exportar un intervalo de vídeo.
+
+    Use videos_list/videos_describe for the source ID. Finite seconds must
+    satisfy 0 <= start_s < end_s <= the freshly probed source duration.
+    Requires the existing optional FFmpeg: CPU H.264 and first audio as AAC
+    if present; no subtitles, extra tracks, stream copy or lossless promise.
+    Creates data/exports/<id>/clip.mp4 and manifest.json. Returns source ID,
+    requested interval, measured output duration/dimensions, bytes and URLs.
+    Container/frame timing may differ from the requested duration. Reads but
+    never edits the original. A started export may finish after a caller leaves.
+    Keywords: trim video, export clip, video interval, recortar vídeo,
+    exportar intervalo, fragmento de vídeo
+    """
+    return [_text(_call("videos_export_clip", {"video_id": video_id, "start_s": start_s, "end_s": end_s}))]
+
+
 @mcp.tool(annotations=READ_ONLY)
 def photos_duplicates(kind: Literal["exact", "near"] = "exact", limit: int = 10, include_ids: bool = False) -> list:
     """Groups of duplicate photos with the copy to keep; never deletes. Fotos duplicadas, repetidas.

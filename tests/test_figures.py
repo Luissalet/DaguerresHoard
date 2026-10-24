@@ -102,7 +102,7 @@ async def test_api_import_get_and_both_downloads_work_off_without_engine_factory
     async def forbidden(*_):raise AssertionError('Native engine started')
     app=create_app(tmp_path/'data',port=64841,factories={'photos':forbidden,'vector':forbidden})
     async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app),base_url='http://127.0.0.1:64841') as client:
-        assert len((await client.get('/api/agent/tools')).json()['tools'])==96
+        assert len((await client.get('/api/agent/tools')).json()['tools'])==97
         assert not app.studio.root.exists()
         project=(await client.post('/api/studio/projects',json={'title':'Synthetic import'})).json()['id']
         result=await client.post(f'/api/studio/projects/{project}/figure',json={'action':'import','figure':capture()})

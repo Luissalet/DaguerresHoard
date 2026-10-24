@@ -80,6 +80,18 @@ export interface SelectionExportResult {
   omitted: { id: string; requested_n: number; reason: string }[];
 }
 
+export interface VideoClipResult {
+  id: string;
+  video_id: string;
+  source_name: string;
+  requested: { start_s: number; end_s: number; duration_s: number };
+  measured: { duration_s: number; width: number; height: number };
+  format: { container: string; video_codec: string; audio_policy: string };
+  bytes: number;
+  video_url: string;
+  manifest_url: string;
+}
+
 function qs(params: Params): string {
   const q = new URLSearchParams();
   for (const [k, v] of Object.entries(params)) if (v !== undefined && v !== "") q.set(k, String(v));
@@ -125,6 +137,7 @@ export const api = {
   listVideos: (params: Params = {}) => request<VideoListResult>(`/photos/api/videos?${qs(params)}`),
   getVideo: (id: string) => request<VideoDetail>(`/photos/api/videos/${id}`),
   videoStreamUrl: (id: string) => `/photos/api/videos/${id}/stream`,
+  exportVideoClip: (id: string, start_s: number, end_s: number) => post<VideoClipResult>(`/photos/api/videos/${id}/export`, { video_id: id, start_s, end_s }),
   timeline: () => request<TimelineResult>("/photos/api/timeline?samples=4"),
   listAlbums: () => request<Album[]>("/photos/api/albums"),
   getAlbum: (id: string) => request<Album>(`/photos/api/albums/${id}`),

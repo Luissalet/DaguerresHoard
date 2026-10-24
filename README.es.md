@@ -2,6 +2,16 @@
 
 # Daguerre's Hoard
 
+En la ficha de un vídeo, **Exportar un intervalo** crea un MP4 independiente a
+partir de inicio/final en segundos o de la posición del reproductor listo.
+FFmpeg por CPU recodifica la primera pista de vídeo y la primera de audio si
+existe como H.264/AAC; los originales quedan intactos. El recibo separa intervalo
+solicitado y duración de salida medida y permite reproducir/descargar el MP4 y
+su JSON. Los fotogramas y el contenedor pueden ajustar la duración; no es un
+corte sin pérdida ni un editor multipista. Requiere el FFmpeg opcional existente.
+Cerrar la vista no cancela una exportación iniciada. UI, HTTP y MCP
+`videos_export_clip` usan la misma operación nativa.
+
 El visor permite explorar las fotos similares ya indexadas en tandas de doce,
 con nombres, carpetas, grado de parecido y notas del índice nativo. El total
 indica fotos ordenadas por el índice actual, no coincidencias confirmadas.

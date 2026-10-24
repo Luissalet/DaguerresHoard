@@ -2,6 +2,17 @@
 
 ## Modules (`daguerre_hoard/`)
 
+- `video_export.py` creates one CPU-transcoded interval through `VideoMixin`.
+  It probes the source duration, uses the existing FFmpeg resolver/process helper,
+  validates the output container and a decoded frame, and retains an MP4/JSON
+  receipt under `data/exports/<id>`. UI and agent routes call the same Library
+  method; only agent calls append the existing log. First video/optional first
+  audio, H.264/AAC; original video/frame index, recipes and sidecars are untouched.
+  The native process helper's existing frame timeout applies to encoding and
+  validation. The MCP bridge retains its existing 120-second request timeout.
+  Closing the keyed video export form only retires its UI response; it does not
+  cancel the native work. Requested and measured durations remain separate.
+
 - `figures.py` validates complete portable diagram captures and decodes PNG pixels
   without native engines or network calls. `studio_projects.py` retains immutable
   complete-source snapshots with an explicit import transaction; `studio.py`

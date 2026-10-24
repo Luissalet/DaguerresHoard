@@ -1,0 +1,11 @@
+.video-clip { max-width: 760px; margin: 24px 0; padding: 20px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-elevated); }
+.video-clip h3 { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; }
+.video-clip p { overflow-wrap: anywhere; }
+.video-clip-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 16px; }
+.video-clip-fields label { display: flex; flex-direction: column; gap: 6px; }
+.video-clip-fields .input { width: 100%; min-width: 0; }
+.video-clip-fields .btn { margin-top: 8px; }
+.video-clip-receipt { margin-top: 20px; border-top: 1px solid var(--border); padding-top: 16px; }
+.video-clip-receipt h4 { overflow-wrap: anywhere; margin: 0 0 8px; }
+.video-clip-receipt .toolbar { flex-wrap: wrap; margin-top: 12px; }
+@media (max-width: 480px) { .video-clip { padding: 16px; } .video-clip-fields { grid-template-columns: minmax(0, 1fr); } }

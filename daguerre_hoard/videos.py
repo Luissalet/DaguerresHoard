@@ -384,3 +384,8 @@ class VideoMixin:
         if not p.is_file():
             raise NotFoundError(f"the video file is not reachable right now: {p}")
         return p
+
+    def export_video_clip(self, video_id: str, start_s: float, end_s: float) -> dict:
+        from .video_export import create
+
+        return create(self, video_id, start_s, end_s)

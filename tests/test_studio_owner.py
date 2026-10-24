@@ -24,7 +24,7 @@ def forbidden(*a,**k):raise AssertionError('engine started')
 subprocess.Popen=forbidden
 from daguerre_hoard.studio import Studio
 s=Studio(Path(sys.argv[1]))
-assert len(s.tools)==96
+assert len(s.tools)==97
 assert 'daguerre_hoard.library' not in sys.modules
 assert 'daguerre_hoard.studio_native.durer.durer_hoard.api' not in sys.modules
 assert not s.root.exists()
@@ -37,7 +37,7 @@ assert all(m.phase=='off' for m in s.modules.values())
 async def test_http_catalogue_and_off_project_reads_are_cold(tmp_path):
     app=create_app(tmp_path/'data',port=64838)
     async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app),base_url='http://127.0.0.1:64838') as client:
-        assert len((await client.get('/api/agent/tools')).json()['tools'])==96
+        assert len((await client.get('/api/agent/tools')).json()['tools'])==97
         assert not (tmp_path/'data').exists()
         project=(await client.post('/api/studio/projects',json={'title':'Native cut'})).json()
         assert (await client.get('/api/studio/projects/'+project['id'])).json()['objects']==[]

@@ -48,7 +48,7 @@ async def test_stdio_cold_contract_and_native_store_roundtrip(tmp_path,monkeypat
         async with stdio_client(params) as (read,write),ClientSession(read,write) as session:
             await session.initialize()
             tools=await session.list_tools()
-            assert len(tools.tools)==96
+            assert len(tools.tools)==97
             by_name={t.name:t for t in tools.tools}
             for group in catalog().values():
                 for item in group: assert by_name[item['name']].inputSchema==item['inputSchema']

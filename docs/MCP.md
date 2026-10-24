@@ -1,7 +1,7 @@
 # Studio operations
 
-The cold owner adds eight common operations to the retained31 photo operations
-and57 vector aliases (96 total). Connecting/discovering starts no native engine;
+The cold owner adds eight common operations to the retained32 photo/video operations
+and57 vector aliases (97 total). Connecting/discovering starts no native engine;
 use `visual_module_set` explicitly. Full vector schemas and659 commands are frozen
 at source build time. Common projects bind real native IDs and revisions; see
 [STUDIO930.md](STUDIO930.md) for the transfer/export/download flow and its current
@@ -15,7 +15,7 @@ page/state remain available; see [the full contract and limits](FIGURES.md).
 
 # MCP tools
 
-Daguerre's Hoard exposes 31 photo-library and local Craft-engine tools over stdio
+Daguerre's Hoard exposes 32 photo/video-library and local Craft-engine tools over stdio
 (`daguerre_hoard/mcp_server.py`, a standalone script: stdlib + `httpx` + `mcp`).
 Every tool calls the app's
 own `/api/agent/<tool>` endpoint and returns exactly what that endpoint
@@ -348,3 +348,16 @@ memory-mapped float32 matrix, fine to about 200k photos.
 ## Preferred incorporated-engine tools
 
 The seven `image_*` names mirror their `craft_*` counterparts: `image_engines`, `image_tools`, `image_call`, `image_develop_photo`, `image_create_layered_document`, `image_create_layered_photo`, `image_import_compositor`. Both name sets use the same implementation. `image_open_editor(artifact_id, engine)` opens the complete own desktop editor for a generated copy. Engine keys are `layers` and `develop`; historical keys remain aliases. All30 tools are discoverable through stdio and normal agent API. See [owned engines](OWNED-ENGINES.md).
+# Video interval export
+
+`videos_export_clip(video_id, start_s, end_s)` creates a new MP4 and JSON receipt
+under Daguerre data. Obtain the ID with `videos_list`/`videos_describe`. Seconds
+must be finite and satisfy `0 <= start_s < end_s` within the freshly probed
+source duration. Uses the existing optional FFmpeg, CPU H.264 and first audio as
+AAC if present; no subtitles, extra tracks, lossless/HDR guarantee or original
+edit. Returns the source ID/name, requested interval, measured output duration
+and dimensions, bytes, `video_url` and `manifest_url`. Frame/container timing can
+differ from the requested duration. Annotation: write, non-destructive,
+non-idempotent, local-only. Each explicit call creates a new export. A started
+export may finish after the caller closes its view. Catalogue: 97 tools including
+the previous 96 definitions unchanged.

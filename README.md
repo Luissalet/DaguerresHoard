@@ -2,6 +2,15 @@
 
 # Daguerre's Hoard
 
+In a video's detail, **Export an interval** creates a separate MP4 from start/end
+seconds or the ready player's position. CPU FFmpeg transcodes the first video
+and optional first audio track as H.264/AAC; originals remain unchanged. The
+receipt separates the requested interval from the measured output duration and
+offers playback and downloads of the MP4 and JSON receipt. Frame/container timing
+can differ; this is not lossless trimming or a multi-track editor. The existing
+optional FFmpeg is required. Closing the view does not cancel an export already
+started. UI, HTTP and `videos_export_clip` MCP use the same native operation.
+
 The photo viewer pages through already indexed similar photos, twelve at a time,
 with names, folders, native relevance bands and index notes. The displayed total
 is the number ranked by the current index, not a count of confirmed matches.

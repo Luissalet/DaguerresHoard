@@ -3,6 +3,7 @@ import { ArrowLeft, Play, Video as VideoIcon } from "lucide-react";
 import { api, errorText, formatBytes } from "../api";
 import FrameStrip from "../components/FrameStrip";
 import Lightbox from "../components/Lightbox";
+import VideoClipExport from "../components/VideoClipExport";
 import { useCopilotOpen, useCopilotRefresh } from "../copilot-hooks";
 import type { Dict } from "../i18n";
 import { frameAsPhoto, type LibraryStatus, type VideoDetail, type VideoSummary } from "../types";
@@ -21,9 +22,12 @@ export default function VideosPage({ t, platformIsWindows, status }: Props) {
   const [open, setOpen] = useState<VideoDetail | null>(null);
   const [playing, setPlaying] = useState(false);
   const [playerFailed, setPlayerFailed] = useState(false);
+  const [playerReady, setPlayerReady] = useState(false);
   const [lightIndex, setLightIndex] = useState<number | null>(null);
   const playerRef = useRef<HTMLVideoElement | null>(null);
   const pendingSeek = useRef<number | null>(null);
+  const opening = useRef(0);
+  useEffect(() => () => { opening.current++; }, []);
 
   useEffect(() => {
     if (open) return;
@@ -56,13 +60,17 @@ export default function VideosPage({ t, platformIsWindows, status }: Props) {
   });
 
   async function openVideo(v: VideoSummary) {
+    const ticket = ++opening.current;
     try {
-      setOpen(await api.getVideo(v.id));
+      const detail = await api.getVideo(v.id);
+      if (ticket !== opening.current) return;
+      setOpen(detail);
       setPlaying(false);
       setPlayerFailed(false);
+      setPlayerReady(false);
       setError(null);
     } catch (e) {
-      setError(errorText(e));
+      if (ticket === opening.current) setError(errorText(e));
     }
   }
 
@@ -79,7 +87,7 @@ export default function VideosPage({ t, platformIsWindows, status }: Props) {
     const photos = open.frames.map((f) => frameAsPhoto(open, f));
     return (
       <div>
-        <button className="btn" onClick={() => setOpen(null)}>
+        <button className="btn" onClick={() => { opening.current++; setOpen(null); }}>
           <ArrowLeft size={14} /> {t.nav_videos}
         </button>
         <h2 title={open.path}>{open.name}</h2>
@@ -109,6 +117,7 @@ export default function VideosPage({ t, platformIsWindows, status }: Props) {
               src={api.videoStreamUrl(open.id)}
               controls
               preload="metadata"
+              onLoadedMetadata={() => setPlayerReady(true)}
               onError={() => setPlayerFailed(true)}
             />
             {playerFailed && <p className="error-text small">{t.video_player_failed}</p>}
@@ -121,6 +130,8 @@ export default function VideosPage({ t, platformIsWindows, status }: Props) {
             <Play size={14} /> {t.video_play_from(open.frames[0]?.timestamp ?? "00:00")}
           </button>
         )}
+        <VideoClipExport key={open.id} video={open} t={t} positionReady={playing && playerReady && !playerFailed}
+          getPosition={() => playerRef.current && playerRef.current.readyState >= 1 ? playerRef.current.currentTime : null} />
         <div className="side-label" style={{ marginTop: 14 }}>
           {t.video_key_frames}
         </div>

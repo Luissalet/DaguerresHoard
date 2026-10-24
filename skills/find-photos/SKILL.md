@@ -5,6 +5,14 @@ description: Find, look at, organise and export the owner's local photos with Da
 
 # Finding photos with Daguerre
 
+For an interval of an indexed video, first use `videos_list`/`videos_describe`,
+then `videos_export_clip(video_id, start_s, end_s)`. It writes a derived MP4 and
+receipt under data, never the original. Requires the existing optional FFmpeg;
+CPU H.264/first audio as AAC if present. Show the requested interval separately
+from the measured output duration and give the returned download URLs. Do not
+claim lossless or sample-perfect trimming, extra tracks, or cancellation merely
+because a caller closed its view. Each call creates another export.
+
 For exposure/colour consistency across comparable photos, use
 `photos_match_reference(reference_id, ids, strength=1, long_edge=1600)` after
 finding their stable IDs. It creates new PNG derivatives and a saved manifest,

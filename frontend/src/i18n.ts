@@ -44,6 +44,23 @@ export interface Dict {
   video_frames_n: (n: number) => string;
   video_no_frames: string;
   video_player_failed: string;
+  clip_title: string;
+  clip_help: string;
+  clip_start: string;
+  clip_end: string;
+  clip_use_position: string;
+  clip_target: string;
+  clip_interval_help: string;
+  clip_busy: string;
+  clip_export: string;
+  clip_pending: string;
+  clip_requested: string;
+  clip_measured: string;
+  clip_timing_note: string;
+  clip_preview: string;
+  clip_download: string;
+  clip_receipt: string;
+  clip_retry: string;
   search_placeholder: string;
   search_button: string;
   search_filter_help: string;
@@ -313,6 +330,23 @@ export const dict: Record<Lang, Dict> = {
     video_frames_n: (n: number) => `${n} key frame${n === 1 ? "" : "s"}`,
     video_no_frames: "No key frames (ffmpeg not found, or the video could not be read)",
     video_player_failed: "This browser cannot play the video; the key frames still work.",
+    clip_title: "Export an interval",
+    clip_help: "Create a separate, re-encoded MP4. The original stays unchanged. Enter seconds or use the ready player's position.",
+    clip_start: "Start (seconds)",
+    clip_end: "End (seconds)",
+    clip_use_position: "Use player position",
+    clip_target: "Requested duration",
+    clip_interval_help: "Choose a start at or after zero and an end after it, within the video.",
+    clip_busy: "Exporting…",
+    clip_export: "Export interval",
+    clip_pending: "You can keep editing. Closing this view does not cancel an export already started.",
+    clip_requested: "Exported request",
+    clip_measured: "Measured output duration",
+    clip_timing_note: "H.264 MP4; first audio track as AAC if present. Frames and the container can adjust the duration.",
+    clip_preview: "Exported interval",
+    clip_download: "Download MP4",
+    clip_receipt: "Download receipt",
+    clip_retry: "Retry export",
     search_placeholder: "Describe what you are looking for…",
     search_button: "Search",
     search_filter_help: "Describe a photo or leave the description blank and use the filters. Filters are combined.",
@@ -602,6 +636,23 @@ export const dict: Record<Lang, Dict> = {
     video_frames_n: (n: number) => `${n} fotograma${n === 1 ? "" : "s"} clave`,
     video_no_frames: "Sin fotogramas clave (no se encontró ffmpeg o no se pudo leer el vídeo)",
     video_player_failed: "Este navegador no puede reproducir el vídeo; los fotogramas clave siguen funcionando.",
+    clip_title: "Exportar un intervalo",
+    clip_help: "Crea un MP4 recodificado independiente. El original queda intacto. Escribe segundos o usa la posición del reproductor cuando esté listo.",
+    clip_start: "Inicio (segundos)",
+    clip_end: "Final (segundos)",
+    clip_use_position: "Usar posición del reproductor",
+    clip_target: "Duración solicitada",
+    clip_interval_help: "Elige un inicio desde cero y un final posterior, dentro del vídeo.",
+    clip_busy: "Exportando…",
+    clip_export: "Exportar intervalo",
+    clip_pending: "Puedes seguir editando. Cerrar esta vista no cancela una exportación ya iniciada.",
+    clip_requested: "Petición exportada",
+    clip_measured: "Duración de salida medida",
+    clip_timing_note: "MP4 H.264; primera pista de audio como AAC si existe. Los fotogramas y el contenedor pueden ajustar la duración.",
+    clip_preview: "Intervalo exportado",
+    clip_download: "Descargar MP4",
+    clip_receipt: "Descargar recibo",
+    clip_retry: "Reintentar exportación",
     search_placeholder: "Describe lo que buscas…",
     search_button: "Buscar",
     search_filter_help: "Describe una foto o deja la descripción vacía y utiliza los filtros. Los filtros se combinan.",

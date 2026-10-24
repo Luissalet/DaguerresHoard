@@ -97,7 +97,7 @@ async def test_mcp_adapter_over_stdio(running_app, tmp_path):
             names = {t.name for t in tools.tools}
             photo_names = {
                 "photos_search", "photos_similar", "photos_show", "photos_describe",
-                "photos_duplicates", "photos_timeline", "photos_library", "videos_list", "videos_describe",
+                "photos_duplicates", "photos_timeline", "photos_library", "videos_list", "videos_describe", "videos_export_clip",
                 "photos_add_folder", "photos_album", "photos_export", "photos_match_reference", "craft_engines",
                 "photos_edits", "photos_set_edits", "photos_sidecar",
                 "craft_tools", "craft_call", "craft_develop_photo", "craft_create_layered_document", "craft_create_layered_photo", "craft_import_compositor",
@@ -112,7 +112,7 @@ async def test_mcp_adapter_over_stdio(running_app, tmp_path):
                 assert tool.annotations.destructiveHint is False, tool.name
             read_only = {t.name for t in tools.tools if t.name in photo_names and t.annotations.readOnlyHint}
             assert read_only == photo_names - {
-                "photos_add_folder", "photos_album", "photos_export", "photos_match_reference", "craft_call",
+                "photos_add_folder", "photos_album", "photos_export", "photos_match_reference", "craft_call", "videos_export_clip",
                 "photos_set_edits", "photos_sidecar",
                 "craft_develop_photo", "craft_create_layered_document", "craft_create_layered_photo", "craft_import_compositor",
                 "image_call", "image_develop_photo", "image_create_layered_document", "image_create_layered_photo", "image_import_compositor", "image_open_editor",

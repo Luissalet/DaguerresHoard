@@ -165,6 +165,12 @@ class VideoBody(BaseModel):
     frames_limit: int | None = None
 
 
+class VideoClipBody(BaseModel):
+    video_id: str
+    start_s: float
+    end_s: float
+
+
 class VideoSettingsBody(BaseModel):
     enabled: bool | None = None
     max_frames: int | None = None
@@ -422,6 +428,17 @@ def create_app(data_dir: Path, static_dir: Path | None = None, port: int = 8814,
         path = run(lambda: lib.video_file(video_id))
         return FileResponse(path, headers={"Cache-Control": "private, max-age=600"})
 
+    @app.post("/api/videos/{video_id}/export")
+    def export_video_clip(video_id: str, body: VideoClipBody):
+        if video_id != body.video_id:
+            raise ApiError(400, "invalid_argument", "video_id must match the selected video")
+        return run(lambda: lib.export_video_clip(video_id, body.start_s, body.end_s))
+
+    @app.post("/api/agent/videos_export_clip", dependencies=agent_auth)
+    def agent_export_video_clip(body: VideoClipBody):
+        return run(lambda: lib.export_video_clip(body.video_id, body.start_s, body.end_s),
+                   tool="videos_export_clip", args=body.model_dump())
+
     @app.get("/api/video-settings")
     def get_video_settings():
         return lib.video_settings()
@@ -673,7 +690,7 @@ def create_app(data_dir: Path, static_dir: Path | None = None, port: int = 8814,
 
     @app.get("/api/exports/{export_id}/{filename}")
     def export_file(export_id: str, filename: str):
-        if not ID_RE.fullmatch(export_id) or filename not in {"gallery.html", "manifest.json", "contact-sheet.jpg"}:
+        if not ID_RE.fullmatch(export_id) or filename not in {"gallery.html", "manifest.json", "contact-sheet.jpg", "clip.mp4"}:
             raise ApiError(404, "not_found", "Export file not found")
         folder = (settings.data_dir / "exports").resolve()
         path = (folder / export_id / filename).resolve()

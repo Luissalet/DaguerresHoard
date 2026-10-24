@@ -1181,6 +1181,39 @@
         "idempotentHint": false,
         "openWorldHint": false
       }
+    },
+    {
+      "name": "videos_export_clip",
+      "description": "Export one indexed video interval as a derived MP4. Exportar un intervalo de vídeo.\n\n    Use videos_list/videos_describe for the source ID. Finite seconds must\n    satisfy 0 <= start_s < end_s <= the freshly probed source duration.\n    Requires the existing optional FFmpeg: CPU H.264 and first audio as AAC\n    if present; no subtitles, extra tracks, stream copy or lossless promise.\n    Creates data/exports/<id>/clip.mp4 and manifest.json. Returns source ID,\n    requested interval, measured output duration/dimensions, bytes and URLs.\n    Container/frame timing may differ from the requested duration. Reads but\n    never edits the original. A started export may finish after a caller leaves.\n    Keywords: trim video, export clip, video interval, recortar vídeo,\n    exportar intervalo, fragmento de vídeo\n    ",
+      "inputSchema": {
+        "properties": {
+          "video_id": {
+            "title": "Video Id",
+            "type": "string"
+          },
+          "start_s": {
+            "title": "Start S",
+            "type": "number"
+          },
+          "end_s": {
+            "title": "End S",
+            "type": "number"
+          }
+        },
+        "required": [
+          "video_id",
+          "start_s",
+          "end_s"
+        ],
+        "title": "videos_export_clipArguments",
+        "type": "object"
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": false,
+        "openWorldHint": false
+      }
     }
   ],
   "vector": [
