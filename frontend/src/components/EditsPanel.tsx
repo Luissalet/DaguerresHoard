@@ -191,6 +191,7 @@ export default function EditsPanel({ photoId, t, onExposure }: Props) {
           {sidecar.exists && sidecar.changed_on_disk && <span className="muted"> {t.sidecar_changed}</span>}
         </span>
       </div>
+      {sidecar.named_with_extension && <p className="muted small">{t.sidecar_shared_name}</p>}
       <div className="sidecar-actions">
         <button className="btn" disabled={busy || !sidecar.exists} onClick={() => run(() => api.readSidecar(photoId))}>
           <RefreshCw size={14} /> {t.sidecar_reread}

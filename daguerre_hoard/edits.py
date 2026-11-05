@@ -12,6 +12,7 @@ before its first modification and is merged, never replaced.
 from __future__ import annotations
 
 import datetime as dt
+import hashlib
 import json
 import logging
 import shutil
@@ -72,7 +73,7 @@ class EditsMixin:
         if not row:
             return {"exists": False, "recipe": {}, "rating": None, "label": None, "keywords": None, "imported": None,
                     "source": None, "sidecar_path": None, "sidecar_mtime_ns": None, "sidecar_size": None,
-                    "sidecar_owner": None, "embedded_hash": None}
+                    "sidecar_owner": None, "embedded_hash": None, "sidecar_sha": None}
         d = dict(row)
         d["exists"] = True
         d["recipe"] = _loads(d.get("recipe"), {})
@@ -105,8 +106,12 @@ class EditsMixin:
         return str(side), st.st_mtime_ns, st.st_size
 
     def _view(self, photo: sqlite3.Row, e: dict[str, Any]) -> dict[str, Any]:
-        side = xmplib.find_sidecar(Path(photo["path"]))
-        sidecar: dict[str, Any] = {"path": str(side or xmplib.target_sidecar(Path(photo["path"]))), "exists": bool(side)}
+        photo_path = Path(photo["path"])
+        stems = xmplib.directory_stems(photo_path.parent)
+        side = xmplib.find_sidecar(photo_path, stems)
+        sidecar: dict[str, Any] = {"path": str(side or xmplib.target_sidecar(photo_path, stems)), "exists": bool(side)}
+        if xmplib.shares_stem(photo_path, stems):
+            sidecar["named_with_extension"] = True  # another file has this name: the sidecar is <name.ext>.xmp
         if side:
             try:
                 recorded = (e["sidecar_path"], e["sidecar_mtime_ns"], e["sidecar_size"])
@@ -254,8 +259,13 @@ class EditsMixin:
             value = patch["label"]
             if value is None or (isinstance(value, str) and not value.strip()):
                 clean["label"] = None
-            elif isinstance(value, str) and len(value.strip()) <= 64:
-                clean["label"] = " ".join(value.split())
+            elif isinstance(value, str):
+                text = " ".join(xmplib.xml_text(value).split())  # control characters cannot live in XMP
+                if not text:
+                    raise xmplib.XmpError("label has no printable characters (control characters are not allowed)")
+                if len(text) > 64:
+                    raise xmplib.XmpError("label must be a short text of at most 64 characters (for example 'Red')")
+                clean["label"] = text
             else:
                 raise xmplib.XmpError("label must be a short text of at most 64 characters (for example 'Red')")
         if "keywords" in patch:
@@ -298,18 +308,29 @@ class EditsMixin:
         side = xmplib.target_sidecar(photo_path)
         existing: bytes | None = None
         backup: str | None = None
+        needs_backup = False
+        digest = ""
         try:
             if side.is_file():
                 if side.stat().st_size > xmplib.MAX_XMP_BYTES:
                     raise xmplib.XmpError("the existing sidecar is larger than 2 MB")
                 existing = side.read_bytes()
                 info = xmplib.read_xmp(existing)  # raises XmpError for anything that is not XMP
-                if not info.written_by_daguerre:
-                    backup = self._backup_foreign(photo["id"], side)
+                digest = hashlib.sha256(existing).hexdigest()
+                # Back up whatever Daguerre did not write itself: a foreign file, or one that somebody changed
+                # since Daguerre's last write.
+                needs_backup = (not info.written_by_daguerre) or digest != self._load_edits(photo["id"])["sidecar_sha"]
             data = xmplib.merge_sidecar(existing, xmplib.SidecarEdits(
                 recipe=args.recipe, cleared=args.cleared, rating=args.rating, label=args.label, keywords=args.keywords))
+            if existing is not None and needs_backup:
+                backup = self._backup_foreign(photo["id"], side, digest)
             write_bytes_atomic(side, data)
             sig = self._signature(side)
+        except xmplib.XmpOutputError as exc:
+            msg = f"Daguerre did not write {side}: {exc}. The file was left as it was"
+            if strict:
+                raise ValidationError(msg) from None
+            return {"written": False, "error": msg}
         except xmplib.XmpError as exc:
             msg = f"the existing sidecar {side} is not usable XMP ({exc}); Daguerre will not overwrite it. Fix or move it, then retry"
             if strict:
@@ -321,7 +342,7 @@ class EditsMixin:
                 raise ValidationError(msg) from None
             return {"written": False, "error": msg}
         self._upsert_edits(photo["id"], sidecar_path=sig[0], sidecar_mtime_ns=sig[1], sidecar_size=sig[2],
-                           sidecar_owner="daguerre")
+                           sidecar_owner="daguerre", sidecar_sha=hashlib.sha256(data).hexdigest())
         self.conn.commit()
         out = {"written": True, "path": str(side), "created": existing is None, "merged": existing is not None,
                "bytes": len(data)}
@@ -329,11 +350,14 @@ class EditsMixin:
             out["backup_of_original"] = backup
         return out
 
-    def _backup_foreign(self, photo_id: str, side: Path) -> str:
+    def _backup_foreign(self, photo_id: str, side: Path, digest: str) -> str:
+        """Copy the file as it is now into ``data/xmp-backups``; the name carries its content hash, so the same
+        content is never copied twice and different content never overwrites an earlier backup."""
         folder = self.settings.data_dir / "xmp-backups"
         folder.mkdir(parents=True, exist_ok=True)
-        target = folder / f"{photo_id}-{dt.datetime.now(dt.timezone.utc).strftime('%Y%m%dT%H%M%SZ')}.xmp"
-        shutil.copy2(side, target)
+        target = folder / f"{photo_id}-{digest[:12]}.xmp"
+        if not target.exists():
+            shutil.copy2(side, target)
         return str(target)
 
     # ------------------------------------------------------------------ #
@@ -421,6 +445,7 @@ class EditsMixin:
         stats.setdefault("sidecars_read", 0)
         stats.setdefault("embedded_read", 0)
         paths = [str(p) for _, p in plan]
+        stems_by_dir: dict[str, dict[str, int]] = {}  # one directory listing per folder, not per photo
         for start in range(0, len(paths), BATCH):
             chunk = paths[start: start + BATCH]
             marks = ",".join("?" * len(chunk))
@@ -431,7 +456,11 @@ class EditsMixin:
             ).fetchall()
             for row in rows:
                 with self._edits_lock:
-                    side = xmplib.find_sidecar(Path(row["path"]))
+                    photo_path = Path(row["path"])
+                    stems = stems_by_dir.get(str(photo_path.parent))
+                    if stems is None:
+                        stems = stems_by_dir[str(photo_path.parent)] = xmplib.directory_stems(photo_path.parent)
+                    side = xmplib.find_sidecar(photo_path, stems)
                     if side:
                         try:
                             if self._signature(side) != (row["e_path"], row["e_mtime"], row["e_size"]):

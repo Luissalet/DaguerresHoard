@@ -507,7 +507,8 @@ def photos_set_edits(
     as "Red"; `keywords` the full list (replaces the old one).
 
     The photo file is never modified. If the owner turned on "Write .xmp sidecars" in Settings (off by default),
-    Daguerre also writes or merges `<photo name>.xmp` next to the photo in the standard form RAW developers read
+    Daguerre also writes or merges `<photo name>.xmp` (`<photo name>.<ext>.xmp` if another file shares the name)
+    next to the photo in the standard form RAW developers read
     (a foreign sidecar is backed up first and every field Daguerre does not own is kept); otherwise the edits stay
     in Daguerre. Returns the same object as photos_edits plus `sidecar_write` ({written, path, merged, ...} or the
     reason it was not written). Only exposure is rendered by Daguerre itself (craft_develop_photo).
@@ -533,7 +534,7 @@ def photos_sidecar(photo_id: str, action: Literal["read", "write"] = "read") -> 
     action="read": re-read the sidecar next to the photo (or, without one, the XMP embedded in the JPEG/TIFF/PNG/WebP)
     and merge its rating, label, keywords and develop settings into Daguerre's edits; settings Daguerre does not
     apply come back in `imported_not_applied`. Scans do this automatically; use it after the owner edited the file.
-    action="write": write or merge the stored edits into `<photo name>.xmp`. Needs "Write .xmp sidecars" turned on by
+    action="write": write or merge the stored edits into `<photo name>.xmp` (`.<ext>.xmp` if the name is shared). Needs "Write .xmp sidecars" turned on by
     the owner in Settings (off by default; you cannot turn it on) and something to write. A sidecar Daguerre did not
     write is backed up under Daguerre's data folder first and merged, never replaced; an unreadable one is left alone
     and the error says so. The photo itself is never modified.

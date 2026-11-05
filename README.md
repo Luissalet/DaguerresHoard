@@ -158,7 +158,7 @@ real MCP stdio by a script that plays a small local model
 | Area | Available now | Boundary |
 | --- | --- | --- |
 | Indexing | Background, incremental scans: unchanged files cost one `stat`; changed files are re-read; moved or renamed files keep their id, vector, caption and albums. Parallel hashing and decoding, progress with files/s and ETA, one unreadable file is reported instead of stopping the scan. JPEG, PNG, WebP, GIF, BMP, TIFF, HEIC/HEIF | No file-system watcher: rescans are started by the user, the agent or a new folder |
-| Metadata | EXIF date with time-zone offset, camera, lens, exposure, ISO, focal length, orientation, GPS; file time as fallback, flagged as such | EXIF only; XMP sidecars are not read |
+| Metadata | EXIF date with time-zone offset, camera, lens, exposure, ISO, focal length, orientation, GPS; file time as fallback, flagged as such | Dates, camera and place come from EXIF only; XMP feeds ratings, labels, keywords and recipes (see below) |
 | Videos | Videos in the folders (MP4, MOV, MKV, AVI, WebM, M4V, WMV, MPG, 3GP) are indexed as **key frames**: one at each scene change (ffmpeg `scene` score) plus one every 30 s as a fallback for static footage, up to 48 per video (both adjustable with `POST /api/video-settings`). Each frame goes through the photo pipeline (thumbnail, perceptual hash, CLIP embedding when the model is installed, full-text, albums) and is linked to its video with its timestamp. Videos page with a key-frame strip and a player that seeks to the clicked frame; search results show `video · 01:23`; `videos_list` and `videos_describe` tools. Incremental: a video is re-extracted only when its content changed (size/mtime, then a head+tail hash), a moved file keeps its frames, a deleted one is hidden | Needs `ffmpeg` on PATH (or `DAGUERRE_FFMPEG`); without it videos are listed with no frames and the next scan retries. Frames are stills: no audio, no speech or caption of the clip, no object tracking. The browser must support the codec for the player (frames work regardless). Frames never appear in the plain library grid, duplicates, timeline or places |
 | Search | Text to image with CLIP ViT-B/32 (English queries work best; the tools tell the model to translate), similar photos, filters (date range, year, month, place, folder, camera, orientation, megapixels, GPS). Hybrid with captions when they exist | The model (about 600 MB) is downloaded only when the user clicks it in Settings. Until then a colour-only fallback is active and every result says so |
 | Duplicates | Exact (BLAKE2b) and near (pHash, Hamming distance up to 6, exact multi-index lookup, union-find) with a suggested keeper (the original, not the backup or chat-app copy) and the space that extra copies use | Read-only by design: "Copy paths of the extra copies" and "Open folder", deleting is up to you. A near group can join different look-alike photos, so its space is shown as "up to" |
@@ -273,15 +273,28 @@ does not measure the temperature of JPEG/TIFF pixels. Existing XMP writing
 preferences apply. Pending label, keyword and exposure drafts remain separate.
 
 **Writing is opt-in.** Settings -> *Write .xmp sidecars next to edited photos*
-(off by default; an assistant cannot turn it on). With it on, every edit also
-writes `IMG_0001.xmp` next to `IMG_0001.jpg` (the RAW-developer convention; an
-existing `IMG_0001.jpg.xmp` is used instead if that is the file you have). The
-photo itself is never touched. An existing sidecar is **merged, never replaced**:
+(off by default). No assistant tool can turn it on, and `POST /api/settings`
+refuses that key when the request carries the assistant's bearer token, so only
+the Settings screen can. With it on, every edit also writes `IMG_0001.xmp` next
+to `IMG_0001.jpg` (the RAW-developer convention). **If another file in the folder
+has the same name** (`IMG_0001.png`, or a RAW that Daguerre does not index such as
+`IMG_0001.cr3`), `IMG_0001.xmp` would describe more than one file, so for that
+photo Daguerre reads and writes `IMG_0001.jpg.xmp` instead and never touches the
+shared `IMG_0001.xmp` (the RAW's settings are not adopted by the JPEG, and a
+Daguerre edit never changes how the RAW develops). The photo itself is never touched. An existing sidecar is **merged, never replaced**:
 it is parsed, only the properties above are updated in place, and every other
-namespace, field, list and unmapped develop setting stays as it was. The first
-time Daguerre changes a sidecar it did not write, it copies the original to
-`data/xmp-backups/`. A sidecar that is not valid XMP is left alone and the edit
-is kept in Daguerre with the error. Writes are atomic (temp file + rename).
+namespace, field, list and unmapped develop setting stays as it was. Before
+Daguerre changes a sidecar it did not write, or one that something else edited
+since Daguerre's last write, it copies the file to `data/xmp-backups/` (named
+after its content, so the same content is saved once). A sidecar that is not valid XMP is left alone and the edit
+is kept in Daguerre with the error. Writes are atomic (temp file + rename). A setting
+whose value did not change keeps its original spelling in the file
+(`Exposure2012="0.8512"`, `CropAngle="-2.1"` and `WhiteBalance="As Shot"` stay as
+they are while the values behind them did not move); a setting you change is
+written in the usual format (`+1.20`). Control characters, which XML cannot carry,
+are removed from the label and keywords, and the generated document is parsed
+again before it replaces anything: if it does not parse, nothing is written and
+the error says so.
 
 **Reading is always on.** Each scan reads a new or changed sidecar (one `stat`
 per photo when nothing changed) and, the first time it sees a file with no
@@ -302,8 +315,8 @@ size, depth and node count are capped. No network access is involved.
 Limits: Daguerre renders only the recipe's exposure (`craft_develop_photo`);
 the other settings are data for RAW developers. RAW formats (CR3, NEF, ARW,
 DNG...) are not indexed by Daguerre yet, so sidecars are used for the formats it
-does index. `IMG_1.jpg` and `IMG_1.png` in one folder share `IMG_1.xmp`, as in
-RAW developers. Comments in a merged sidecar are dropped and its whitespace is
+does index. A photo whose name another file shares uses `IMG_1.jpg.xmp`, a name RAW
+developers do not look for: the price of never mixing two files' settings. Comments in a merged sidecar are dropped and its whitespace is
 normalised. Extended XMP (more than 64 KB in a JPEG) is not read. Temperature
 is in Kelvin, as in RAW files; the relative scale used for JPEGs is reported as
 not applied.

@@ -76,6 +76,19 @@ class XmpError(ValueError):
 # --------------------------------------------------------------------------- #
 # Recipe model
 # --------------------------------------------------------------------------- #
+class XmpOutputError(XmpError):
+    """What Daguerre was about to write is not well-formed XMP: nothing is written."""
+
+
+def _xml_char_ok(code: int) -> bool:
+    return code in (0x9, 0xA, 0xD) or 0x20 <= code <= 0xD7FF or 0xE000 <= code <= 0xFFFD or 0x10000 <= code <= 0x10FFFF
+
+
+def xml_text(value: str) -> str:
+    """``value`` without the characters XML 1.0 cannot carry: control characters, lone surrogates, U+FFFE, U+FFFF."""
+    return "".join(ch for ch in value if _xml_char_ok(ord(ch)))
+
+
 def _num(name: str, value: Any) -> float:
     if isinstance(value, bool):
         raise XmpError(f"{name} must be a number, got {value!r}")
@@ -469,7 +482,7 @@ def _clean_keywords(values: list[str]) -> list[str]:
     seen: set[str] = set()
     out: list[str] = []
     for value in values:
-        word = " ".join(str(value).split())[:100]
+        word = " ".join(xml_text(str(value)).split())[:100]
         if word and word.casefold() not in seen:
             seen.add(word.casefold())
             out.append(word)
@@ -543,6 +556,38 @@ def _set_simple(rdf: _Node, uri: str, local: str, value: str, *, as_element: boo
         desc.children.append(node)
     else:
         desc.attrib[q(uri, local)] = value
+
+
+def _current_text(rdf: _Node, uri: str, local: str) -> str | None:
+    """The text of a simple property (attribute or plain element), or None when absent or structured."""
+    found = _find_prop(rdf, uri, local)
+    if not found:
+        return None
+    desc, kind, child = found
+    if kind == "attr":
+        return desc.attrib.get(q(uri, local))
+    if child is not None and not child.children:
+        return (child.text or "").strip()
+    return None
+
+
+def _same_setting(old: str, new: str) -> bool:
+    """True when ``old`` already says what ``new`` says, at the precision ``new`` is written with."""
+    old = old.strip()
+    if old == new or old.lower() == new.lower():
+        return True
+    a, b = _crs_float(old), _crs_float(new)
+    if a is None or b is None:
+        return False
+    decimals = len(new.split(".", 1)[1]) if "." in new else 0
+    return abs(a - b) <= 0.5 * 10 ** (-decimals) + 1e-9
+
+
+def _set_if_changed(rdf: _Node, uri: str, local: str, value: str) -> None:
+    old = _current_text(rdf, uri, local)
+    if old is not None and _same_setting(old, value):
+        return
+    _set_simple(rdf, uri, local, value)
 
 
 def _set_bag(rdf: _Node, uri: str, local: str, values: list[str]) -> None:
@@ -684,18 +729,27 @@ def merge_sidecar(existing: bytes | None, edits: SidecarEdits) -> bytes:
     for name in crs_names_for(edits.cleared):
         if name not in crs:
             _remove_prop(rdf, NS_CRS, name)
+    kept: set[str] = set()
     for name, value in crs.items():
+        old = _current_text(rdf, NS_CRS, name)
+        if name == "WhiteBalance":
+            # "As Shot" stays while the temperature and tint it describes did not move
+            if old is not None and {"Temperature", "Tint"} & set(crs) <= kept:
+                continue
+        elif old is not None and _same_setting(old, value):
+            kept.add(name)  # same value at the file's own precision: keep the original spelling
+            continue
         _set_simple(rdf, NS_CRS, name, value)
     if crs:
         for name, value in (("Version", "15.0"), ("ProcessVersion", "11.0"), ("HasSettings", "True")):
             if not _find_prop(rdf, NS_CRS, name):
                 _set_simple(rdf, NS_CRS, name, value)
     if "orientation" in edits.recipe:
-        _set_simple(rdf, NS_TIFF, "Orientation", str(int(edits.recipe["orientation"])))
+        _set_if_changed(rdf, NS_TIFF, "Orientation", str(int(edits.recipe["orientation"])))
     elif "orientation" in edits.cleared:
         _remove_prop(rdf, NS_TIFF, "Orientation")
     if edits.rating is not None:
-        _set_simple(rdf, NS_XMP, "Rating", str(int(edits.rating)))
+        _set_if_changed(rdf, NS_XMP, "Rating", str(int(edits.rating)))
     if edits.label is not None:
         if edits.label:
             _set_simple(rdf, NS_XMP, "Label", edits.label)
@@ -711,18 +765,59 @@ def merge_sidecar(existing: bytes | None, edits: SidecarEdits) -> bytes:
     _set_simple(rdf, NS_DAGUERRE, "Recipe", json.dumps(edits.recipe, ensure_ascii=False, separators=(",", ":"),
                                                       sort_keys=True), as_element=True)
     _reindent(root)
-    return serialize(root)
+    # Never trust the writer: the result must parse with the same strict parser before it can reach the disk.
+    try:
+        data = serialize(root)
+        parse_xmp(data)
+    except UnicodeError as exc:
+        raise XmpOutputError(f"the text cannot be encoded as UTF-8 ({exc})") from None
+    except XmpError as exc:
+        raise XmpOutputError(f"the result would not be well-formed XMP ({exc})") from None
+    return data
 
 
 # --------------------------------------------------------------------------- #
 # Where sidecars live, and XMP embedded in the image itself
 # --------------------------------------------------------------------------- #
-def sidecar_candidates(photo: Path) -> list[Path]:
-    """``IMG_0001.xmp`` (the RAW-developer convention), ``IMG_0001.XMP``, then ``IMG_0001.CR3.xmp``."""
+def directory_stems(folder: Path) -> dict[str, int]:
+    """How many files (not counting ``.xmp`` files) carry each case-folded name stem in ``folder``."""
+    counts: dict[str, int] = {}
+    try:
+        with os.scandir(folder) as entries:
+            for entry in entries:
+                path = Path(entry.name)
+                if path.suffix.lower() == ".xmp" or entry.is_dir():
+                    continue
+                key = path.stem.casefold()
+                counts[key] = counts.get(key, 0) + 1
+    except OSError:
+        return {}
+    return counts
+
+
+def shares_stem(photo: Path, stems: dict[str, int] | None = None) -> bool:
+    """True when another file in the folder has the same name stem (``IMG_1.jpg`` next to ``IMG_1.png`` or an
+    unindexed ``IMG_1.cr3``): ``IMG_1.xmp`` would then describe more than one file."""
     photo = Path(photo)
+    counts = directory_stems(photo.parent) if stems is None else stems
+    return counts.get(photo.stem.casefold(), 0) > 1
+
+
+def sidecar_candidates(photo: Path, stems: dict[str, int] | None = None) -> list[Path]:
+    """Where the photo's sidecar may be, best first.
+
+    Alone in its name (the usual case): ``IMG_1.xmp``, ``IMG_1.XMP``, then ``IMG_1.jpg.xmp``. When another file
+    shares the stem, only ``IMG_1.jpg.xmp``: the plain ``IMG_1.xmp`` belongs to nobody in particular (often to a
+    RAW file next to the JPEG) and Daguerre neither reads nor writes it for this photo."""
+    photo = Path(photo)
+    named = [photo.with_name(photo.name + ".xmp"), photo.with_name(photo.name + ".XMP")]
+    if shares_stem(photo, stems):
+        order = named
+    else:
+        order = [photo.with_suffix(".xmp"), photo.with_suffix(".XMP"), named[0]]
     seen: set[str] = set()
     out: list[Path] = []
-    for cand in (photo.with_suffix(".xmp"), photo.with_suffix(".XMP"), photo.with_name(photo.name + ".xmp")):
+    for cand in order:
         key = os.path.normcase(str(cand))
         if key not in seen:
             seen.add(key)
@@ -730,15 +825,21 @@ def sidecar_candidates(photo: Path) -> list[Path]:
     return out
 
 
-def find_sidecar(photo: Path) -> Path | None:
-    for cand in sidecar_candidates(photo):
+def find_sidecar(photo: Path, stems: dict[str, int] | None = None) -> Path | None:
+    for cand in sidecar_candidates(photo, stems):
         if cand.is_file():
             return cand
     return None
 
 
-def target_sidecar(photo: Path) -> Path:
-    return find_sidecar(photo) or Path(photo).with_suffix(".xmp")
+def target_sidecar(photo: Path, stems: dict[str, int] | None = None) -> Path:
+    """The existing sidecar, or the one to create: ``IMG_1.xmp``, or ``IMG_1.jpg.xmp`` when the stem is shared."""
+    photo = Path(photo)
+    counts = directory_stems(photo.parent) if stems is None else stems
+    found = find_sidecar(photo, counts)
+    if found:
+        return found
+    return photo.with_name(photo.name + ".xmp") if shares_stem(photo, counts) else photo.with_suffix(".xmp")
 
 
 _XMP_HEADER = b"http://ns.adobe.com/xap/1.0/\x00"
