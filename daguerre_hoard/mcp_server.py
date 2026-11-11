@@ -759,5 +759,12 @@ if os.environ.get('DAGUERRE_CATALOG_BUILD') != '1':
     _install_visual_catalog()
 
 
+try:  # the skills this app carries, for the agent that connects
+    from daguerre_hoard.hoard_link import skills as _family_skills
+    _family_skills.attach(mcp, 'daguerre', root=__file__)
+except Exception:  # noqa: BLE001 - the bridge works without them
+    pass
+
+
 if __name__ == "__main__":
     main()
