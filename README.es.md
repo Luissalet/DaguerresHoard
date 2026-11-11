@@ -527,3 +527,7 @@ Notas de diseño de los recorridos por los casos de uso:
 ## Motores de imagen incorporados
 
 Daguerre contiene los motores completos de capas y revelado y sus editores de escritorio, compilados desde fuente detached con nombres y formatos propios. La vista de detalle crea copias, las revela, exporta resultados y abre el editor completo. Sus30 herramientas MCP conservan los22 nombres anteriores; los proyectos históricos son importables y los originales permanecen intactos. Consulta [la guía](docs/CRAFT-ENGINES.es.md) para compilación, formatos, procedencia y alcance verificado.
+
+## Skills para los agentes que se conectan
+
+Esta app lleva procedimientos de la biblioteca de skills del espacio de trabajo de la familia para los agentes que se conectan: daguerre: `photo-library-curation`, `image-composition`, `revision-aware-media`; durer: `image-composition`, `product-ui-visual-direction`, `diagram-authoring`. Aparecen en lo que el agente lee al conectarse, se leen con `skills_list` y `skill_read`, se buscan y asignan con `skills_library` y `skills_assign`, y se ofrecen como prompts. Se eligen en la página de skills (`/api/agent/skills/page`) o en la pestaña Skills del hub; el bloque `skills` de `faustus-plugin.json` guarda lo que la app pide por defecto.

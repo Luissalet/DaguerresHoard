@@ -89,5 +89,6 @@
       "HOARD_HUB_URL"
     ]
   },
-  "notes": "Owned Rust engine and desktop editor built from native/. Historical .vectorcraft and .drawcraft import preserves originals. Durable snapshots retain undo after service restart. No external application or configured legacy CLI is required. Full reference parity has not been certified."
+  "notes": "Owned Rust engine and desktop editor built from native/. Historical .vectorcraft and .drawcraft import preserves originals. Durable snapshots retain undo after service restart. No external application or configured legacy CLI is required. Full reference parity has not been certified.",
+  "skills": {"slugs": ["image-composition", "product-ui-visual-direction", "diagram-authoring"], "limit": 3}
 }

@@ -64,5 +64,6 @@
       "repository": "https://github.com/Luissalet/DaguerresHoard"
     }
   },
-  "notes": "Capabilities and native data belong to Daguerre's Hoard. Modules are enabled explicitly in the owner."
+  "notes": "Capabilities and native data belong to Daguerre's Hoard. Modules are enabled explicitly in the owner.",
+  "skills": {"slugs": ["image-composition", "product-ui-visual-direction", "diagram-authoring"], "limit": 3}
 }
