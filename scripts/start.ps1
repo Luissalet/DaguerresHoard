@@ -108,6 +108,15 @@ if ($installed -ne $lockHash) {
     Set-Content -LiteralPath $LockStamp -Value $lockHash -Encoding ASCII
 }
 
+# 2b) the package itself, installed from this folder (editable): the MCP server the hub starts from this venv
+# is then the code in this repository and cannot fall behind it.
+$editable = & $VenvPython -c "import importlib.metadata as m;d=m.distribution('daguerres-hoard');print(any('__editable__' in str(f) for f in (d.files or [])))" 2>$null
+if ("$editable".Trim() -ne "True") {
+    Write-Host "Linking the package to this folder..."
+    & $VenvPython -m pip install --disable-pip-version-check --no-deps -e $RepoRoot
+    if ($LASTEXITCODE -ne 0) { Fail "pip install -e failed (see the output above)" }
+}
+
 # 3) frontend ------------------------------------------------------------
 if (-not (Test-Path (Join-Path $RepoRoot "frontend\dist\index.html")) -or -not (Test-Path (Join-Path $RepoRoot "daguerre_hoard\studio_ui\fonts\cinzel-latin-400-normal.woff2"))) {
     if (-not (Get-Command npm -ErrorAction SilentlyContinue)) {

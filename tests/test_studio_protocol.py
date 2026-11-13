@@ -3,6 +3,7 @@ import asyncio
 import json
 import os
 from pathlib import Path
+import socket
 import sys
 import threading
 import time
@@ -35,14 +36,17 @@ async def test_stdio_cold_contract_and_native_store_roundtrip(tmp_path,monkeypat
     if not native:
         monkeypatch.setattr(sessions,'execute',worker)
     data=tmp_path/'data'
-    app=create_app(data,port=64846,demo=True)
-    server=uvicorn.Server(uvicorn.Config(app,host='127.0.0.1',port=64846,log_level='warning'))
+    with socket.socket() as probe:
+        probe.bind(('127.0.0.1',0))
+        port=probe.getsockname()[1]
+    app=create_app(data,port=port,demo=True)
+    server=uvicorn.Server(uvicorn.Config(app,host='127.0.0.1',port=port,log_level='warning'))
     thread=threading.Thread(target=server.run,name='daguerre-qa930-http')
     thread.start()
     try:
         async with asyncio.timeout(10):
             while not server.started: await asyncio.sleep(.02)
-        env={**os.environ,'DAGUERRE_URL':'http://127.0.0.1:64846','DAGUERRE_TOKEN_FILE':str(data/'mcp-token'),
+        env={**os.environ,'DAGUERRE_URL':f'http://127.0.0.1:{port}','DAGUERRE_TOKEN_FILE':str(data/'mcp-token'),
             'DAGUERRE_DATA_DIR':str(data),'DAGUERRE_TOKEN':'','HOARD_EVENTS':'0'}
         params=StdioServerParameters(command=sys.executable,args=[str(ROOT/'daguerre_hoard/mcp_server.py')],env=env,cwd=str(ROOT))
         async with stdio_client(params) as (read,write),ClientSession(read,write) as session:
@@ -84,7 +88,7 @@ async def test_stdio_cold_contract_and_native_store_roundtrip(tmp_path,monkeypat
                 await call('visual_module_set',{'module':'photos','enabled':False})
                 import httpx
                 async with httpx.AsyncClient() as client:
-                    response=await client.get(f"http://127.0.0.1:64846/api/studio/artifacts/{project['id']}/{receipt['sha256']}",headers={'Range':'bytes=0-7'})
+                    response=await client.get(f"http://127.0.0.1:{port}/api/studio/artifacts/{project['id']}/{receipt['sha256']}",headers={'Range':'bytes=0-7'})
                     assert response.status_code==206 and response.content==b'\x89PNG\r\n\x1a\n'
             await call('visual_module_set',{'module':'vector','enabled':False})
     finally:
